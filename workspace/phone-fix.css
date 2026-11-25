@@ -1,0 +1,46 @@
+/* phone-fix.css v2 —— 1016-29：滚动边缘渐隐 / 主屏纵向节奏 / 主题色选中环留白 */
+
+/* 1) 滚动内容在顶部、底部白条处柔和渐隐，不再被硬切 */
+.win .sc{
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 16px,#000 calc(100% - 38px),transparent 100%);
+          mask-image:linear-gradient(to bottom,transparent 0,#000 16px,#000 calc(100% - 38px),transparent 100%);
+}
+
+/* 2) 主屏：行距放开一点，（v2：胶囊居中、页点与 Dock 位置改由 phone-widgets.css 管理） */
+@media (min-height:761px){
+  #home .grid{gap:22px 0;margin-top:24px}
+}
+
+/* 3) 设置页主题色：选中环不再贴到文字 */
+.st-sw{padding-top:12px}
+.st-sw .sw{gap:13px}
+
+/* [位置:phone-fix.css·全局滚动条兜底] [隐藏小手机壳内一切原生滚动条] [2026-10-21 起逐容器写隐藏规则漏了十几处，原生条与 JS 细条叠影；改为 #device 内全局兜底，一处管全部，新页面不再漏] [注释时间 2026-10-24] */
+#device *::-webkit-scrollbar{display:none}
+#device *{scrollbar-width:none}
+/* [位置:phone-fix.css·.win.opening] [app 打开动画禁命中] [10-28：从图标放大那 520ms 里窗口还在缩放平移，点到的不是看到的位置（还可能穿到底层桌面）；opening 期间整窗禁命中，动画结束 phone-new.html·openApp 会移除 opening 恢复] [注释时间 2026-10-28] */
+.win.opening{pointer-events:none}
+/* [位置:phone-fix.css·.ph-sbar] [全局滑动条样式] [原生条已藏，滑动时浮出统一淡白细条；按住变胖变实可直接拖动（拖动逻辑 phone-scrollbar.js），::after 扩大手指命中区，不显示时 pointer-events:none 不挡底层点击] [注释时间 2026-10-21；2026-10-24 弃主题色改淡白、加粗到 4px、加按住态与可拖动；气泡/极简两套聊天主题配色适配暂缓] */
+.ph-sbar{position:fixed;left:0;top:0;width:4px;height:40px;border-radius:999px;background:rgba(255,255,255,.55);opacity:0;transition:opacity .28s,width .15s,background-color .15s,margin-left .15s;pointer-events:none;z-index:99999;will-change:transform;touch-action:none;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* 2026-10-28（滚动条隐形命中带偏大）：::after 原来四周各扩 10px——列表右缘 24px 宽的手指点不到行；收窄到横向 ±4px（宽 12px，手指仍好按）、纵向 ±8px */
+.ph-sbar::after{content:'';position:absolute;left:-4px;right:-4px;top:-8px;bottom:-8px}
+.ph-sbar.on{opacity:1;transition-duration:.1s;pointer-events:auto}
+.ph-sbar.grab{width:7px;margin-left:-3px;background:rgba(255,255,255,.85)}
+/* [位置:phone-fix.css·.ph-sbar.ink] [状态机页滚动条墨色] [10-30：状态机页浅玻璃底上淡白细条看不清；目标在 .tk-ps 时细条换墨色（取主题 --ink 同色系），夜间自动换亮色，按住拖动加深；细条挂在 body 上够不着 #home/#lock 的变量，颜色直接写值，夜间用 body:has(#device[data-night="1"]) 判] [注释时间 2026-10-30] */
+.ph-sbar.ink{background:rgba(42,48,66,.5)}
+.ph-sbar.ink.grab{background:rgba(42,48,66,.85)}
+body:has(#device[data-night="1"]) .ph-sbar.ink{background:rgba(238,241,255,.6)}
+body:has(#device[data-night="1"]) .ph-sbar.ink.grab{background:rgba(238,241,255,.9)}
+
+/* [位置:phone-fix.css·.pd-st] [统一的「正在读取… / 没连上后台 · 点一下重试」] [演示数据全部删除后，所有列表读不到数据时都用这一组；与 phone-net.js 的 failBox/loadBox 配套] [注释时间 2026-10-22] */
+.pd-st{display:flex;align-items:center;justify-content:center;gap:10px;padding:36px 16px;font-size:13.5px;letter-spacing:.06em;color:var(--ink3);text-align:center}
+/* [位置:phone-fix.css·.pd-load] [读取中：小圆点转圈已退役] [11-05 改用 ph-load.js 的动画（白天纸船/夜里星光），这里不再画圈；.pd-st 的居中布局继续给动画用] [注释时间 2026-11-05] */
+@keyframes pdspin{to{transform:rotate(360deg)}}
+.pd-fail{flex-direction:column;gap:12px}
+.pd-retry{height:32px;padding:0 16px;border-radius:16px;font-size:12.5px;letter-spacing:.08em;color:var(--acc);background:rgba(125,156,207,.14);border:.5px solid rgba(125,156,207,.3)}
+
+/* 1024：图片加载失败的统一占位（配合 phone-kit.js 的兜底） */
+.img-fallback{display:inline-flex;align-items:center;justify-content:center;min-width:88px;max-width:70%;padding:9px 13px;border:.5px dashed rgba(125,156,207,.55);border-radius:12px;background:rgba(255,255,255,calc(.45*var(--wk)));color:var(--ink3);font:12px var(--sans)}
+
+/* [位置:phone-fix.css·纵向滚动容器禁横滑] [状态机页/搜索结果页等内容可以左右拖动] [11-09：这些容器只写了 overflow-y:auto，CSS 规则里另一轴会被算成 auto，内部有长串文字/表格/预格式撑宽就能横向拖；统一补 overflow-x:hidden（内部自己带横滚的 pre/表格/chips 是各自的滚动容器，不受影响）] [注释时间 2026-11-09] */
+.pg-sc,.tk-ps,.tk-ps .smpv,.tk-ps .stlog-sc,.tk-rawsc,.tk-dw .tl,.tk-dw .stp .sb,.tk-mo .tk-pan,.ses-pop .opt,.ses-pop .smpv,.ses-pop.mcp .tk-pan,.cs-sc,.cs-pane,.cs-dw .dl,.pg-sheet .sb,.mp-sc,.dp-l,.tc .tc-scroll,.tk-card .body.open,.sc,.xw-pop .box{overflow-x:hidden}

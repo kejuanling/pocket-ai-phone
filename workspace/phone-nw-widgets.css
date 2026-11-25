@@ -1,0 +1,354 @@
+/* phone-widgets.css v2 —— 1016-30：桌面分页 + 后台拆成小组件卡片（统一冰蓝白玻璃，粉色只留给「需要留意」） */
+
+/* ===== 分页容器：卡片区左右滑，Dock 与页点固定 ===== */
+#home .hpages{flex:1;min-height:0;margin:-14px -20px 0;padding-top:14px;overflow:hidden;position:relative;display:flex;flex-direction:column;touch-action:none}
+.hp-track{flex:1;min-height:0;display:flex;will-change:transform}
+.hp-page{flex:0 0 100%;width:100%;min-width:0;padding:0 20px;display:flex;flex-direction:column;will-change:transform,opacity}
+#home .pager{margin:10px 0 14px;gap:7px}
+#home .pager i{transition:width .45s var(--spring),background .3s}
+.hp-p1 .pill{margin-top:auto;margin-bottom:auto}
+
+/* ===== 小组件网格 ===== */
+.hw-g{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(7,minmax(0,1fr));gap:10px;padding-bottom:2px}
+/* 左右两屏的格子钉死在页面里（高度确定，7 行才会等分） */
+#home .hp-p2,#home .hp-p3{position:relative}
+#home .hw-g2,#home .hw-g3{position:absolute;left:20px;right:20px;top:0;bottom:2px;padding:0;grid-template-rows:repeat(7,minmax(0,1fr))}
+/* 格子尺寸：行×列，对应 1×4 / 2×2 / 4×4 / 3×4 / 2×1 / 4×2（JS 渲染布局时直接写内联 grid-area，这里的 span 只管 JS 生效前的第一帧）
+   11-17 格位制：原来钉死的 .hp-p3 .hw-month/.hw-bak/.hw-mem 与 .hp-p1 .hw-photo 的 grid-area 已删，格位由布局表（ph.layout.v7）驱动，卡片可拖可变档。 */
+.hw[data-sz="4x1"]{grid-column:span 4}
+.hw[data-sz="2x1"]{grid-column:span 2}
+.hw[data-sz="2x2"]{grid-column:span 2;grid-row:span 2}
+.hw[data-sz="4x2"]{grid-column:span 4;grid-row:span 2}
+.hw[data-sz="4x4"]{grid-column:span 4;grid-row:span 4}
+.hw[data-sz="3x4"]{grid-column:span 4;grid-row:span 3}
+.hw-g .app-ic{width:auto;justify-self:center;align-self:center;gap:4px}
+.hw-g .app-ic .sq{width:56px;height:56px;border-radius:19px}
+.hw-g .app-ic .sq svg{width:25px;height:25px}
+.hw-g .app-ic span{font-size:11px}
+.hp-p3:not(.in) .hw-g .app-ic{opacity:0}
+.hp-p3.in .hw-g .app-ic{animation:hw-in .7s var(--spring) backwards;animation-delay:calc(var(--i) * 60ms + 80ms)}
+/* 主屏：格子占满资料卡和 dock 之间的空间（4 行），中间没摆卡的就是留白 */
+#home .hp-p1 .grid{flex:1;min-height:0;margin:14px 0 8px}
+.grid .hw{justify-self:stretch;align-self:stretch}
+.hp-p1 .hw-photo{width:100%;align-self:stretch}
+.hw{position:relative;min-width:0;min-height:0;border-radius:28px;padding:14px 15px;overflow:hidden;display:flex;flex-direction:column;color:var(--ink);cursor:pointer}
+.hp-page:not(.in) .hw{opacity:0}
+.hp-page.in .hw{animation:hw-in .75s var(--spring) backwards;animation-delay:calc(var(--i) * 70ms + 80ms)}
+@keyframes hw-in{from{opacity:0;transform:translateY(22px) scale(.94)}}
+
+/* 标题行 */
+.hw-t{display:flex;align-items:center;gap:7px;font:600 12.5px var(--sans);color:var(--ink2);letter-spacing:.02em;white-space:nowrap}
+.hw-t i{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;flex:none;background:rgba(125,156,207,.16);background:color-mix(in srgb,var(--acc) 18%,transparent)}
+.hw-t svg{width:14px;height:14px;stroke:var(--hw-ac2,#5a76ab);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.hw-t em{margin-left:auto;font:600 11.5px var(--sans);font-style:normal;color:var(--ink3);display:flex;align-items:center;gap:4px}
+.hw-t em b{font:700 13px var(--mono);color:var(--hw-ac,#4f6ea8)}
+.hw-sub{font:italic 11.5px var(--serif);color:var(--ink3);margin-top:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hw-big{font:700 19px/1.1 var(--display);letter-spacing:-.01em;margin-top:8px}
+.hw-chip{align-self:flex-start;margin-top:6px;padding:3px 9px;border-radius:999px;font:600 11px var(--mono);color:var(--hw-ac,#4f6ea8);background:rgba(125,156,207,.16);background:color-mix(in srgb,var(--acc) 16%,transparent)}
+.hw-quote{font:italic 14px/1.45 var(--serif);color:var(--ink);margin:10px 0 6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.hw-quote.big{font-size:15.5px;margin-top:8px}
+.hw-sv{justify-content:center}
+
+/* 环 */
+.hw-ring{position:relative;display:grid;place-items:center;flex:none}
+.hw-ring svg{display:block;width:100%;height:100%;transform:rotate(-90deg)}
+.hw-ring circle{fill:none;stroke-linecap:round}
+.hw-ring .bg{stroke:rgba(125,156,207,.2)}
+.hw-ring .fg{stroke:var(--acc);stroke-dasharray:var(--C);stroke-dashoffset:var(--C);transition:stroke-dashoffset 1.6s var(--spring) .25s}
+.hp-page.in .hw-ring .fg{stroke-dashoffset:var(--o,var(--C))}
+.hw-ring b{position:absolute;font:700 15px var(--display);color:var(--ink)}
+
+/* —— 英雄：状态 + 唤醒倒计时 —— */
+.hw-hero{background:linear-gradient(140deg,rgba(255,255,255,.66),rgba(255,255,255,.34) 55%,rgba(169,191,230,.42));justify-content:space-between}
+.hw-top{display:flex;align-items:center;justify-content:space-between;font-size:12.5px}
+.hw-top small{font:italic 11.5px var(--serif);color:var(--ink3)}
+.hw-live{display:flex;align-items:center;gap:7px;font-weight:600;color:var(--ink)}
+.hw-live i{width:8px;height:8px;border-radius:50%;background:#7fc4a6;box-shadow:0 0 0 0 rgba(127,196,166,.6);animation:hw-live 2.4s ease-out infinite}
+@keyframes hw-live{0%{box-shadow:0 0 0 0 rgba(127,196,166,.55)}70%,100%{box-shadow:0 0 0 9px rgba(127,196,166,0)}}
+.hw-wk{display:flex;align-items:center;gap:13px}
+.hw-r1{width:68px;height:68px}
+.hw-r1 b{font-size:14px}
+.hw-tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.hw-tx small{font-size:11.5px;color:var(--ink2)}
+.hw-tx b{font:600 25px/1.15 var(--mono);letter-spacing:-.02em;color:var(--ink);white-space:nowrap}
+.hw-tx em{font:italic 11px var(--serif);color:var(--ink3);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hw-btn{flex:none;padding:9px 14px;border-radius:999px;background:var(--acc);color:#fff;font:600 13px var(--sans);box-shadow:0 6px 16px rgba(111,148,212,.35);transition:opacity .3s,transform .18s var(--spring)}
+.hw-btn.busy{opacity:.6}
+
+/* —— 上下文：高卡 —— */
+.hw-ctx{align-items:flex-start}
+.hw-r2{width:min(104px,100%);height:min(104px,100%);aspect-ratio:1;margin:auto auto 0;flex:0 1 104px;min-height:0}
+.hw-r2 b{font-size:23px}
+.hw-ctx .hw-sub{margin-top:8px;align-self:center}
+.hw-ctx .hw-chip{align-self:center;margin-top:5px}
+
+/* —— 服务 / 备份：小方块 —— */
+.hw-dots{display:flex;gap:7px;margin-top:11px}
+.hw-dots span{width:11px;height:11px;border-radius:50%;background:#7fc4a6;box-shadow:0 0 0 3px rgba(127,196,166,.2)}
+.hw-dots .warn{background:#ee9db0;box-shadow:0 0 0 3px rgba(238,157,176,.28);animation:hw-warn 2.2s ease-in-out infinite}
+@keyframes hw-warn{50%{transform:scale(1.25)}}
+.hw-tick{display:flex;gap:3px;margin-top:auto;height:16px;align-items:flex-end}
+.hw-tick span{flex:1;height:100%;border-radius:2.5px;background:rgba(125,156,207,.38);transform-origin:50% 100%}
+.hw-tick .gap{background:#f0b4c3}
+.hp-page.in .hw-tick span{animation:hw-tick .5s var(--spring) backwards;animation-delay:calc(var(--k) * 28ms + 500ms)}
+@keyframes hw-tick{from{transform:scaleY(.2);opacity:0}}
+
+/* —— 记忆池：待审核，可直接 ✓ ✗ —— */
+.hw-q{flex:1;min-height:0;display:flex;align-items:center;gap:12px;margin-top:8px;position:relative}
+.hw-qi{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;animation:hw-q-in .5s var(--spring) backwards}
+.hw-qi .cat{align-self:flex-start;padding:2px 8px;border-radius:999px;font:600 10.5px var(--sans);color:var(--hw-ac,#4f6ea8);background:rgba(125,156,207,.16);background:color-mix(in srgb,var(--acc) 16%,transparent)}
+.hw-qi p{font:500 13.5px/1.4 var(--sans);color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hw-qi.gone-y{animation:hw-q-y .42s var(--spring) forwards}
+.hw-qi.gone-n{animation:hw-q-n .42s var(--spring) forwards}
+@keyframes hw-q-in{from{opacity:0;transform:translateX(18px)}}
+@keyframes hw-q-y{to{opacity:0;transform:translateX(34px) scale(.96)}}
+@keyframes hw-q-n{to{opacity:0;transform:translateX(-34px) scale(.96)}}
+.hw-qb{display:flex;gap:8px;flex:none}
+.hw-qb button{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--glass2);border:.5px solid var(--line);transition:transform .18s var(--spring),background .25s}
+.hw-qb button.y{background:var(--acc)}
+.hw-qb svg{width:17px;height:17px;fill:none;stroke:var(--ink2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hw-qb .y svg{stroke:#fff}
+.hw-qb button:active{transform:scale(.88)}
+.hw-qe{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font:italic 14px var(--serif);color:var(--ink2);animation:hw-q-in .5s var(--spring)}
+.hw-qe svg{width:18px;height:18px;stroke:var(--acc);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* —— 最近动静：自己轮播 —— */
+.hw-act{justify-content:center}
+.hw-a{display:flex;gap:12px;align-items:center;transition:opacity .3s,transform .4s var(--spring)}
+.hw-a.out{opacity:0;transform:translateY(-8px)}
+.hw-a .ic{width:40px;height:40px;border-radius:14px;flex:none;display:grid;place-items:center;background:rgba(125,156,207,.16);background:color-mix(in srgb,var(--acc) 16%,transparent)}
+.hw-a .ic svg{width:19px;height:19px;stroke:var(--hw-ac2,#5a76ab);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.hw-a .bd{flex:1;min-width:0}
+.hw-a .tt{display:flex;justify-content:space-between;gap:8px;font:600 13.5px var(--sans)}
+.hw-a .tt small{font:400 11.5px var(--sans);color:var(--ink3)}
+.hw-a .mm{margin-top:2px;font-size:12.5px;line-height:1.4;color:var(--ink2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hw-pg{position:absolute;right:15px;top:13px;display:flex;gap:4px}
+.hw-pg i{width:5px;height:5px;border-radius:50%;background:rgba(42,48,66,.16);transition:width .4s var(--spring),background .3s}
+/* [位置:phone-nw-widgets.css·选中态各规则] [批次4b选中态token化：实色强调 var(--acc)→var(--sel-ring)、浅底 rgba(...,.16)→var(--sel-bg)、半实 rgba(...,.55)→var(--sel-dim)；token 定义在 phone-new.html :root，非选中态主色一律未动，零视觉差异] [工作流/tasks/调查/2026-11-13_前端体验修复确认单.md 批次4b] [注释时间 2026-11-14] */
+.hw-pg i.on{width:14px;border-radius:3px;background:var(--sel-ring)}
+
+/* —— 唤醒日志：浅色终端 —— */
+.hw-rt{color:#5b9e83!important}
+.hw-rt s{width:6px;height:6px;border-radius:50%;background:#7fc4a6;animation:hw-warn 1.4s ease-in-out infinite}
+.hw-term{flex:1;min-height:0;margin-top:9px;padding:9px 11px;border-radius:16px;background:rgba(255,255,255,.5);border:.5px solid rgba(255,255,255,.8);display:flex;flex-direction:column;justify-content:flex-end;gap:3px;overflow:hidden;font:11px/1.45 var(--mono);color:var(--ink2)}
+.hw-ln{display:flex;gap:7px;white-space:nowrap;overflow:hidden;animation:hw-ln-in .45s var(--spring)}
+.hw-ln time{color:var(--ink3);flex:none}
+.hw-ln b{font-weight:600;color:var(--hw-ac2,#5a76ab);flex:none}
+.hw-ln span{overflow:hidden;text-overflow:ellipsis}
+.hw-ln.warn b,.hw-ln.warn span{color:#c9788d}
+@keyframes hw-ln-in{from{opacity:0;transform:translateY(8px)}}
+
+/* —— 永久注入：编号清单 —— */
+.hw-ol{list-style:none;margin:9px 0 0;display:flex;flex-direction:column;gap:6px;counter-reset:n}
+.hw-ol li{counter-increment:n;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);min-width:0}
+.hw-ol li span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.hw-ol li::before{content:counter(n);width:18px;height:18px;border-radius:50%;flex:none;display:grid;place-items:center;font:700 10.5px var(--sans);color:#fff;background:var(--acc)}
+
+/* —— 跨窗口：分段 —— */
+.hw-seg{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:10px}
+.hw-seg span{padding:5px 0;text-align:center;border-radius:10px;font:600 11px var(--sans);color:var(--ink2);background:rgba(255,255,255,.5)}
+.hw-seg span.on{background:var(--sel-ring);color:#fff}
+
+/* —— 替换：前后对比条 —— */
+.hw-cmp{display:flex;flex-direction:column;gap:3px;margin-top:10px}
+.hw-cmp small{font-size:10.5px;color:var(--ink3)}
+.hw-cmp u{display:block;height:7px;border-radius:4px;background:rgba(125,156,207,.34);width:0;transition:width 1.2s var(--spring) .5s}
+.hw-cmp u.b{background:var(--acc)}
+.hp-page.in .hw-cmp u{width:var(--w)}
+
+/* —— 新的格子尺寸下的卡片内排版 —— */
+.hw[data-sz="4x1"],.hw[data-sz="2x1"]{padding:9px 13px;border-radius:22px;justify-content:center}
+.hw-mem .hw-t{font-size:12px}
+.hw-mem .hw-t i,.hw-bak .hw-t i{width:20px;height:20px;border-radius:7px}
+.hw-star .hw-quote.big{-webkit-line-clamp:4;font-size:13.5px;margin:10px 0 6px;line-height:1.6}
+.hw-star .hw-sub{margin-top:auto}
+/* [位置:phone-nw-widgets.css·hw-mem 单条大字] [记忆卡一次一条、正文 4 行] [11-10：两条一行被截断看不全；改成分类在上、正文最多 4 行、按钮在正文右下] [注释时间 2026-11-10] */
+/* [位置:phone-nw-widgets.css·hw-mem 重排] [11-17：分类+序号 / 进度条 / 正文 / 底部横排按钮；旧的右侧竖排网格已替换] [注释时间 2026-11-17] */
+.hw-mem .hw-q{margin-top:8px;gap:0;align-items:stretch}
+.hw-mem .hw-qi{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0}
+.hw-mem .hw-qh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hw-mem .hw-qi .cat{font-size:10px;padding:1px 7px}
+.hw-mem .hw-qc{font:400 11.5px var(--sans);color:var(--ink3);letter-spacing:.02em}
+.hw-mem .hw-qc b{font-weight:600;color:var(--ink2)}
+.hw-qp{height:3px;border-radius:2px;background:rgba(125,156,207,.18);overflow:hidden;flex:none}
+.hw-qp u{display:block;height:100%;border-radius:2px;background:var(--sel-ring);transition:width .5s var(--spring)}
+.hw-mem .hw-qi p{flex:1;min-height:0;min-width:0;-webkit-line-clamp:7;font-size:14.5px;line-height:1.6}
+.hw-mem .hw-qb{flex:none;flex-direction:row;gap:10px;justify-content:stretch}
+.hw-mem .hw-qb button{flex:1;width:auto;height:40px;border-radius:20px;gap:6px;display:flex;align-items:center;justify-content:center}
+.hw-mem .hw-qb button.y{flex:1.35;background:var(--sel-ring);border-color:transparent}
+.hw-mem .hw-qb em{font:500 13px var(--sans);font-style:normal;color:var(--ink2)}
+.hw-mem .hw-qb .y em{color:#fff}
+/* 唤醒状态 2×2 */
+.hw-hero{justify-content:space-between;padding:12px 13px}
+.hw-hero .hw-top{align-items:flex-start}
+.hw-hero .hw-r1{width:50px;height:50px}.hw-hero .hw-r1 b{font-size:11.5px}
+.hw-hero .hw-tx b{font-size:22px}
+.hw-hero .hw-tx em{display:none}
+.hw-hero .hw-btn{align-self:stretch;text-align:center;padding:8px 0;font-size:12.5px}
+/* 待办 2×2 */
+.hw-tl{list-style:none;margin:10px 0 0;display:flex;flex-direction:column;gap:9px;min-height:0}
+.hw-tl li{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink);min-width:0}
+.hw-tl li s{width:13px;height:13px;border-radius:50%;flex:none;border:1.5px solid var(--acc);display:block}
+.hw-tl li span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.hw-tl li.e{color:var(--ink3);font:italic 12.5px var(--serif)}.hw-tl li.e s{display:none}
+/* AI 动静 4×4 */
+.hw-act{justify-content:flex-start}
+.hw-act .hw-pg{display:none}
+.hw-act .hw-a{margin-top:10px;flex:1;min-height:0;overflow:hidden;align-items:flex-start}
+.hw-act .pl-tl{width:100%}
+/* 备份 2×1 */
+.hw-bak .hw-big{font-size:16px;margin-top:3px}
+.hw-bak .hw-tick{height:9px;margin-top:5px}
+/* 随机情书 4×2（11-16 批1：信封 App 删除，.hw-letter 卡与下列两条规则一并清掉） */
+
+/* 随机照片 2×2 */
+/* [位置:phone-nw-widgets.css·.hw-pol] [随机照片卡去内框] [11-16：卡片里套了三层盒子（卡片/拍立得白框/渐变底）太重——白框的底色描边投影和整体倾斜都去掉，照片直接铺在卡片里，只留下面的说明小字；空相册时剩标题+「相册还是空的」，i 靠 flex:1 撑住高度不塌] [注释时间 2026-11-16] */
+.hw-pol{flex:1;min-height:0;margin-top:8px;border-radius:14px;display:flex;flex-direction:column;gap:5px;overflow:hidden}
+.hw-pol i{flex:1;min-height:0;border-radius:10px;background-size:cover;background-position:center}
+.hw-pol small{font:italic 11px var(--serif);color:var(--ink3);text-align:center}
+/* 整月日历 4×4 */
+.hw-month{padding:13px 12px 10px}
+.hm-h{display:flex;align-items:baseline;gap:8px;padding:0 4px}
+.hm-h b{font:400 21px/1 var(--hfont,var(--sans));letter-spacing:.06em}
+.hm-h small{font:italic 400 13px var(--hnum,var(--serif));color:var(--ink3)}
+.hm-h .pl{margin-left:auto;font:400 11px var(--hfont,var(--sans));letter-spacing:.26em;color:var(--ink2)}
+.hm-wk{display:grid;grid-template-columns:repeat(7,1fr);margin-top:10px}
+.hm-wk span{text-align:center;font:400 11px var(--hfont,var(--sans));color:var(--ink3)}
+.hm-g{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;margin-top:4px}
+.hmc{position:relative;display:flex;align-items:center;justify-content:center;min-height:0}
+.hmc .nr{position:relative;width:100%;height:30px;max-height:100%;display:grid;place-items:center}
+.hmc .nr b{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:400 15px/1 var(--hnum,var(--sans));color:var(--ink)}
+.hmc.today .nr b{background:var(--acc);color:#fff;box-shadow:0 5px 14px rgba(111,148,212,.42)}
+.hmc.p .nr::before{content:"";position:absolute;left:0;right:0;top:1px;bottom:1px;background:rgba(238,157,176,.26)}
+.hmc.p.ps .nr::before{left:4px;border-radius:14px 0 0 14px}.hmc.p.pe .nr::before{right:4px;border-radius:0 14px 14px 0}
+.hmc.p.ps.pe .nr::before{border-radius:14px}
+.hmc.pp .nr::before{content:"";position:absolute;left:2px;right:2px;top:2px;bottom:2px;border:1px dashed rgba(238,157,176,.55);border-radius:14px}
+.hmc i{position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--acc)}
+.hmc em{position:absolute;bottom:-1px;right:6px;font:normal 8px/1 var(--sans);color:#ee8fa6}
+/* —— 矮屏收一点 —— */
+@media (max-height:800px){
+  .hw{padding:11px 13px;border-radius:24px}
+  .hw-g{gap:10px}
+  .hw-big{font-size:17px;margin-top:5px}
+  .hw-tx b{font-size:23px}
+  .hw-r1{width:60px;height:60px}
+  .hw-quote{margin:6px 0 4px;font-size:13px}
+  .hw-ol{gap:4px;margin-top:6px}
+  .hw-seg{margin-top:7px}
+  .hw-term{margin-top:6px;padding:7px 10px}
+  .hw-dots{margin-top:7px}
+}
+@media (prefers-reduced-motion:reduce){.hw-live i,.hw-dots .warn,.hw-rt s{animation:none}}
+
+/* 从桌面展开的详情页盖在所有桌面层之上 */
+#device>.tl-ov{z-index:35}
+
+/* ===== 长按编辑：轻轻晃动 + 拖起来的那张浮在手指下面 ===== */
+@keyframes hw-jig{from{transform:rotate(-.55deg)}to{transform:rotate(.55deg)}}
+#home.editing .hp-page .hw:not(.hw-ghost),#home.editing .hp-page .app-ic:not(.hw-ghost){animation:hw-jig .26s ease-in-out infinite alternate;animation-delay:calc(var(--i,0) * -41ms)}
+#home.editing .hw,#home.editing .app-ic{cursor:grab}
+.hw-ghost{opacity:.26!important;animation:none!important;outline:1.5px dashed rgba(110,130,185,.5);outline-offset:-3px}
+.app-ic.hw-ghost{outline:none}
+.hw-fly{position:absolute;z-index:45;margin:0!important;pointer-events:none;animation:none!important;opacity:1!important;transform:scale(1);transition:transform .24s var(--spring),box-shadow .24s;will-change:left,top,transform}
+.hw-fly.up{transform:scale(1.045);box-shadow:0 20px 40px rgba(70,90,140,.3)}
+.app-ic.hw-fly.up{box-shadow:none;filter:drop-shadow(0 14px 18px rgba(70,90,140,.32))}
+/* [位置:phone-nw-widgets.css·.hw-edbar] [编辑栏落到底部 dock 位] [11-17 改：原栏悬在顶部 y≈52、＋ 又在左上角，两处都压住第一行卡、把点击吃掉；现在整条降到 dock 那一格，＋ 并进栏内左端，编辑时 dock 让位] [注释时间 2026-11-17] */
+.hw-edbar{position:absolute;z-index:58;left:50%;bottom:calc(var(--sab,0px) + 32px);display:flex;align-items:center;gap:2px;padding:5px 6px;border-radius:22px;transform:translate(-50%,18px) scale(.94);opacity:0;transition:transform .45s var(--spring),opacity .3s}
+.hw-edbar.show{transform:translate(-50%,0);opacity:1}
+.hw-edbar button{flex:none;white-space:nowrap;border:0;background:none;padding:8px 14px;border-radius:15px;font:600 13px var(--font,inherit);letter-spacing:.06em;color:#5a6788;cursor:pointer;transition:background .2s,transform .18s var(--spring)}
+.hw-edbar button:active{transform:scale(.94)}
+.hw-edbar button.ok{background:var(--acc,#7d9ccf);color:#fff}
+.hw-edbar .plus{width:34px;height:34px;padding:0;border-radius:12px;display:grid;place-items:center;font:400 22px/1 var(--sans,inherit);color:var(--ink2);background:rgba(255,255,255,.5)}
+.hw-edbar .sep{flex:none;width:.5px;height:20px;background:var(--line);margin:0 5px}   /* 分隔线：类名别用 .sv，主题里已有同名开关轨道样式会串 */
+#home.editing .dock{opacity:.3;pointer-events:none;transition:opacity .3s}
+@media (prefers-reduced-motion:reduce){#home.editing .hw,#home.editing .app-ic{animation:none!important}}
+
+.hp-page.in .hw.moved,#home .app-ic.moved{animation:none}
+#home .hpages{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+
+/* ===== 格位编辑 UI：收起角标 / 放不下红框 / 尺寸档位条 / 左上角添加钮 / 添加面板 =====
+   [位置:phone-nw-widgets.css·格位编辑 UI] [收起改为不占格（编辑时左上角 ＋ 面板里放回），旧 hw-off 虚线框与 .hw-cal/.qroom 死引用一并删] [注释时间 2026-11-17] */
+@keyframes hw-pop{from{transform:scale(.7);opacity:0}}
+.hw-pop{animation:hw-pop .45s var(--spring)!important}
+#home.editing .hp-page .hw[data-go]:not(.hw-ghost)::before,#home.editing .hp-page .hw[data-lid]:not(.hw-ghost)::before{content:"−";position:absolute;left:5px;top:5px;width:18px;height:18px;border-radius:50%;background:rgba(112,128,170,.92);color:#fff;font:700 15px/17px var(--sans,inherit);text-align:center;z-index:5;box-shadow:0 2px 6px rgba(60,80,130,.3);pointer-events:none;animation:hw-pop .35s var(--spring)}
+.hw-deny{outline:1.5px dashed rgba(224,120,140,.9)!important}
+.hw-sizebar{position:absolute;z-index:57;display:flex;gap:2px;padding:4px;border-radius:16px;transform:translateY(8px) scale(.94);opacity:0;transition:transform .3s var(--spring),opacity .25s;box-shadow:0 10px 26px rgba(60,80,130,.22)}
+.hw-sizebar.show{transform:none;opacity:1}
+.hw-sizebar button{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;padding:7px 12px;border-radius:14px;font:600 11px var(--sans,inherit);color:var(--ink2);cursor:pointer;transition:transform .18s var(--spring)}
+.hw-sizebar button:active{transform:scale(.92)}
+.hw-sizebar button.on{background:var(--sel-bg)}
+.hw-sizebar button i{display:block;border-radius:4px;background:var(--sel-dim)}
+/* .hw-addbtn 已删：＋ 并进 .hw-edbar 左端（2026-11-17），原左上角浮钮压第一行卡片 */
+.hw-addov{position:absolute;inset:0;z-index:60}
+.hw-addbg{position:absolute;inset:0;background:rgba(28,38,58,.2);opacity:0;transition:opacity .3s}
+.hw-addsheet{position:absolute;left:10px;right:10px;bottom:10px;max-height:74%;overflow:auto;border-radius:28px;padding:16px 16px 20px;transform:translateY(30px);opacity:0;transition:transform .45s var(--spring),opacity .3s}
+.hw-addov.show .hw-addbg{opacity:1}
+.hw-addov.show .hw-addsheet{transform:none;opacity:1}
+.hw-add-h{font:600 15px var(--sans,inherit);color:var(--ink)}
+.hw-add-sec{margin:12px 2px 8px;font:600 11.5px var(--sans,inherit);letter-spacing:.06em;color:var(--ink3)}
+.hw-add-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.hw-addit{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 4px;border:0;border-radius:16px;background:rgba(255,255,255,.4);cursor:pointer;transition:transform .18s var(--spring)}
+.hw-addit:active{transform:scale(.94)}
+.hw-addit.in{opacity:.45}
+.hw-addit .sq{width:38px;height:38px;border-radius:13px;display:grid;place-items:center;background:rgba(255,255,255,.55)}
+.hw-addit .sq svg{width:19px;height:19px;stroke:var(--hw-ac2,#5a76ab);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.hw-addit .nm{font:600 11px var(--sans,inherit);color:var(--ink);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hw-addit .sb{font:400 10px var(--mono,monospace);color:var(--ink3)}
+/* ===== 卡片尺寸档位下的内部排版（data-sz 由布局表写入，档位变这里跟着变；2x1/4x1 的紧凑底已由上方 .hw[data-sz] 规则管） ===== */
+.hw-hero[data-sz="2x1"]{flex-direction:row;align-items:center;gap:12px}
+.hw-hero[data-sz="2x1"] .hw-top{flex:none;flex-direction:column;align-items:flex-start;gap:5px}
+.hw-hero[data-sz="2x1"] .hw-r1{width:38px;height:38px}
+.hw-hero[data-sz="2x1"] .hw-r1 b{font-size:9.5px}
+.hw-hero[data-sz="2x1"] .hw-tx{flex:1}
+.hw-hero[data-sz="2x1"] .hw-tx small{display:none}
+.hw-hero[data-sz="4x2"]{flex-direction:row;align-items:center;gap:14px}
+.hw-hero[data-sz="4x2"] .hw-top{flex:none}
+.hw-hero[data-sz="4x2"] .hw-tx{flex:1}
+.hw-hero[data-sz="4x2"] .hw-r1{width:56px;height:56px}
+.hw-todo[data-sz="2x1"] .hw-tl{display:none}
+.hw-todo[data-sz="4x2"] .hw-tl{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}
+.hw-star[data-sz="4x1"] .hw-quote{-webkit-line-clamp:1;font-size:13px;margin:0}
+.hw-month[data-sz="4x2"]{padding:10px 12px 8px}
+.hw-month[data-sz="4x2"] .hm-wk{margin-top:6px}
+.hw-month[data-sz="4x2"] .hmc .nr b{width:22px;height:22px;font-size:12px}
+.hw-month[data-sz="4x4"] .hmc .nr b{width:30px;height:30px;font-size:16px}
+.hw-bak[data-sz="4x1"]{flex-direction:row;align-items:center;gap:12px}
+.hw-bak[data-sz="4x1"] .hw-big{margin-top:0}
+.hw-bak[data-sz="4x1"] .hw-tick{margin-top:0;flex:1}
+.hw-mem[data-sz="4x2"] .hw-qi{gap:5px}
+.hw-mem[data-sz="4x2"] .hw-qi p{-webkit-line-clamp:2;font-size:12.5px;line-height:1.4}
+.hw-mem[data-sz="4x2"] .hw-qp{display:none}
+.hw-mem[data-sz="4x2"] .hw-qb button{height:32px;border-radius:16px}
+.hw-photo[data-sz="1x1"]{padding:6px}
+.hw-photo[data-sz="1x1"] .hw-t,.hw-photo[data-sz="1x1"] .hw-pol small{display:none}
+.hw-photo[data-sz="1x1"] .hw-pol{margin-top:0;border-radius:16px}
+
+/* 第四轮：随机一个标星改成一行高；AI 在做什么 = 四行高、固定高度里上下滑、只看不跳 */
+.hw-star .hw-t{margin-bottom:0}
+.hw-star .hw-quote.big{-webkit-line-clamp:2;font-size:13.5px;line-height:1.5;margin:5px 0 0}
+.hw-star .hw-quote small{font:normal 11px var(--sans);font-style:normal;color:var(--ink3);margin-left:8px;letter-spacing:.02em}
+.hw-act{position:relative;justify-content:flex-start}
+.hw-act .hw-tabs{position:absolute;top:13px;right:16px;display:flex;gap:14px}
+.hw-act .hw-tabs button{padding:2px 0;font:400 12.5px var(--sans);letter-spacing:.06em;color:var(--ink3);background:none;transition:color .2s}
+.hw-act .hw-tabs button.on{color:var(--ink);font-weight:500}
+.hw-act .hw-a{margin-top:10px;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:none;-webkit-mask-image:linear-gradient(#000 88%,transparent);mask-image:linear-gradient(#000 88%,transparent)}
+.hw-act .hw-a::-webkit-scrollbar{display:none}
+.hw-act .hw-ae{padding:20px 0;text-align:center;font-size:12.5px;color:var(--ink3)}
+.hw-act:active{transform:none}
+
+/* 第五轮：随机一个标星回到两行高；句子和日期挨在一起，整组在标题下面居中，不再中间空一块 */
+.hw-star .hw-quote.big{-webkit-line-clamp:4;font-size:15px;line-height:1.6;margin:0}
+.hw-star .hw-sd{margin-top:6px;font:italic 11.5px var(--serif);color:var(--ink3)}
+
+/* 第六轮：随机一个标星——日期在左下角，内容盒子占标题到日期中间那块，句子在盒子里居中 */
+.hw-star .hw-sv{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-start}
+.hw-star .hw-quote.big{margin:auto 0;-webkit-line-clamp:3;text-align:left}
+.hw-star .hw-sd{margin-top:0;align-self:flex-start;text-align:left}
+/* 第八轮：随机标星内容最多五行 */
+.hw-star .hw-quote.big{-webkit-line-clamp:5;font-size:14px;line-height:1.5}
+
+/* 活动卡推送铃铛：送到绿点 / 没送到红点 */
+.hw-act .ic{position:relative}
+.hw-act .push-dot{position:absolute;top:-2px;right:-3px;width:8px;height:8px;border-radius:50%;border:1.6px solid rgba(255,255,255,.9)}
+.hw-act .push-dot.ok{background:#5cb783}
+.hw-act .push-dot.bad{background:#e0705c}

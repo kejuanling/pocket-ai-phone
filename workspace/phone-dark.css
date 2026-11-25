@@ -1,0 +1,129 @@
+/* phone-dark.css —— 小手机 · 夜间模式（批 F，2026-10-22）：#device[data-theme="dark"] 下换一套深色变量 + 收口少数写死的浅色。只改颜色，不动布局。
+   做法：各页 css 里写死的白色填充/描边/阴影写成 rgba(255,255,255,calc(X*var(--wk)))，日间 --wk=1 与原值一致，夜间 --wk 取小值整体压暗；
+   蓝白面板色 rgba(246,249,255,A) 写成 rgba(var(--sh),A)；白描边 var(--ring)；选中胶囊 var(--pill)；卡片面 var(--face)；深色文字色 var(--k-xxxxxx)。这些变量日间值在 phone-new.html :root，夜间值在这里。
+   配色参考用户发的夜间页面：深灰蓝黑底、比底色略亮的扁平卡片 + 极细描边、暖米色标题、灰色副标题。 */
+
+/* 窗口里的变量（桌面按下面「夜间桌面」单独做） */
+#device[data-theme="dark"] .win,#device[data-theme="dark"] #toast{
+  color-scheme:dark;color:var(--ink);
+  --ink:#e8e6df;--ink2:rgba(232,230,223,.64);--ink3:rgba(232,230,223,.4);
+  --glass:rgba(224,232,244,.06);--glass2:rgba(224,232,244,.09);--line:rgba(214,226,240,.14);
+  --shadow:none;
+  --wk:.16;--sh:20,23,33;--ring:rgba(255,255,255,.22);--pill:rgba(255,255,255,.14);--face:#1b1f2c;
+  --tkbg:linear-gradient(180deg,#0f121b 0%,#131722 55%,#161a26 100%);
+  --k-2a3042:#717da4;--k-2f2922:#97846f;--k-32241a:#a97b59;--k-34231a:#ab7558;--k-344263:#768ab7;--k-35241a:#ad7757;--k-3a2a1c:#af8159;--k-3a332b:#9a8a77;--k-3b4766:#7f8eb5;--k-3c3129:#9f8572;--k-3d5a92:#839ccb;--k-3d7c62:#81c1a6;--k-3d8c6a:#82c9aa;--k-3f8f72:#85c9b0;--k-4a3d33:#a48d7b;--k-4a4036:#a2907f;--k-4d6fa8:#96abcf;--k-4e5a78:rgba(238,241,255,.88);--k-4f6ea8:#97aace;--k-4f9a7a:#95c9b2;--k-4f9b78:#95c9b1;--k-566079:#e6ebff;--k-5a6f9c:#9eabc7;--k-5a74a8:#9faecd;--k-5a76ab:#9fb0ce;--k-5a78b0:#9fb1d1;--k-5b4430:#b59172;--k-5f80c0:#a2b5da;--k-5f9884:#a1c4b8;--k-5f9a7c:#a1c5b3;--k-6b5236:#bb9c78;--k-6b5a3e:#b6a382;--k-6b7fa8:#a9b5cd;--k-6b87bd:#a9b9d9;--k-6d8ccb:#aabce1;--k-7480b4:#aeb5d4;--k-7a5c3c:#c0a17f;--k-7d6445:#bea689;--k-7f95c4:#b5c2dd;--k-8a6c48:#c3aa8d;--k-8a7766:#bcb0a5;--k-8a90a6:#bbbfcb;--k-8c7fd0:#bcb4e4;--k-8d7253:#c2ae97;--k-9a6238:#d1a27f;--k-9a7f5c:#c6b59f;--k-a08a6c:#c8bbaa;--k-a1553d:#d19886;--k-a67428:#ddb271;--k-b4533f:#d7998c;--k-b5475c:#d594a0;--k-b5617a:#d4a3b2;--k-b8566f:#d69dab;--k-b8794a:#d6b196;--k-bd7f76:#d9b5b0;--k-c06d86:#daaab9;--k-c4607c:#dda3b3;--k-c46a82:#dda9b6;--k-c5814f:#ddb699;--k-c86c84:#dfaab8;--k-c9607a:#e0a3b2;--k-c9788d:#e0b1bd;--k-c9803a:#e0b58d;--k-cf6683:#e3a6b7;--k-d06a7e:#e4a9b4;--k-d5738c:#e7aebc;
+}
+/* 深灰蓝黑底：几乎不透明，天空层的太阳 / 月亮不透出来 */
+#device[data-theme="dark"] .win{background:linear-gradient(180deg,rgba(15,18,27,.99) 0%,rgba(19,23,34,.99) 55%,rgba(22,26,38,.99) 100%)}
+/* 扁平：窗口里的卡片不要投影 */
+#device[data-theme="dark"] .win :is(.pg-g,.nt-card,.card,.th-card,.pg-sheet .pane,.tk-menu,.st-alert .box){box-shadow:none}
+/* 头像底色、预设主题卡文字、日记头图 */
+#device[data-theme="dark"] .win .av{background-color:#262c3d}
+#device[data-theme="dark"] .th-card b{color:#e8e6df}
+#device[data-theme="dark"] .th-card small{color:rgba(232,230,223,.46)}
+#device[data-theme="dark"] .dy .cover{filter:brightness(.5) saturate(.85)}
+/* 聊天页：极简样式的一套深色（对方气泡颜色由 phone-bubble.js 的 eff() 处理） */
+#device[data-theme="dark"] .tkmin{--bme:#2b2b2b;--bme-ink:#e9e9e9;--bai-ink:#e9e9e9;--mn-bg:#191919;--mn-ink:#e9e9e9;--mn-ink2:rgba(233,233,233,.68);--mn-ink3:rgba(233,233,233,.52);--mn-line:rgba(255,255,255,.10);--mn-user:#2b2b2b;--mn-acc:#d88a6a;--acc2:#a85f45;--glass:rgba(255,255,255,.055);--glass2:rgba(255,255,255,.085)}
+#device[data-theme="dark"] .tkmin .tk-av{background:#272727}
+/* [位置:phone-dark.css·极简夜间配色] [中性灰底 + 日间赤陶重点] [2026-11-16：极简主题的重点色就是日间橙，夜间不再另起暖金；底色/正文/用户消息/输入框全部收成中性灰，不偏蓝也不偏棕；赤陶橙只用于 Markdown、发送、选中、录音等重点。底 #191919、正文 #e9e9e9、用户消息与输入框 #2b2b2b，弱字 .52；重点 #d88a6a] [注释时间 2026-11-16] */
+#device[data-theme="dark"] .tkmin{--md-tint:216,138,106;--md-acc:#d88a6a;--md-code:#dba08a}   /* 2026-11-16：夜间 markdown 从暖金改为日间赤陶的同色相提亮版 */
+#device[data-theme="dark"] .tkmin .b.md .mdh.l1{color:#d88a6a}
+#device[data-theme="dark"] .tkmin .b.md .md-pre,#device[data-theme="dark"] .tkmin .b.md .md-code{background:rgba(var(--md-tint),.07)}
+/* [位置:phone-dark.css·md 夜间降噪] [夜间强调类压半档] [11-09 二轮：夜间行内代码底再淡一档（.08）；em 高亮字/底压到 .94/.15；列表圆点与序号压到 .78——整条消息只留一级标题一个橙色重音。11-16 起不再用暖金，全部跟日间赤陶重点色；引用线已由主规则的 --md-tint 自动跟随] [注释时间 2026-11-16] */
+#device[data-theme="dark"] .tkmin .b.md code{background:rgba(var(--md-tint),.08)}
+#device[data-theme="dark"] .tkmin .b.md em{color:rgba(216,138,106,.94);background:linear-gradient(transparent 62%,rgba(var(--md-tint),.15) 0)}
+#device[data-theme="dark"] .tkmin .b.md ul li::marker,#device[data-theme="dark"] .tkmin .b.md ol li::marker{color:rgba(216,138,106,.78)}
+/* [位置:phone-dark.css·极简夜间控件] [顶栏/输入框/录音/多选] [与中性灰底同一套层级：顶栏半透明灰、输入框实灰、重点只走赤陶橙；浅橙底上的勾用深色保证可辨] [注释时间 2026-11-16] */
+#device[data-theme="dark"] .tkmin .tk-top .tk-cb,#device[data-theme="dark"] .tkmin .tk-nm{background:rgba(28,28,28,.82);border-color:rgba(255,255,255,.13);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+#device[data-theme="dark"] .tkmin .composer .field{background:#252525;border-color:rgba(255,255,255,.20);box-shadow:0 1px 2px rgba(0,0,0,.18)}
+#device[data-theme="dark"] .tkmin .composer .field:focus-within{background:#2b2b2b;border-color:rgba(216,138,106,.46);box-shadow:0 1px 2px rgba(0,0,0,.18)}
+#device[data-theme="dark"] .tkmin .field .tk-send{box-shadow:none}
+#device[data-theme="dark"] .tkmin.recording .composer .field{background:rgba(216,138,106,.10)}
+#device[data-theme="dark"] .tkmin.msel .msel-on.b[data-r]::after{border-color:var(--mn-acc);background:var(--mn-acc) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='%232b1c17' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/15px no-repeat}
+#device[data-theme="dark"] .ses-pop.sub .box{--mn-ink:#e9e9e9;--mn-ink2:rgba(233,233,233,.68);--mn-ink3:rgba(233,233,233,.52);--mn-line:rgba(255,255,255,.10);--mn-acc:#d88a6a;--ink:var(--mn-ink);--ink2:var(--mn-ink2);--ink3:var(--mn-ink3);--acc:var(--mn-acc);--sel-ring:var(--acc)}
+/* 切换外观时的颜色过渡（phone-set.js 临时加 ap-fade，0.48 秒后去掉） */
+#device.ap-fade,#device.ap-fade *{transition:background-color .45s ease,color .45s ease,border-color .45s ease,fill .45s ease,stroke .45s ease,box-shadow .45s ease}
+/* 纸张类（情书信封 / 信纸）：深色字配暖纸，整体压暗而不是反色 */
+#device[data-theme="dark"] :is(.letter,.eback,.efront,.eflap,.lv-env,.lv-paper){filter:brightness(.74) saturate(.92)}
+/* 其余写死的浅底 */
+#device[data-theme="dark"] .tl-ov{background:linear-gradient(180deg,#171b27,#12151f)}
+#device[data-theme="dark"] .pn .fg2{background:#1f2433}
+#device[data-theme="dark"] .dysub{background:#151925}
+#device[data-theme="dark"] .cr-stage{background:#12151f}
+/* [位置:phone-dark.css·.crop 夜间变量] [头像裁剪弹窗夜里仍是浅色面板] [11-11 排查：.crop 直接挂在 #device 下、不在 .win 里，拿不到上面 .win 块重定义的 --sh/--ring/--ink，面板（rgba(var(--sh),.94)）和文字都还是日间值；这里给 .crop 补同一组变量，不改布局] [注释时间 2026-11-11] */
+#device[data-theme="dark"] .crop{color-scheme:dark;--ink:#e8e6df;--ink2:rgba(232,230,223,.64);--ink3:rgba(232,230,223,.4);--wk:.16;--sh:20,23,33;--ring:rgba(255,255,255,.22);--pill:rgba(255,255,255,.14);--face:#1b1f2c}
+#device[data-theme="dark"] .cs-ov .lift.pin{background:rgba(36,42,60,.95)}
+#device[data-theme="dark"] .st3-c.me{background:rgba(125,156,207,.14)}
+#device[data-theme="dark"] .tk-menu{background:rgba(var(--sh),.9)}
+/* [位置:phone-dark.css·.pv-picking .pv-mh] [模型页多选吸顶行夜间底色] [夜间下吸顶行的浅色var(--wall)收口为深色win底色] [注释时间 2026-10-29] */
+#device[data-theme="dark"] .pv-picking .pv-mh{background:linear-gradient(180deg,rgba(15,18,27,.99),rgba(19,23,34,.99))}
+/* 纸张里的深色字保持原色（纸只是压暗，不换底色）：信封 / 信纸 / 抽签小纸条 */
+#device[data-theme="dark"] :is(.lv-env,.lv-paper,.letter,.cd-slip){--k-2a3042:#2a3042;--k-2f2922:#2f2922;--k-32241a:#32241a;--k-34231a:#34231a;--k-344263:#344263;--k-35241a:#35241a;--k-3a2a1c:#3a2a1c;--k-3a332b:#3a332b;--k-3b4766:#3b4766;--k-3c3129:#3c3129;--k-3d5a92:#3d5a92;--k-3d7c62:#3d7c62;--k-3d8c6a:#3d8c6a;--k-3f8f72:#3f8f72;--k-4a3d33:#4a3d33;--k-4a4036:#4a4036;--k-4d6fa8:#4d6fa8;--k-4f6ea8:#4f6ea8;--k-4f9a7a:#4f9a7a;--k-4f9b78:#4f9b78;--k-5a6f9c:#5a6f9c;--k-5a74a8:#5a74a8;--k-5a76ab:#5a76ab;--k-5a78b0:#5a78b0;--k-5b4430:#5b4430;--k-5f80c0:#5f80c0;--k-5f9884:#5f9884;--k-5f9a7c:#5f9a7c;--k-6b5236:#6b5236;--k-6b5a3e:#6b5a3e;--k-6b7fa8:#6b7fa8;--k-6b87bd:#6b87bd;--k-6d8ccb:#6d8ccb;--k-7480b4:#7480b4;--k-7a5c3c:#7a5c3c;--k-7d6445:#7d6445;--k-7f95c4:#7f95c4;--k-8a6c48:#8a6c48;--k-8a7766:#8a7766;--k-8a90a6:#8a90a6;--k-8c7fd0:#8c7fd0;--k-8d7253:#8d7253;--k-9a6238:#9a6238;--k-9a7f5c:#9a7f5c;--k-a08a6c:#a08a6c;--k-a1553d:#a1553d;--k-a67428:#a67428;--k-b4533f:#b4533f;--k-b5475c:#b5475c;--k-b5617a:#b5617a;--k-b8566f:#b8566f;--k-b8794a:#b8794a;--k-bd7f76:#bd7f76;--k-c06d86:#c06d86;--k-c4607c:#c4607c;--k-c46a82:#c46a82;--k-c5814f:#c5814f;--k-c86c84:#c86c84;--k-c9607a:#c9607a;--k-c9788d:#c9788d;--k-c9803a:#c9803a;--k-cf6683:#cf6683;--k-d06a7e:#d06a7e;--k-d5738c:#d5738c;}
+#device[data-theme="dark"] .cd-slip{filter:brightness(.78) saturate(.92)}
+
+
+/* ===== 夜间桌面：卡片 / 图标底座 / dock（桌面布局不变）=====
+   质感照用户的「小世界」首页（workspace/index.html）：半透明的冷白色浅浅托起（alpha .055~.085）+ 0.5px 冷白描边 + 顶边一线内高光 + 很淡的投影，不是纯黑块。
+   去掉原来的斜向渐变高光；跟桌面一样按天空层的 data-night 走，白天桌面不动。 */
+#device[data-night="1"] #home .glass,#device[data-night="1"] #home .app-ic .sq{
+  background-color:rgba(224,232,244,.062);background-image:none;
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border:.5px solid rgba(214,226,240,.16);
+  box-shadow:0 10px 34px rgba(4,7,12,.28),inset 0 1px 0 rgba(224,232,244,.08)}
+#device[data-night="1"] #home .app-ic .sq,#device[data-night="1"] #home .dock .app-ic .sq{box-shadow:0 4px 14px rgba(4,7,12,.22),inset 0 1px 0 rgba(224,232,244,.08)}
+#device[data-night="1"] #home .hw-hero{background-image:none!important}
+#device[data-night="1"] #home .pcard .cover{display:none}
+#device[data-night="1"] #home .pcard .avs .av{border-color:rgba(224,232,244,.26);box-shadow:none}
+#device[data-night="1"] #home .av{background-color:#2c3550}
+#device[data-theme="dark"] .tkmin{--mn-line2:rgba(255,255,255,.20)}
+
+/* [位置:phone-dark.css·夜间卡片样式] [气泡默认黑夜 + 极简黑夜卡片] [2026-11-18：气泡默认黑夜修复 --cd-acc 误取深色气泡底导致按钮发黑的问题，改用柔和亮蓝 #7d9ccf；极简黑夜采用中性灰微底 + 淡柔赤陶 #c48870] [注释时间 2026-11-18] */
+#device[data-theme="dark"] .tk:not(.tkmin) .card{
+  --cd-bg:var(--cd-ai-bg,linear-gradient(165deg,rgba(34,40,57,.84),rgba(24,29,43,.74)));
+  --cd-border:var(--cd-ai-border,rgba(214,226,240,.16));
+  --cd-in-bg:var(--cd-ai-in-bg,rgba(15,18,27,.42));
+  --cd-in-focus:var(--cd-ai-in-focus,rgba(15,18,27,.65));
+  box-shadow:inset 0 1px 0 rgba(224,232,244,.08);
+}
+#device[data-theme="dark"] .tk:not(.tkmin) .tk-g.me .card{
+  --cd-bg:var(--cd-me-bg,linear-gradient(165deg,rgba(34,40,57,.84),rgba(24,29,43,.74)));
+  --cd-border:var(--cd-me-border,rgba(214,226,240,.16));
+  --cd-in-bg:var(--cd-me-in-bg,rgba(15,18,27,.42));
+  --cd-in-focus:var(--cd-me-in-focus,rgba(15,18,27,.65));
+}
+#device[data-theme="dark"] .tkmin .card{
+  --cd-ink:#e9e9e9;--cd-ink2:rgba(233,233,233,.68);--cd-ink3:rgba(233,233,233,.48);
+  --cd-acc:#c48870;--cd-on-acc:#1c1816;
+  --cd-acc-soft:rgba(196,136,112,.12);--cd-acc-line:rgba(255,255,255,.1);
+  --cd-acc-ico:rgba(196,136,112,.88);--cd-acc-tint:rgba(196,136,112,.14);
+  background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.1);
+}
+#device[data-theme="dark"] .tkmin .cd-hr{background:rgba(255,255,255,.09)}
+#device[data-theme="dark"] .tkmin .cd-opt{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)}
+#device[data-theme="dark"] .tkmin .cd-opt u{border-color:rgba(255,255,255,.24)}
+#device[data-theme="dark"] .tkmin .cd-opt.on{background:var(--cd-acc-soft);border-color:rgba(196,136,112,.45);color:#dfa68f}
+#device[data-theme="dark"] .tkmin .cd-sl .cd-slh b{color:#dfa68f}
+#device[data-theme="dark"] .tkmin .cd-sl input[type=range]::-webkit-slider-runnable-track{background:linear-gradient(to right,var(--cd-acc) var(--p),rgba(255,255,255,.14) var(--p))}
+#device[data-theme="dark"] .tkmin .cd-sl input[type=range]::-webkit-slider-thumb{background:#262626;border-color:var(--cd-acc);box-shadow:none}
+#device[data-theme="dark"] .tkmin .cd-sl input[type=range]::-moz-range-track{background:rgba(255,255,255,.14)}
+#device[data-theme="dark"] .tkmin .cd-sl input[type=range]::-moz-range-thumb{background:#262626;border-color:var(--cd-acc);box-shadow:none}
+#device[data-theme="dark"] .tkmin .cd-in{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12)}
+#device[data-theme="dark"] .tkmin .cd-in:focus{background:rgba(255,255,255,.07);border-color:rgba(196,136,112,.55)}
+#device[data-theme="dark"] .tkmin .cd-btn,#device[data-theme="dark"] .tkmin .cd-go{
+  background:rgba(255,255,255,.08);
+  border:.5px solid rgba(255,255,255,.22);
+  color:#e9e9e9;
+}
+#device[data-theme="dark"] .tkmin .cd-btn.alt{
+  background:transparent;
+  border:.5px solid rgba(255,255,255,.14);
+  color:var(--cd-ink2);
+}
+#device[data-theme="dark"] .tkmin .cd-btn:disabled,#device[data-theme="dark"] .tkmin .cd-go:disabled{
+  background:rgba(255,255,255,.04);
+  border-color:rgba(255,255,255,.08);
+  color:rgba(233,233,233,.32);
+}
+
+/* [位置:phone-dark.css·宽屏应用页图标] [夜间 .cs-ag 底座质感] [10-31：宽屏「应用」页（.cs-ag）的图标底座沿用日间白色斜向渐变与内高光，深底上发白发灰；文字/描边色已随 --k-4e5a78/--k-566079 在窗口夜间变量表反转，这里只收底座——照「夜间桌面」段的参数（去白渐变、深玻璃、0.5px 冷白描边、一线内高光），跟手机桌面夜间图标统一] [注释时间 2026-10-31] */
+#device[data-theme="dark"] .cs-ag .app-ic .sq{background-image:none;border-color:rgba(214,226,240,.16);box-shadow:0 4px 14px rgba(4,7,12,.22),inset 0 1px 0 rgba(224,232,244,.08)}

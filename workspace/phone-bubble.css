@@ -1,0 +1,75 @@
+/* phone-bubble.css v2 —— 聊天气泡的唯一出处。10-28 起不再用 SVG 画形状（不要小脚了；流式回复每帧换一张 SVG 图，气泡会闪）：
+   纯圆角矩形 = border-radius + 背景色 + 阴影，颜色/透明度/圆角/阴影由 phone-bubble.js 写在根节点的变量里。
+   2026-11-02 形状选择器（设置 → 主题 → 月夜玻璃 → 气泡样式，#device[data-bs]）：默认圆角 / 经典收角（旧 chat 短信式，外下角收小）/
+   （CSS 版弯钩小尾巴 11-02 上过半天，用户对比后定留 SVG 版，已删）/
+   小尾巴·SVG（phone-bubble.js 画 dataURI 垫在 ::before，
+   透明度/阴影走 CSS 变量）。所有新规则都带 .tk:not(.tkmin) 或 .lk-pv（设置页预览）前缀，极简主题不沾。 */
+.b{--c:var(--bai,#f6f9ff);position:relative;isolation:isolate;max-width:74%;--pad:var(--bpad-ai,8px);--gap:var(--bgap-ai,4px);padding:var(--pad) calc(var(--pad)*1.75) calc(var(--pad)*1.125);border-radius:var(--brai,15px);font-size:16px;line-height:1.34;letter-spacing:.01em;
+  margin-top:var(--gap);word-break:break-word;background:var(--c);background:color-mix(in srgb,var(--c) calc(var(--ba,1)*var(--ka,1)*100%),transparent);
+  --ka:var(--tk-ai-a,1);box-shadow:0 1.5px 5px rgba(96,120,160,var(--tk-ai-sh,.16));transform-origin:var(--ox,0) 100%;transition:transform .25s var(--spring)}
+.b.first{margin-top:14px}
+.b.hasreact{margin-top:22px}
+.b.me{align-self:flex-end;border-radius:var(--brme,var(--brai,15px));--c:var(--bme,#7298d6);--ka:var(--tk-me-a,1);--ox:100%;color:var(--bme-ink,#fff);box-shadow:0 3px 6px rgba(111,148,212,var(--tk-me-sh,.3))}
+.b.ai{align-self:flex-start;color:var(--bai-ink,var(--ink))}
+.b.me{--pad:var(--bpad-me,8px);--gap:var(--bgap-me,4px)}   /* [位置:phone-bubble.css·.b.me] [内/外边距每边一套] [2026-11-10：原共用的 --bpad/--bgap 拆成 -ai/-me，.b 默认取他的、.b.me 取我的，下面 padding/margin 只读 --pad/--gap] [注释时间 2026-11-10] */
+.b.typing{padding:calc(var(--pad)*1.5) calc(var(--pad)*1.75)}
+.b.pop{transform-origin:0 100%}
+.b.me.new{animation:pop .4s var(--spring);transform-origin:100% 100%}
+#device.bnoshadow .b:not(.lifted){box-shadow:none}
+/* 气泡模糊度：毛玻璃（只在调过才开，免得每个气泡都多一层合成） */
+#device.bblur .b{-webkit-backdrop-filter:blur(var(--bblur));backdrop-filter:blur(var(--bblur))}
+/* 聊天背景：图 / 渐变垫在聊天页最底下，清晰度 = 模糊，淡化 = 盖一层浅白 */
+#device.hascbg .content.chat,.bb-pv{isolation:isolate}
+#device.hascbg .content.chat:not(.tkmin)::before,#device.hascbg .bb-pv::before{content:"";position:absolute;inset:calc(var(--cbg-blur,0px) * -2.5);z-index:-1;pointer-events:none;
+  background:linear-gradient(rgba(246,249,255,var(--cbg-veil,0)),rgba(246,249,255,var(--cbg-veil,0))),var(--cbg,none) center/cover no-repeat;filter:blur(var(--cbg-blur,0px))}
+/* [位置:phone-bubble.css·图案背景] [选「图案」当背景时这一边的气泡不铺实色底] [2026-11-06：颜色和图案是两套背景配置、二选一，图案模式下底色由图案自己带（铺满），实色那套的透明度/模糊不参与；模糊由 phone-pages.js·lookApply 把 --tk-XX-bl 归零] [注释时间 2026-11-06] */
+#device.bgp-ai .tk:not(.tkmin) .b.ai:not(.na),#device.bgp-ai .lk-pv .b.ai:not(.na){background:none}
+#device.bgp-me .tk:not(.tkmin) .b.me:not(.na),#device.bgp-me .lk-pv .b.me:not(.na){background:none}
+.b.lifted{transform:scale(1.04);z-index:60}
+.b.lifted{box-shadow:0 16px 30px rgba(70,90,130,.32)}
+.b .react{top:-13px;width:26px;height:26px;font-size:14px}
+.stamp{margin:12px 0 6px}
+.status{margin:9px 6px 0 0}
+
+/* ---------- 气泡形状选择器（2026-11-02） ---------- */
+/* [位置:phone-bubble.css·经典收角] [2026-11-23 升级为 Muse 风格多气泡连发分组贴合圆角：单条四角保持大圆角；同一说话人连续多条（同容器内相邻 .b）靠说话人一侧两两紧贴的内角收成 5px——首条收内下角、中间条收上下内角、尾条收内上角；外侧与整组顶/底保持大圆角。SVG 轮廓由 phone-bubble.js·smsLink/cssRadii 同口径生成] [注释时间 2026-11-02；2026-11-23 升级] */
+/* [2026-11-06 形状分边] 形状档改挂到每个气泡自己身上（.b[data-bs]），两边各按自己的档出规则 */
+.tk:not(.tkmin) .b.ai[data-bs=sms]:has(+ .b.ai[data-bs=sms]),.lk-pv .b.ai[data-bs=sms]:has(+ .b.ai[data-bs=sms]){border-bottom-left-radius:5px}
+.tk:not(.tkmin) .b.ai[data-bs=sms] + .b.ai[data-bs=sms],.lk-pv .b.ai[data-bs=sms] + .b.ai[data-bs=sms]{border-top-left-radius:5px}
+.tk:not(.tkmin) .b.me[data-bs=sms]:has(+ .b.me[data-bs=sms]),.lk-pv .b.me[data-bs=sms]:has(+ .b.me[data-bs=sms]){border-bottom-right-radius:5px}
+.tk:not(.tkmin) .b.me[data-bs=sms] + .b.me[data-bs=sms],.lk-pv .b.me[data-bs=sms] + .b.me[data-bs=sms]{border-top-right-radius:5px}
+/* [位置:phone-bubble.css·两方两圆] [11-16 批2 E4：新形状档 hsq——AI 侧左上下角方、右两角圆跟圆角滑杆；我侧镜像（右角方）。屏幕坐标直出，SVG 轮廓（线框/图案）由 phone-bubble.js·cssRadii 的 hsq 分支同形出。11-17 批5 柔化公式被用户否了（真机仍太方），11-17 晚改用户可调：方角=var(--hsq-ai/--hsq-me)（phone-bubble.js·applyVars 与 phone-pages.js·lookApply 从 look 段 aiHsqR/meHsqR 写，缺省 11），设置页「方角」滑杆直调] [注释时间 2026-11-16；2026-11-17 批5 柔化；2026-11-17 晚改可调] */
+.tk:not(.tkmin) .b.ai[data-bs=hsq],.lk-pv .b.ai[data-bs=hsq]{border-top-left-radius:var(--hsq-ai,11px);border-bottom-left-radius:var(--hsq-ai,11px)}
+.tk:not(.tkmin) .b.me[data-bs=hsq],.lk-pv .b.me[data-bs=hsq]{border-top-right-radius:var(--hsq-me,11px);border-bottom-right-radius:var(--hsq-me,11px)}
+/* [位置:phone-bubble.css·小尾巴·CSS] [iMessage 惯用法：同色方块（background:inherit 继承 color-mix 计算值）藏进气泡下面的左/右下角，露出弯月钩；z-index:-1 沉到 .b 的 isolation 内背景之下；每条气泡都带（旧 chat 是组尾带，这边简化每条带，与 SVG 版对比着挑）] [注释时间 2026-11-02] */
+/* [位置:phone-bubble.css·小尾巴·SVG] [形状由 phone-bubble.js 画成 dataURI 写进 --shape，垫在 .b.shaped::before（外扩 12px 装尾巴）；气泡本体背景关掉；阴影用 drop-shadow 跟着形状走（box-shadow 矩形影会在尾巴侧穿帮）；透明度滑杆=伪元素 opacity，实时] [注释时间 2026-11-02] */
+.tk:not(.tkmin) .b[data-bs=tailsvg]:not(.na),.lk-pv .b[data-bs=tailsvg]:not(.na){background:none}
+.tk:not(.tkmin) .b.shaped[data-bs=tailsvg]::before,.lk-pv .b.shaped[data-bs=tailsvg]::before{content:"";position:absolute;left:-12px;top:-12px;width:calc(100% + 24px);height:calc(100% + 24px);z-index:-1;pointer-events:none;
+  background-image:var(--shape,none),var(--fr,none);background-size:100% 100%,100% 100%;background-position:0 0,0 0;background-repeat:no-repeat}   /* 2026-11-02 线框：--fr 作第二层背景与形状图同坐标系叠加（phone-bubble.js·drawFrame） */
+.tk:not(.tkmin) .b.shaped[data-bs=tailsvg],.lk-pv .b.shaped[data-bs=tailsvg]{box-shadow:none}
+/* AI 浅色形状多叠一圈 1px 贴边光：近白气泡（默认 #f6f9ff）的尾巴在浅背景上只有投影太淡，11-02 真机反馈看不见；贴边光只描轮廓不加重投影，tailsvg 档独有 */
+/* [2026-11-05 透明度解耦] 去掉 opacity:var(--tk-ai-a)——它淡的是整张形状图（含图案），会让「图案透明度」失效。现在底色的 alpha 烘进 SVG 的 fill-opacity（phone-bubble.js·bubbleAlpha），图案浓度在 pattern 里独立控制，两个旋钮分开。阴影浓淡照旧走 --tk-XX-sh，不跟气泡透明度联动。 */
+.tk:not(.tkmin) .b.shaped.ai[data-bs=tailsvg]::before,.lk-pv .b.shaped.ai[data-bs=tailsvg]::before{filter:drop-shadow(0 0 1px rgba(96,120,160,.24)) drop-shadow(0 1.5px 5px rgba(96,120,160,var(--tk-ai-sh,.16)))}
+.tk:not(.tkmin) .b.shaped.me[data-bs=tailsvg]::before,.lk-pv .b.shaped.me[data-bs=tailsvg]::before{filter:drop-shadow(0 3px 6px rgba(111,148,212,var(--tk-me-sh,.3)))}
+
+/* [位置:phone-bubble.css·.b.na] [noaction 静默消息虚线气泡] [2026-11-01 用户需求：唤醒时「这轮不推」的原因在消息流里正常显示。
+   四轮实拍定稿：①字色不覆盖、继承正常气泡（--bai-ink/var(--mn-ink)）——首版 --ink2 夜间/自定义主题下看不清；②底色=AI 气泡色（--bai 变量，跟随气泡设置不写死）× 0.5 浓度（--ka 是 .b color-mix 的透明度因子）；③虚线=原生 border:dashed（渐变环画法用户不要，撤回）、颜色=用户气泡色（--bme 变量跟随）× 50% 透明；④去阴影（虚线叠阴影显脏）；极简 .tkmin .b 本就无底色、--bme 在米白底上不可见，虚线退回 --mn-ink3] [注释时间 2026-11-01 四轮定稿] */
+.b.ai.na{--ka:calc(var(--tk-ai-a,1)*.5);box-shadow:none;border:1px dashed color-mix(in srgb,var(--bme,#7298d6) 50%,transparent)}
+.tkmin .tk-g.ai .b.na{padding:5px 12px;border:1px dashed var(--mn-ink3);border-radius:12px;background:none;box-shadow:none}
+
+/* [位置:phone-bubble.css·气泡线框] [2026-11-02：气泡描边装饰（单线/虚线/波浪 + 粗细 + 颜色，两个角色独立）——def/sms 档画在 .b.framed::before（--fr dataURI，phone-bubble.js·drawFrame 生成，同 SM=12 外扩坐标系）；tailsvg 档不另起伪元素，线框是 ::before 双层背景的第二层（见上面 shaped::before 规则）。开了线框的 AI 气泡走三点输出（phone-talk.js·bsHold 防换图闪，同 tailsvg 道理）] [注释时间 2026-11-02] */
+/* 2026-11-02 晚修：def/sms 档本体是实心底，线框不能用 z-index:-1（会被底色整个盖住，截图实测隐形）——
+   描边线条在气泡边缘 1~2px、文字有 padding 缓冲压不到字，用 auto 画在「背景之上、行内文字之下」的定位层。
+   sms 收角档的框按统一圆角矩形画（收角差异极小，第一版接受）。 */
+.tk:not(.tkmin) .b.framed:not([data-bs=tailsvg])::before,.lk-pv .b.framed:not([data-bs=tailsvg])::before{content:"";position:absolute;left:-12px;top:-12px;width:calc(100% + 24px);height:calc(100% + 24px);z-index:auto;pointer-events:none;background-image:var(--fr,none);background-size:100% 100%;background-position:0 0;background-repeat:no-repeat}
+
+/* [位置:phone-bubble.css·气泡图案底纹] [11-05 重做：①形状跟气泡轮廓一致——图案不再是无脑平铺，而是 phone-bubble.js·drawPat 画的一整块 SVG（<pattern> 平铺底纹 + <path> 用气泡自己的轮廓 bubbleOutline 裁切），所以尾巴档尾巴上有图案、波浪档波浪边有图案、经典收角档收角处图案跟着收；气泡背景、气泡线框、气泡本体三者同一条轮廓 path。②透明度解耦——opacity 不再是 var(--ka)（气泡透明度）：气泡透明度只管纯色底（.b 本体 background 的 color-mix），图案浓度由生成器的「图案透明度」独立控制，画在 SVG 内的 pattern 里，两个旋钮不串联。
+   层级：z-index:-1=底色之上文字之下（.b 有 isolation:isolate，负层伪元素落在本体背景之上、文字之下）；background-size 走 --pat-sz（整块 SVG 的尺寸，含 SM 外扩，尾巴不裁）；.tk.msel 多选时整层让位（::after 被多选勾圈 .b.m0::after 占用，退出自动恢复）] [注释时间 2026-11-05 重做] */
+#device .tk:not(.tkmin):not(.msel) .b.patted::after,#device .lk-pv .b.patted::after{content:"";position:absolute;left:-12px;top:-12px;width:calc(100% + 24px);height:calc(100% + 24px);z-index:-1;pointer-events:none;background-image:var(--pat,none);background-size:var(--pat-sz,100% 100%);background-position:0 0;background-repeat:no-repeat}
+
+/* [位置:phone-bubble.css·波浪线框一体] [2026-11-03：波浪线框档整个气泡变波浪——底色也画进 --fr（fill+stroke 同轮廓，phone-bubble.js·drawFrame·波浪档），本体矩形背景/阴影必须关掉（不然波浪凹处露出直边底）；::before 回 z-index:-1（它装着底色，要在文字下）、opacity=var(--ka) 跟透明度滑杆、阴影 drop-shadow 跟波浪走（矩形 box-shadow 会在波浪侧穿帮）] [注释时间 2026-11-03] */
+.tk:not(.tkmin) .b.framed-wave:not([data-bs=tailsvg]),.lk-pv .b.framed-wave:not([data-bs=tailsvg]){background:none;box-shadow:none}
+.tk:not(.tkmin) .b.framed-wave:not([data-bs=tailsvg])::before,.lk-pv .b.framed-wave:not([data-bs=tailsvg])::before{z-index:-1;opacity:var(--ka,1);filter:drop-shadow(0 1.5px 4px rgba(96,120,160,.18))}
+
+/* [位置:phone-bubble.css·.b.ai.na 虚线色跟透明度] [AI 气泡「线框自适应」虚线颜色跟用户气泡色×用户气泡透明度] [11-03：虚线色参考用户气泡颜色，还要参考用户气泡的透明度，保持一致——原来固定 50% 浓度，用户把气泡调淡后虚线还是原浓度。现在 浓度 = 50% × 用户气泡透明度(--tk-me-a)；气泡 100% 不透明时和原来完全一样] [注释时间 2026-11-03] */
+.b.ai.na{border:1px dashed color-mix(in srgb,var(--bme,#7298d6) calc(var(--tk-me-a,1) * 50%),transparent)}

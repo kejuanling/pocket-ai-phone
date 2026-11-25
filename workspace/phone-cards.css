@@ -1,0 +1,257 @@
+.cm{align-self:flex-start;width:min(84%,320px);margin-top:12px;animation:cd-in .5s var(--spring) both;transform-origin:0 100%}
+.cm.me{align-self:flex-end;transform-origin:100% 100%}
+@keyframes cd-in{from{opacity:0;transform:translateY(14px) scale(.92)}to{opacity:1;transform:none}}
+
+/* [位置:phone-cards.css·卡片字色/强调色变量] [卡片跟所在边气泡主题] [2026-11-17：卡片内文字跟随 AI / 我的气泡字色二选一，选项浅底与图标等蓝色部分跟随对应气泡色调淡，卡片整体背景不动。2026-11-18 升级：默认日/夜与自定义主题分流——自定义主题由 phone-bubble.js·applyCardVars 根据气泡字体颜色与气泡底色双因子智能计算 --cd-* 变量写在根上（--cd-ai-* / --cd-me-*），这里按所在边映射；未自定义时走默认日/夜（夜间在 phone-dark.css 覆盖）] [注释时间 2026-11-18] */
+.tk:not(.tkmin) .tk-g.ai .card{
+  --cd-bg:var(--cd-ai-bg,linear-gradient(165deg,rgba(255,255,255,calc(.86*var(--wk))),rgba(255,255,255,calc(.58*var(--wk)))));
+  --cd-border:var(--cd-ai-border,rgba(255,255,255,calc(.95*var(--wk))));
+  --cd-ink:var(--cd-ai-ink,var(--ink));
+  --cd-ink2:var(--cd-ai-ink2,var(--ink2));
+  --cd-ink3:var(--cd-ai-ink3,var(--ink3));
+  --cd-acc:var(--cd-ai-acc,var(--acc));
+  --cd-on-acc:var(--cd-ai-on-acc,#fff);
+  --cd-acc-soft:var(--cd-ai-soft,color-mix(in srgb,var(--acc) 13%,transparent));
+  --cd-acc-line:var(--cd-ai-line,color-mix(in srgb,var(--acc) 20%,transparent));
+  --cd-acc-ico:var(--cd-ai-ico,color-mix(in srgb,var(--acc) 45%,rgb(var(--sh))));
+  --cd-acc-tint:var(--cd-ai-tint,color-mix(in srgb,var(--acc) 22%,white));
+  --cd-in-bg:var(--cd-ai-in-bg,var(--cd-acc-soft));
+  --cd-in-focus:var(--cd-ai-in-focus,rgba(255,255,255,calc(.5*var(--wk))));
+}
+.tk:not(.tkmin) .tk-g.me .card{
+  --cd-bg:var(--cd-me-bg,linear-gradient(165deg,rgba(255,255,255,calc(.86*var(--wk))),rgba(255,255,255,calc(.58*var(--wk)))));
+  --cd-border:var(--cd-me-border,rgba(255,255,255,calc(.95*var(--wk))));
+  --cd-ink:var(--cd-me-ink,var(--ink));
+  --cd-ink2:var(--cd-me-ink2,var(--ink2));
+  --cd-ink3:var(--cd-me-ink3,var(--ink3));
+  --cd-acc:var(--cd-me-acc,var(--acc));
+  --cd-on-acc:var(--cd-me-on-acc,#fff);
+  --cd-acc-soft:var(--cd-me-soft,color-mix(in srgb,var(--acc) 13%,transparent));
+  --cd-acc-line:var(--cd-me-line,color-mix(in srgb,var(--acc) 20%,transparent));
+  --cd-acc-ico:var(--cd-me-ico,color-mix(in srgb,var(--acc) 45%,rgb(var(--sh))));
+  --cd-acc-tint:var(--cd-me-tint,color-mix(in srgb,var(--acc) 22%,white));
+  --cd-in-bg:var(--cd-me-in-bg,var(--cd-acc-soft));
+  --cd-in-focus:var(--cd-me-in-focus,rgba(255,255,255,calc(.5*var(--wk))));
+}
+/* 图案背景档该边气泡不铺实色底，强调色回退全站 --acc，避免取到透明色 */
+#device.bgp-ai .tk:not(.tkmin) .tk-g.ai .card{--cd-acc:var(--acc);--cd-on-acc:#fff;--cd-acc-soft:color-mix(in srgb,var(--acc) 13%,transparent);--cd-acc-line:color-mix(in srgb,var(--acc) 20%,transparent);--cd-acc-ico:color-mix(in srgb,var(--acc) 45%,rgb(var(--sh)));--cd-acc-tint:color-mix(in srgb,var(--acc) 22%,white)}
+#device.bgp-me .tk:not(.tkmin) .tk-g.me .card{--cd-acc:var(--acc);--cd-on-acc:#fff;--cd-acc-soft:color-mix(in srgb,var(--acc) 13%,transparent);--cd-acc-line:color-mix(in srgb,var(--acc) 20%,transparent);--cd-acc-ico:color-mix(in srgb,var(--acc) 45%,rgb(var(--sh)));--cd-acc-tint:color-mix(in srgb,var(--acc) 22%,white)}
+
+.card{position:relative;padding:14px 15px 15px;border-radius:24px;color:var(--cd-ink,var(--ink));font-family:var(--cfont,var(--sans));
+  background:var(--cd-bg,linear-gradient(165deg,rgba(255,255,255,calc(.86*var(--wk))),rgba(255,255,255,calc(.58*var(--wk)))));border:.5px solid var(--cd-border,rgba(255,255,255,calc(.95*var(--wk))));
+  box-shadow:0 10px 28px rgba(96,120,160,.16),0 1px 0 rgba(255,255,255,calc(.9*var(--wk))) inset;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.cd-h{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.22em;color:var(--cd-ink3,var(--ink3))}
+.cd-i{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;background:var(--cd-acc-tint,color-mix(in srgb,var(--acc) 22%,white))}
+.cd-i svg{width:14px;height:14px;stroke:var(--cd-acc-ico,#4f6ea8);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.cd-q{margin:10px 2px 12px;font-size:17px;line-height:1.5;letter-spacing:.04em}
+.cd-foot{max-height:0;overflow:hidden;opacity:0;font-size:13px;line-height:1.6;letter-spacing:.05em;color:var(--cd-ink2,var(--ink2));text-align:center;transition:max-height .4s var(--spring),opacity .3s,margin .3s}
+.cd-foot.on{max-height:60px;opacity:1;margin-top:12px}
+/* [位置:phone-cards.css·选中态各规则] [批次4b选中态token化：实色强调 var(--acc)→var(--sel-ring)、浅底 rgba(...,.16)→var(--sel-bg)、半实 rgba(...,.55)→var(--sel-dim)；token 定义在 phone-new.html :root，非选中态主色一律未动，零视觉差异] [工作流/tasks/调查/2026-11-13_前端体验修复确认单.md 批次4b] [注释时间 2026-11-14] */
+.cd-foot.on::before{content:"✓ ";color:var(--cd-acc,var(--sel-ring))}
+.card button{-webkit-text-stroke:.3px}
+
+/* 选一个 */
+.cd-opts{display:flex;flex-direction:column;gap:8px}
+/* [位置:phone-cards.css·.cd-opt] [选项换行时高度自动增加] [10-31 补充：上一轮只放了文字收缩，按钮上下 padding 是 0，两行文字挤在 44px 最小高度里贴边；padding 改上下 10px——单行仍被 min-height 44px 兜底视觉不变，两行自动长到约 61px、留白正常] [注释时间 2026-10-31] */
+.cd-opt{position:relative;display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 14px;border-radius:15px;text-align:left;font-size:14px;line-height:1.45;letter-spacing:.05em;color:var(--cd-ink,var(--ink));
+  background:var(--cd-acc-soft,rgba(125,156,207,.12));border:.5px solid var(--cd-acc-line,rgba(125,156,207,.18));transition:background .25s,color .25s,transform .3s var(--spring),opacity .3s,box-shadow .3s}
+/* [位置:phone-cards.css·.cd-opt span] [选项文字换行] [10-31：选项原文不换行，长选项把卡片撑破（flex 子项默认 min-width:auto 不许收缩）；放开收缩 + 长词断行，字号 15.5 改 14 并加行高，双行选项不贴边] [注释时间 2026-10-31] */
+.cd-opt span{flex:1;min-width:0;overflow-wrap:break-word}
+.cd-opt em{font-style:normal;font-size:22px;width:28px;flex:none;text-align:center}
+.cd-opt u{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--cd-acc-ico,rgba(79,110,168,.35));flex:none;position:relative;transition:background .25s,color .25s,border-color .25s,opacity .25s,transform .25s,box-shadow .25s}
+.cd-opt.on{background:var(--cd-acc,var(--sel-ring));color:var(--cd-on-acc,#fff);border-color:transparent;box-shadow:0 6px 16px color-mix(in srgb,var(--cd-acc,var(--sel-ring)) 45%,transparent)}
+.cd-opt.on u{background:var(--cd-on-acc,#fff);border-color:var(--cd-on-acc,var(--ring))}
+.cd-opt.on u::after{content:"";position:absolute;left:5.5px;top:3px;width:5px;height:9px;border:solid var(--cd-acc,var(--sel-ring));border-width:0 2px 2px 0;transform:rotate(42deg)}
+.card.locked .cd-opt:not(.on){opacity:.42}
+.card.locked .cd-opt{pointer-events:none}
+.cd-opts.vs{flex-direction:row}
+.cd-opts.vs .cd-opt{flex:1;flex-direction:column;justify-content:center;min-height:96px;gap:6px;text-align:center;padding:10px}
+.cd-opts.vs .cd-opt u{display:none}
+.cd-opts.vs .cd-opt em{font-size:30px}
+.cd-go{margin-top:12px;width:100%;height:42px;border-radius:999px;background:var(--cd-acc,var(--acc));color:var(--cd-on-acc,#fff);font-size:15px;font-weight:500;letter-spacing:.3em;box-shadow:0 6px 16px color-mix(in srgb,var(--cd-acc,var(--acc)) 40%,transparent);transition:opacity .25s,transform .25s var(--spring)}
+.cd-go:disabled{opacity:.4;box-shadow:none}
+
+/* 心情 */
+.cd-faces{display:flex;justify-content:space-between;gap:2px}
+.cd-face{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:10.5px;letter-spacing:.04em;color:var(--cd-ink3,var(--ink3));padding:4px 0;transition:transform .35s var(--spring),opacity .3s}
+.cd-face svg{width:38px;height:38px;fill:none;stroke:hsl(var(--h) 38% 52%);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;padding:3px;border-radius:50%;background:hsl(var(--h) 70% 94%);transition:background .3s var(--spring),color .3s var(--spring),border-color .3s var(--spring),opacity .3s var(--spring),transform .3s var(--spring),box-shadow .3s var(--spring)}
+.cd-face svg .f{fill:hsl(var(--h) 38% 52%);stroke:none}
+.cd-face.on{transform:translateY(-4px);color:var(--cd-ink,var(--ink))}
+.cd-face.on svg{background:hsl(var(--h) 62% 72%);stroke:#fff;box-shadow:0 6px 14px hsl(var(--h) 50% 60%/.4);transform:scale(1.14)}
+.cd-face.on svg .f{fill:#fff}
+.card.locked .cd-face:not(.on){opacity:.38}
+.card.locked .cd-face{pointer-events:none}
+
+/* 抽签 */
+.cd-tube{display:block;margin:2px auto 0;width:82px;height:92px;transform-origin:50% 90%}
+.cd-tube svg{width:100%;height:100%;overflow:visible}
+.cd-tube .tb{fill:var(--cd-acc-tint,color-mix(in srgb,var(--acc) 30%,white));stroke:var(--cd-acc-ico,#4f6ea8);stroke-width:1.5;stroke-linejoin:round}
+.cd-tube .ln{stroke:var(--cd-acc-ico,#4f6ea8);stroke-width:1.2;fill:none;opacity:.45;stroke-linecap:round}
+.cd-tube .stk rect{fill:#e8d3a8;stroke:#b79a62;stroke-width:.8;transition:transform .5s var(--spring)}
+.card.shaking .cd-tube{animation:cd-shake .95s ease-in-out}
+.card.shaking .cd-tube .stk rect:nth-child(2){transform:translateY(-9px)}
+@keyframes cd-shake{0%,100%{transform:rotate(0)}12%{transform:rotate(-14deg)}28%{transform:rotate(12deg)}44%{transform:rotate(-10deg)}60%{transform:rotate(9deg)}78%{transform:rotate(-5deg)}}
+.cd-hint{text-align:center;font-size:12.5px;letter-spacing:.14em;color:var(--cd-ink3,var(--ink3));margin-top:6px}
+.cd-slip{max-height:0;overflow:hidden;opacity:0;margin-top:0;border-radius:14px;text-align:center;background:linear-gradient(180deg,#fff8ea,#f5e7c8);border:.5px solid #e4cf9e;transform:translateY(-8px) rotate(-2deg);transition:background .6s var(--spring),color .6s var(--spring),border-color .6s var(--spring),opacity .6s var(--spring),transform .6s var(--spring),box-shadow .6s var(--spring);box-shadow:0 8px 20px rgba(150,120,60,.18)}
+.cd-slip.on{max-height:160px;opacity:1;margin-top:14px;padding:14px 16px 16px;transform:none}
+.cd-slip b{display:block;font-size:22px;font-weight:400;letter-spacing:.5em;padding-left:.5em;color:var(--k-a1553d)}
+.cd-slip p{margin-top:8px;font-size:14.5px;line-height:1.7;letter-spacing:.06em;color:var(--k-6b5a3e)}
+
+/* 猜拳 */
+.cd-arena{display:flex;align-items:center;justify-content:space-around;padding:6px 0 14px}
+.cd-arena div{display:flex;flex-direction:column;align-items:center;gap:4px}
+.cd-arena em{font-style:normal;font-size:44px;line-height:1;width:72px;height:72px;display:grid;place-items:center;border-radius:50%;background:var(--cd-acc-soft,rgba(125,156,207,.12));transition:transform .35s var(--spring),background .3s}
+.cd-arena small{font-size:11px;letter-spacing:.2em;color:var(--cd-ink3,var(--ink3))}
+.cd-arena .vs{font:italic 13px var(--hnum);color:var(--cd-ink3,var(--ink3));letter-spacing:.1em}
+.card.playing .cd-arena em{animation:cd-bob .36s ease-in-out infinite}
+@keyframes cd-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.card.won .you em{background:var(--cd-acc-tint,color-mix(in srgb,var(--acc) 40%,white));transform:scale(1.1)}
+.card.lost .him em{background:#f6d4dc;transform:scale(1.1)}
+.cd-hands{display:flex;gap:8px}
+.cd-hand{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;border-radius:16px;background:var(--cd-acc-soft,rgba(125,156,207,.12));border:.5px solid var(--cd-acc-line,rgba(125,156,207,.18));font-size:12px;letter-spacing:.12em;color:var(--cd-ink2,var(--ink2))}
+.cd-hand em{font-style:normal;font-size:26px;line-height:1.2}
+.card.playing .cd-hand{opacity:.5;pointer-events:none}
+
+/* 小清单 */
+.cd-prog{height:4px;border-radius:2px;background:var(--cd-acc-line,rgba(125,156,207,.18));overflow:hidden;margin:10px 0 8px}
+.cd-prog i{display:block;height:100%;width:100%;transform-origin:0 50%;transform:scaleX(0);background:var(--cd-acc,var(--acc));border-radius:2px;transition:transform .5s var(--spring)}
+.cd-item{display:flex;align-items:center;gap:11px;width:100%;min-height:40px;text-align:left;font-size:15.5px;letter-spacing:.04em;color:var(--cd-ink,var(--ink));transition:color .3s}
+.cd-item u{width:20px;height:20px;border-radius:7px;border:1.5px solid var(--cd-acc-ico,rgba(79,110,168,.38));flex:none;position:relative;transition:background .28s var(--spring),color .28s var(--spring),border-color .28s var(--spring),opacity .28s var(--spring),transform .28s var(--spring),box-shadow .28s var(--spring)}
+.cd-item.on{color:var(--cd-ink3,var(--ink3))}
+.cd-item.on span{text-decoration:line-through;text-decoration-color:var(--cd-acc-ico,rgba(79,110,168,.5))}
+.cd-item.on u{background:var(--cd-acc,var(--sel-ring));border-color:var(--cd-acc,var(--sel-ring));transform:scale(1.06)}
+.cd-item.on u::after{content:"";position:absolute;left:5.5px;top:2px;width:5px;height:9px;border:solid var(--ring);border-width:0 2px 2px 0;transform:rotate(42deg)}
+
+/* 积木卡片 */
+.cd-blocks>*+*{margin-top:14px}
+.cd-bt{font-size:18px;font-weight:600;line-height:1.4;letter-spacing:.02em;margin-top:2px}
+.cd-tx{font-size:14px;line-height:1.65;letter-spacing:.02em;color:var(--cd-ink2,var(--ink2))}
+.cd-tx.s{font-size:13px;color:var(--cd-ink3,var(--ink3))}
+.cd-bt+.cd-tx{margin-top:6px}
+.card .cd-tx{line-height:1.65}.card .cd-tx.s{line-height:1.6}
+.cd-img{display:block;width:100%;max-height:220px;object-fit:cover;border-radius:14px}
+.cd-hr{display:block;height:.5px;background:var(--cd-acc-line,rgba(79,110,168,.25))}
+.cd-bq{font-size:12px;font-weight:500;letter-spacing:.08em;color:var(--cd-ink3,var(--ink3));margin-bottom:9px}
+.cd-blk .cd-opts{gap:7px}
+.cd-sl .cd-slh{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;letter-spacing:.1em;color:var(--cd-ink3,var(--ink3));margin-bottom:6px}
+.cd-sl .cd-slh b{font-weight:400;font-size:20px;letter-spacing:0;color:var(--cd-ink,var(--ink))}
+.cd-sl input[type=range]{display:block;width:100%;height:28px;margin:0;background:none;-webkit-appearance:none;appearance:none;outline:0;--p:50%}
+.cd-sl input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(to right,var(--cd-acc,var(--acc)) var(--p),var(--cd-acc-line,rgba(125,156,207,.22)) var(--p))}
+.cd-sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:#fff;border:.5px solid var(--cd-acc-ico,rgba(125,156,207,.45));box-shadow:0 2px 8px rgba(60,80,120,.28);transition:transform .2s var(--spring)}
+.cd-sl input[type=range]:active::-webkit-slider-thumb{transform:scale(1.12)}
+.cd-sl input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:var(--cd-acc-line,rgba(125,156,207,.22))}
+.cd-sl input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--cd-acc,var(--acc))}
+.cd-sl input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:.5px solid var(--cd-acc-ico,rgba(125,156,207,.45));box-shadow:0 2px 8px rgba(60,80,120,.28)}
+.cd-in{display:block;width:100%;box-sizing:border-box;padding:10px 12px;border-radius:14px;border:.5px solid var(--cd-acc-line,rgba(125,156,207,.3));background:var(--cd-in-bg,var(--cd-acc-soft,rgba(125,156,207,.08)));color:var(--cd-ink,var(--ink));font-family:inherit;font-size:15px;line-height:1.5;letter-spacing:.04em;outline:0;resize:none;-webkit-user-select:text;user-select:text}
+.cd-in::placeholder{color:var(--cd-ink3,var(--ink3))}
+.cd-in:focus{border-color:var(--cd-acc,var(--acc));background:var(--cd-in-focus,rgba(255,255,255,calc(.5*var(--wk))))}
+.cd-cnt{display:flex;align-items:baseline;gap:6px;color:var(--cd-ink2,var(--ink2));font-size:14px;letter-spacing:.08em}
+.cd-cnt b{font-weight:400;font-size:34px;line-height:1;color:var(--cd-ink,var(--ink));letter-spacing:0}
+.cd-btn{display:block;width:100%;height:44px;border-radius:999px;background:var(--cd-acc,var(--acc));color:#fff;font-size:15px;letter-spacing:.22em;text-indent:.22em;box-shadow:0 6px 16px color-mix(in srgb,var(--cd-acc,var(--acc)) 40%,transparent);transition:opacity .25s,transform .25s var(--spring)}
+.cd-btn.alt{background:var(--cd-acc-soft,rgba(125,156,207,.14));color:var(--cd-ink2,var(--ink2));box-shadow:none}
+.cd-btn:disabled{background:var(--cd-acc-line,rgba(125,156,207,.2));color:var(--cd-ink3,var(--ink3));box-shadow:none}
+.card.locked .cd-in,.card.locked .cd-sl input{opacity:.75}
+
+/* 聊天里「＋」打开的小菜单 */
+.cmenu{position:absolute;left:12px;bottom:calc(var(--sab) + 78px);z-index:8;width:206px;padding:7px;border-radius:20px;background:rgba(255,255,255,calc(.88*var(--wk)));-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  border:.5px solid rgba(255,255,255,calc(.95*var(--wk)));box-shadow:0 14px 34px rgba(70,90,130,.24);transform-origin:0 100%;transform:scale(.7);opacity:0;pointer-events:none;transition:transform .38s var(--spring),opacity .22s}
+.cmenu.show{transform:none;opacity:1;pointer-events:auto}
+.cmenu .t{padding:6px 10px 4px;font-size:11px;letter-spacing:.2em;color:var(--cd-ink3,var(--ink3))}
+.cmenu button{display:flex;align-items:center;gap:10px;width:100%;height:42px;padding:0 10px;border-radius:13px;font-size:15px;letter-spacing:.08em;text-align:left;-webkit-text-stroke:.3px}
+.cmenu button:active{background:var(--cd-acc-soft,rgba(125,156,207,.16))}
+.cmenu button i{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;background:var(--cd-acc-tint,color-mix(in srgb,var(--acc) 22%,white))}
+.cmenu button svg{width:15px;height:15px;stroke:var(--cd-acc-ico,#4f6ea8);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.cmenu-scrim{position:absolute;inset:0;z-index:2;display:none}
+.cmenu-scrim.show{display:block}
+.chat .plus{transition:transform .35s var(--spring)}
+.chat .plus.open{transform:rotate(45deg)}
+@media (prefers-reduced-motion:reduce){.cm,.card.shaking .cd-tube,.card.playing .cd-arena em{animation:none}}
+
+/* [位置:phone-cards.css·极简主题卡片] [极简主题日间卡片：圆润微底 + 淡重点色 + 字号智能跟随 --tk-fs] [2026-11-18：极简主题下卡片去掉厚重毛玻璃与投影，改用 18px 圆角微底 + 0.5px 细描边，重点色调淡为低饱和柔赤陶 #c47b62，所有字号按 --tk-fs 等比缩放融入正文流] [注释时间 2026-11-18] */
+.tkmin .card{
+  --cd-ink:var(--mn-ink);--cd-ink2:var(--mn-ink2);--cd-ink3:var(--mn-ink3);
+  --cd-acc:#c47b62;--cd-on-acc:#faf9f5;
+  --cd-acc-soft:rgba(196,123,98,.09);--cd-acc-line:rgba(31,30,29,.09);
+  --cd-acc-ico:rgba(196,123,98,.85);--cd-acc-tint:rgba(196,123,98,.11);
+  border-radius:18px;padding:14px 15px 15px;
+  background:rgba(31,30,29,.026);border:.5px solid rgba(31,30,29,.09);
+  box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;
+  color:var(--cd-ink);font-family:var(--cfont,var(--sans));
+}
+.tkmin .cd-h{font-size:calc(var(--tk-fs,15px) * .76);letter-spacing:.14em;color:var(--cd-ink3)}
+.tkmin .cd-i{width:20px;height:20px;border-radius:7px;background:var(--cd-acc-tint)}
+.tkmin .cd-i svg{width:12px;height:12px;stroke:var(--cd-acc-ico);stroke-width:1.7}
+.tkmin .cd-bt{font-size:calc(var(--tk-fs,15px) * 1.08);font-weight:500;letter-spacing:.01em;line-height:1.45;color:var(--cd-ink)}
+.tkmin .cd-q{font-size:calc(var(--tk-fs,15px) * 1.05);font-weight:500;letter-spacing:.01em;line-height:1.45;color:var(--cd-ink);margin:8px 0 10px}
+.tkmin .cd-tx{font-size:var(--tk-fs,15px);line-height:1.68;letter-spacing:.01em;color:var(--cd-ink2)}
+.tkmin .cd-tx.s{font-size:calc(var(--tk-fs,15px) * .88);color:var(--cd-ink3)}
+.tkmin .cd-hr{background:rgba(31,30,29,.08)}
+.tkmin .cd-bq{font-size:calc(var(--tk-fs,15px) * .86);font-weight:500;letter-spacing:.04em;color:var(--cd-ink3);margin-bottom:7px}
+.tkmin .cd-blk .cd-opts{gap:7px}
+.tkmin .cd-opt{border-radius:13px;min-height:42px;padding:9px 13px;background:rgba(255,255,255,.62);border:.5px solid rgba(31,30,29,.08);color:var(--cd-ink);font-size:var(--tk-fs,15px);letter-spacing:.01em}
+.tkmin .cd-opt em{font-size:calc(var(--tk-fs,15px) * 1.25);width:24px}
+.tkmin .cd-opt u{width:18px;height:18px;border:1.2px solid rgba(31,30,29,.22)}
+.tkmin .cd-opt.on{background:var(--cd-acc-soft);border-color:rgba(196,123,98,.42);color:#a85d44;box-shadow:none}
+.tkmin .cd-opt.on u{background:var(--cd-acc);border-color:var(--cd-acc)}
+.tkmin .cd-opt.on u::after{left:5px;top:2.5px;width:4.5px;height:8px;border-color:var(--cd-on-acc)}
+.tkmin .cd-sl .cd-slh{font-size:calc(var(--tk-fs,15px) * .88);color:var(--cd-ink3);letter-spacing:.04em}
+.tkmin .cd-sl .cd-slh b{color:#a85d44;font-weight:500;font-size:calc(var(--tk-fs,15px) * 1.15)}
+.tkmin .cd-sl input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(to right,var(--cd-acc) var(--p),rgba(31,30,29,.12) var(--p))}
+.tkmin .cd-sl input[type=range]::-webkit-slider-thumb{width:18px;height:18px;margin-top:-7px;background:#faf9f5;border:1.5px solid var(--cd-acc);box-shadow:0 1px 4px rgba(31,30,29,.12)}
+.tkmin .cd-sl input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:rgba(31,30,29,.12)}
+.tkmin .cd-sl input[type=range]::-moz-range-progress{height:4px;border-radius:2px;background:var(--cd-acc)}
+.tkmin .cd-sl input[type=range]::-moz-range-thumb{width:18px;height:18px;background:#faf9f5;border:1.5px solid var(--cd-acc);box-shadow:0 1px 4px rgba(31,30,29,.12)}
+.tkmin .cd-in{border-radius:13px;padding:9px 12px;background:rgba(255,255,255,.62);border:.5px solid rgba(31,30,29,.11);color:var(--cd-ink);font-family:inherit;font-size:var(--tk-fs,15px)}
+.tkmin .cd-in::placeholder{color:var(--cd-ink3)}
+.tkmin .cd-in:focus{border-color:rgba(196,123,98,.55);background:#fff}
+.tkmin .cd-btn,.tkmin .cd-go{height:40px;border-radius:14px;background:var(--cd-acc);color:#ffffff;box-shadow:none;font-size:calc(var(--tk-fs,15px) * .96);font-weight:500;letter-spacing:.14em;text-indent:.14em}
+.tkmin .cd-btn.alt{background:transparent;border:.5px solid rgba(31,30,29,.14);color:var(--cd-ink2)}
+.tkmin .cd-btn:disabled,.tkmin .cd-go:disabled{background:rgba(31,30,29,.08);color:var(--cd-ink3);opacity:1}
+.tkmin .cd-foot{font-size:calc(var(--tk-fs,15px) * .86)}
+.tkmin .cd-foot.on::before{color:var(--cd-acc)}
+
+/* [位置:phone-cards.css·棋盘卡 .bd-*] [围棋/五子棋] [2026-11-22：柔和木色底 + 细墨线，黑白子带渐变和一点投影；底色/线色走 --bd-* 变量，夜间压暗（不刺眼）；落子预览是半透明子，下面一条状态 + 按钮] [注释时间 2026-11-22] */
+.bd-wrap{margin-top:10px}
+.bd-svg{display:block;width:100%;height:auto;border-radius:10px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+.bd-wood{fill:var(--bd-wood,#dcc08a)}
+.bd-ln{fill:none;stroke:var(--bd-line,rgba(72,52,28,.72));stroke-width:.8;stroke-linecap:square}
+.bd-star{fill:var(--bd-line,rgba(72,52,28,.72))}
+.bd-lb{fill:var(--bd-lbl,rgba(72,52,28,.58));text-anchor:middle;font-family:var(--hnum,var(--sans,sans-serif));letter-spacing:0;pointer-events:none}
+.bd-sh{fill:rgba(40,28,14,.26)}
+.bd-s{stroke:rgba(0,0,0,.28);stroke-width:.4}
+.bd-mk.kb{fill:#efe9df}
+.bd-mk.kw{fill:#1d1b19}
+.bd-ko{fill:none;stroke:#c0553f;stroke-width:1}
+.bd-pv{opacity:.58}
+.bd-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;min-height:34px}
+.bd-st{flex:1;min-width:0;font-size:13px;line-height:1.5;letter-spacing:.05em;color:var(--cd-ink2,var(--ink2))}
+.bd-act{display:flex;gap:6px;flex:none}
+.bd-b{height:34px;padding:0 14px;border:0;border-radius:999px;font-size:13px;letter-spacing:.12em;background:var(--cd-acc-soft,rgba(125,156,207,.14));color:var(--cd-ink2,var(--ink2));transition:transform .25s var(--spring),opacity .2s}
+.bd-b:active{transform:scale(.96)}
+.bd-b.pri{background:var(--cd-acc,var(--acc));color:var(--cd-on-acc,#fff)}
+.bd-note{display:none;margin-top:8px;font-size:12.5px;line-height:1.55;letter-spacing:.04em;color:var(--cd-ink3,var(--ink3))}
+.bd-note.on{display:block}
+#device[data-theme="dark"] .bd-wood{fill:var(--bd-wood,#9a8260)}
+#device[data-theme="dark"] .bd-ln,#device[data-theme="dark"] .bd-star{stroke:var(--bd-line,rgba(28,20,12,.8))}
+#device[data-theme="dark"] .bd-star{fill:rgba(28,20,12,.8);stroke:none}
+#device[data-theme="dark"] .bd-lb{fill:var(--bd-lbl,rgba(24,17,10,.72))}
+#device[data-theme="dark"] .bd-svg{filter:brightness(.94)}
+.tkmin .bd-st{font-size:calc(var(--tk-fs,15px) * .86)}
+
+/* [位置:phone-cards.css·触碰卡片 .cd-touch] [AI 回发的触碰/触感卡片：触感脉冲按钮 + 捏捏软硅胶/麻薯回应软垫] [2026-11-23 升级：软弹立体光影材质、圆角矩形按钮，全部文字与边框改走 --cd-ink / --bai-ink / --tk-btnink 自适应，移除裸 --ink2/--ink3] [注释时间 2026-11-23] */
+.cd-touch{--ct-ink:var(--cd-ink,var(--bai-ink,var(--tk-btnink)));--ct-ink2:var(--cd-ink2,color-mix(in srgb,var(--ct-ink) 78%,transparent));--ct-ink3:var(--cd-ink3,color-mix(in srgb,var(--ct-ink) 62%,transparent));--ct-line:color-mix(in srgb,var(--ct-ink) 22%,transparent);--ct-tint:color-mix(in srgb,var(--ct-ink) 8%,transparent)}
+.cd-touch .ct-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.cd-touch .ct-zone{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:8px;font-size:11.5px;color:var(--cd-acc,var(--acc));background:var(--cd-acc-soft,color-mix(in srgb,var(--acc) 13%,transparent));border:.5px solid var(--cd-acc-line,color-mix(in srgb,var(--acc) 26%,transparent))}
+.cd-touch .ct-hap{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:9px;border:.5px solid color-mix(in srgb,var(--cd-acc,var(--acc)) 45%,transparent);background:var(--cd-acc-soft,color-mix(in srgb,var(--acc) 11%,transparent));color:var(--cd-acc,var(--acc));font-size:12px;cursor:pointer;transition:transform .2s var(--spring),background .2s}
+.cd-touch .ct-hap.pulse{animation:ctPulse .7s ease}
+@keyframes ctPulse{0%{transform:scale(1)}35%{transform:scale(1.06);box-shadow:0 0 0 6px color-mix(in srgb,var(--cd-acc,var(--acc)) 18%,transparent)}100%{transform:scale(1);box-shadow:none}}
+.cd-touch .ct-pad{position:relative;height:102px;border-radius:16px;border:.5px solid var(--ct-line);background:radial-gradient(115% 95% at 30% 16%,rgba(255,255,255,.36),transparent 56%),radial-gradient(96% 86% at 50% 56%,color-mix(in srgb,var(--cd-acc,var(--acc)) 16%,transparent),var(--ct-tint) 76%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.4),inset 0 -7px 16px color-mix(in srgb,var(--ct-ink) 11%,transparent),0 3px 10px color-mix(in srgb,var(--ct-ink) 9%,transparent);overflow:hidden;touch-action:none;cursor:pointer;will-change:transform;transition:box-shadow .22s ease,border-color .22s ease}
+.cd-touch .ct-pad::before{content:'';position:absolute;inset:5px 12px auto;height:28%;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.24),rgba(255,255,255,0));pointer-events:none}
+.cd-touch .ct-pad.down{border-color:color-mix(in srgb,var(--cd-acc,var(--acc)) 58%,transparent);box-shadow:inset 0 4px 14px color-mix(in srgb,var(--ct-ink) 18%,transparent),inset 0 -1px 0 rgba(255,255,255,.26),0 1px 4px color-mix(in srgb,var(--ct-ink) 8%,transparent)}
+.cd-touch .ct-pad canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+.cd-touch .ct-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ct-ink2);pointer-events:none;transition:opacity .2s}
+.cd-touch .ct-pad.has .ct-ph{opacity:0}
+.cd-touch .ct-ft{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.cd-touch .ct-sum{flex:1;min-width:0;font-size:11.5px;color:var(--ct-ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cd-touch .ct-go{flex:none;height:28px;padding:0 12px;border-radius:10px;background:var(--cd-acc,var(--acc));color:var(--cd-on-acc,#fff);font-size:12px;opacity:.45;transition:opacity .18s}
+.cd-touch .ct-go.ready{opacity:1}

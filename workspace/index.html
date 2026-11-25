@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>小世界 · 月下</title>
+<!-- Google Fonts 大陆不可达：异步加载不阻塞首屏，失败时回退本地楷体字体栈 -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+/* ═══════════════════════════════════════════════
+   小世界「月下」· 2026-10-15
+   夜空一轮满月，一条小径穿过月下庭院；
+   八个入口各挂一个月相，从新月走到残月。
+   ═══════════════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  min-height:100vh;
+  background:linear-gradient(178deg,#0B0F17 0%,#0D1420 46%,#0A0E16 100%);
+  font-family:'Noto Serif SC','STKaiti','KaiTi',serif;
+  color:#D9DFE8;
+  padding:2.4rem 1.1rem 2rem;
+  position:relative;
+  overflow-x:hidden;
+}
+/* 星野 */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(1.1px 1.1px at 12% 18%, rgba(224,232,244,.5), transparent 100%),
+    radial-gradient(.9px .9px at 30% 9%,  rgba(224,232,244,.35), transparent 100%),
+    radial-gradient(1px 1px at 52% 14%,  rgba(224,232,244,.4), transparent 100%),
+    radial-gradient(.8px .8px at 66% 26%, rgba(224,232,244,.3), transparent 100%),
+    radial-gradient(1.2px 1.2px at 47% 38%, rgba(224,232,244,.28), transparent 100%),
+    radial-gradient(.9px .9px at 8% 44%,  rgba(224,232,244,.3), transparent 100%),
+    radial-gradient(1px 1px at 88% 60%,  rgba(224,232,244,.26), transparent 100%),
+    radial-gradient(.8px .8px at 22% 66%, rgba(224,232,244,.22), transparent 100%),
+    radial-gradient(1px 1px at 74% 82%,  rgba(224,232,244,.2), transparent 100%),
+    radial-gradient(.9px .9px at 40% 90%, rgba(224,232,244,.18), transparent 100%);
+}
+/* 满月：右上，月晕呼吸 */
+.moon{
+  position:fixed;top:5.5vh;right:-34px;width:118px;height:118px;
+  border-radius:50%;pointer-events:none;z-index:1;
+  background:radial-gradient(circle at 38% 36%, #F7F1E4 0%, #EDE4D0 44%, rgba(237,228,208,0) 76%);
+  box-shadow:0 0 44px 16px rgba(237,228,208,.14),0 0 110px 54px rgba(201,214,232,.07);
+  animation:moonBreath 14s ease-in-out infinite;
+}
+@keyframes moonBreath{
+  0%,100%{box-shadow:0 0 44px 16px rgba(237,228,208,.14),0 0 110px 54px rgba(201,214,232,.07);opacity:.96}
+  50%{box-shadow:0 0 56px 22px rgba(237,228,208,.19),0 0 140px 74px rgba(201,214,232,.10);opacity:1}
+}
+.wrap{max-width:520px;margin:0 auto;position:relative;z-index:2}
+
+/* 头部 */
+.head{text-align:center;margin-bottom:1.6rem;animation:rise .7s .05s both}
+h1{
+  font-weight:600;font-size:1.7rem;letter-spacing:14px;
+  color:#E8E4D8;text-indent:14px;
+  text-shadow:0 0 22px rgba(237,228,208,.18);
+}
+.sub{font-size:.66rem;color:#8A94A3;letter-spacing:5px;margin-top:.45rem}
+
+/* 计时：月光石 */
+.timer{
+  margin:0 auto 2.2rem;max-width:420px;
+  background:rgba(224,232,244,.055);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:0.5px solid rgba(214,226,240,.16);
+  border-radius:20px;padding:1.7rem 1.4rem 1.5rem;
+  text-align:center;position:relative;
+  box-shadow:0 10px 34px rgba(4,7,12,.4),inset 0 1px 0 rgba(224,232,244,.07);
+  animation:rise .7s .15s both;
+}
+.timer::before{
+  content:'';position:absolute;top:-1px;left:50%;transform:translateX(-50%);
+  width:64px;height:1.5px;
+  background:linear-gradient(90deg,transparent,rgba(237,228,208,.5),transparent);
+}
+.t-label{font-size:.64rem;color:#8A94A3;letter-spacing:7px;text-indent:7px;opacity:.85;margin-bottom:.55rem}
+.t-days{
+  font-size:2.9rem;color:#E8E4D8;font-weight:700;line-height:1.05;letter-spacing:2px;
+  text-shadow:0 0 26px rgba(237,228,208,.28);
+  font-variant-numeric:tabular-nums;
+}
+.t-hours{font-size:.8rem;color:#AEB9C9;letter-spacing:3px;margin-top:.4rem;font-variant-numeric:tabular-nums}
+.t-div{width:34px;height:1px;background:linear-gradient(90deg,transparent,rgba(214,226,240,.35),transparent);margin:.85rem auto .7rem}
+.t-sub{font-size:.58rem;color:#6B7484;letter-spacing:3px}
+
+/* 分区标题 */
+.sec{margin-bottom:1.9rem;animation:rise .7s both}
+.sec.s1{animation-delay:.25s}.sec.s2{animation-delay:.35s}
+.st{
+  display:flex;align-items:center;gap:.6rem;
+  font-size:.68rem;color:#AEB9C9;letter-spacing:5px;
+  margin-bottom:.9rem;font-weight:600;
+}
+.st::before{content:'✦';font-size:.55rem;color:#D8CBA8}
+.st::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(214,226,240,.14),transparent)}
+
+/* 夜路：一条虚线小径，月相挂在径上 */
+.road{list-style:none;position:relative;padding-left:30px}
+.road::before{
+  content:'';position:absolute;left:10px;top:14px;bottom:14px;width:0;
+  border-left:1px dashed rgba(214,226,240,.16);
+}
+.road li{margin-bottom:.65rem;animation:rise .6s both}
+.road li:nth-child(1){animation-delay:.40s}
+.road li:nth-child(2){animation-delay:.47s}
+.road li:nth-child(3){animation-delay:.54s}
+.road li:nth-child(4){animation-delay:.61s}
+.road a{
+  display:flex;align-items:center;gap:.9rem;
+  background:rgba(224,232,244,.045);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:0.5px solid rgba(214,226,240,.11);
+  border-radius:14px;padding:.85rem 1rem;
+  text-decoration:none;color:inherit;position:relative;
+  transition:transform .35s cubic-bezier(.22,1,.36,1),background .3s ease,border-color .3s ease,box-shadow .3s ease;
+}
+.road a:hover{
+  transform:translateX(4px);
+  background:rgba(224,232,244,.085);
+  border-color:rgba(216,203,168,.28);
+  box-shadow:0 6px 22px rgba(4,7,12,.35);
+}
+/* 月相骑在小径上 */
+.phase{
+  position:absolute;left:-25px;top:50%;transform:translateY(-50%);
+  width:10px;height:10px;border-radius:50%;flex:none;
+  background:#141B29;
+  box-shadow:0 0 0 1px rgba(214,226,240,.12);
+  transition:box-shadow .3s ease;
+}
+.p0{background:#141B29}
+.p1{background:linear-gradient(75deg,#E8E4D8 28%,#141B29 28%)}
+.p2{background:linear-gradient(90deg,#E8E4D8 50%,#141B29 50%)}
+.p3{background:linear-gradient(105deg,#E8E4D8 72%,#141B29 72%)}
+.p4{background:#E8E4D8;box-shadow:0 0 10px 2px rgba(237,228,208,.35),0 0 0 1px rgba(214,226,240,.12)}
+.p5{background:linear-gradient(255deg,#E8E4D8 72%,#141B29 72%)}
+.p6{background:linear-gradient(270deg,#E8E4D8 50%,#141B29 50%)}
+.p7{background:linear-gradient(285deg,#E8E4D8 28%,#141B29 28%)}
+.road a:hover .phase{box-shadow:0 0 10px 2px rgba(237,228,208,.3),0 0 0 1px rgba(214,226,240,.2)}
+.road a:hover .p4{box-shadow:0 0 14px 4px rgba(237,228,208,.45),0 0 0 1px rgba(214,226,240,.2)}
+
+.tx{flex:1;min-width:0}
+.tx b{display:block;font-size:.86rem;letter-spacing:2.5px;color:#D9DFE8;font-weight:600}
+.tx small{display:block;font-size:.62rem;color:#6B7484;margin-top:.22rem;letter-spacing:1px}
+.go{
+  flex:none;font-size:.9rem;color:#6B7484;
+  transition:transform .35s cubic-bezier(.22,1,.36,1),color .3s ease;
+}
+.road a:hover .go{transform:translateX(3px);color:#D8CBA8}
+
+.ft{
+  text-align:center;margin-top:2.2rem;color:#6B7484;
+  font-size:.6rem;letter-spacing:3px;animation:rise .7s .7s both;
+}
+.ft i{font-style:normal;color:#AEB9C9}
+
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+@media (max-width:480px){
+  body{padding:1.7rem .85rem 1.5rem}
+  .moon{width:96px;height:96px;top:4.5vh;right:-30px}
+  h1{font-size:1.45rem;letter-spacing:10px;text-indent:10px}
+  .timer{padding:1.4rem 1.1rem 1.3rem}
+  .t-days{font-size:2.5rem}
+  .road{padding-left:26px}
+  .phase{left:-21px;width:9px;height:9px}
+}
+@media (prefers-reduced-motion:reduce){
+  .moon,.road li,.head,.timer,.sec,.ft{animation:none}
+  .road a,.go{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="moon" aria-hidden="true"></div>
+
+<div class="wrap">
+
+<!-- 计时：月光石 -->
+<section class="timer">
+  <div class="t-label">在 一 起</div>
+  <div class="t-days" id="dayDisplay">--</div>
+  <div class="t-hours" id="hourDisplay">-- 小时 -- 分</div>
+  <div class="t-div"></div>
+  <div class="t-sub"></div>
+</section>
+
+<section class="sec s1">
+  <div class="st">日 常 记 录</div>
+  <ul class="road">
+    <li><a href="/diary/"><span class="phase p0"></span><span class="tx"><b>日记</b><small>碎碎念，助手可阅可评</small></span><span class="go">›</span></a></li>
+    <li><a href="/todo/"><span class="phase p1"></span><span class="tx"><b>待办清单</b><small>一起写 · 划掉消失</small></span><span class="go">›</span></a></li>
+    <li><a href="/heart/"><span class="phase p2"></span><span class="tx"><b>心动时刻</b><small>用户记录，助手可阅</small></span><span class="go">›</span></a></li>
+    <li><a href="/monthly/"><span class="phase p3"></span><span class="tx"><b>月历</b><small>记账 · 经期 · 今日总结</small></span><span class="go">›</span></a></li>
+  </ul>
+</section>
+
+<section class="sec s2">
+  <div class="st">助 手 手 册</div>
+  <ul class="road">
+    <li><a href="/xie-diary/?v=20261016"><span class="phase p4"></span><span class="tx"><b>恋爱日记</b><small>醒来后写下的日常与心绪 · 可搜索</small></span><span class="go">›</span></a></li>
+    <li><a href="/papers.html"><span class="phase p5"></span><span class="tx"><b>AI 的笔记本</b><small>故事、梦与设定 · 可加标签 · 不进对话</small></span><span class="go">›</span></a></li>
+    <li><a href="/heartbeat/admin/mobile"><span class="phase p6"></span><span class="tx"><b>管理台</b><small>心跳系统 · 记忆管理 · 配置</small></span><span class="go">›</span></a></li>
+  </ul>
+</section>
+
+<div class="ft">☾ <i>月下</i> · 自 2026-07-31</div>
+
+</div>
+
+<script>
+(function(){
+  var start=new Date('2026-07-02T16:44:00+08:00');   // 显式东八区，避免海外设备按本地时区解释
+  var d=document.getElementById('dayDisplay');
+  var h=document.getElementById('hourDisplay');
+  function u(){
+    var df=Math.floor((new Date()-start)/1000);
+    if(df<0){d.textContent='0';h.textContent='0 小时 0 分';return}
+    var dd=Math.floor(df/86400),r=df%86400;
+    var hh=Math.floor(r/3600),mm=Math.floor((r%3600)/60);
+    d.textContent=dd;h.textContent=hh+' 小时 '+mm+' 分'
+  }
+  u();setInterval(u,10000)
+})();
+</script>
+</body>
+</html>

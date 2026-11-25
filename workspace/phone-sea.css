@@ -1,0 +1,52 @@
+/* phone-sea.css v1 —— 1017：海一样的壁纸（底部深蓝向上渐淡）/ 月相画布 / 桌面日历卡 / 夜里日志小卡保持浅色 */
+
+/* 壁纸：底部更深的蓝，向上渐淡（2026-10-27 光斑层 #aurora 整层删除，只剩纯渐变） */
+#device{--wall:linear-gradient(180deg,#d6e6f7 0%,#b7cfee 32%,#92b2e1 66%,#6c90ce 100%)}
+/* 夜晚：同样是底部更深、顶部略亮 */
+.sk-night{background:radial-gradient(120% 22% at 50% 58%,rgba(170,170,222,.16),transparent 70%),linear-gradient(180deg,#4f5a9c 0%,#3d4688 36%,#2a3070 66%,#1a1d4c 100%)}
+.sk-wash{background:linear-gradient(180deg,rgba(124,140,170,.5),rgba(96,112,146,.5))}
+
+/* 月亮：canvas 画的真实月相（1018 照主页的满月改成柔光圆：大、无硬边、露在右上角、月晕呼吸；月相仍按真实日期） */
+.sk-lune{position:absolute;left:0;top:0;width:320px;height:320px;margin:-160px 0 0 -160px;opacity:0;transition:transform 30s linear,opacity 20s linear;will-change:transform,opacity;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.sk-lune{animation:none}}
+#sky.nofx .sk-lune{transition:none!important}
+
+/* 桌面日历卡（第 1 页，周条） */
+.hp-p1 .pill{display:none}
+.hw-cal{flex:none;height:122px;padding:12px 8px 8px;margin-top:auto;margin-bottom:10px;gap:4px}
+.hc-h{display:flex;align-items:baseline;gap:8px;padding:0 8px}
+.hc-h b{font:400 20px/1 var(--hfont);letter-spacing:.06em}
+.hc-h small{font:italic 400 13px var(--hnum);color:var(--ink3);letter-spacing:.03em}
+.hc-h .pl{margin-left:auto;font:400 11px var(--hfont);letter-spacing:.26em;color:var(--ink2)}
+.hc-w{flex:1;display:grid;grid-template-columns:repeat(7,1fr);min-height:0}
+.hc{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0}
+.hc small{font:400 11px var(--hfont);color:var(--ink3);letter-spacing:.04em}
+.hc .nr{position:relative;width:100%;height:30px;display:grid;place-items:center}
+.hc .nr b{position:relative;z-index:1;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:400 16px/1 var(--hnum);color:var(--ink)}
+.hc.today .nr b{background:var(--acc);color:#fff;box-shadow:0 5px 14px rgba(111,148,212,.42)}
+.hc.p .nr::before{content:"";position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(238,157,176,.26)}
+.hc.p.ps .nr::before{left:5px;border-radius:15px 0 0 15px}.hc.p.pe .nr::before{right:5px;border-radius:0 15px 15px 0}
+.hc.p.ps.pe .nr::before{border-radius:15px}
+.hc.pp .nr::before{content:"";position:absolute;left:3px;right:3px;top:1px;bottom:1px;border:1px dashed rgba(238,157,176,.55);border-radius:15px}
+.hc i{position:absolute;bottom:0;width:4px;height:4px;border-radius:50%;background:var(--acc)}
+.hc em{position:absolute;bottom:-4px;font:normal 9px/1 var(--sans);color:#ee8fa6}
+
+/* 夜里桌面的日志小卡：保持浅色小终端，不要变成一大块深蓝 */
+#device[data-night="1"] .hw-term{background:rgba(244,247,255,.86);border-color:rgba(255,255,255,.9);color:#3a4468}
+#device[data-night="1"] .hw-ln time{color:#8591b4}
+#device[data-night="1"] .hw-ln b{color:#4f6ea8}
+#device[data-night="1"] .hw-ln span{color:#3a4468}
+#device[data-night="1"] .hw-ln.warn b,#device[data-night="1"] .hw-ln.warn span{color:#c9788d}
+
+/* 第 1 页：内容不被压扁；矮屏时整体紧凑一点，太矮就收起日历卡 */
+.hp-p1 .pcard,.hp-p1 .grid{flex:none}
+@media (max-height:800px){
+  #home .pcard{padding-bottom:10px}
+  #home .pcard .avs{margin-top:14px}
+  #home .pcard .avs .av{width:62px;height:62px}
+  #home .pcard .nm{margin-top:6px}
+  #home .pcard .bar{margin-top:6px}
+  #home .grid{gap:12px 0;margin-top:12px}
+  .hw-cal{height:106px;margin-bottom:6px}
+}
+@media (max-height:700px){ .hw-cal{display:none} }

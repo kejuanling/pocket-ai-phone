@@ -1,0 +1,350 @@
+/* phone-chats.css —— 会话列表（Dock「聊天」进来的第一页）：玻璃行、置顶换底色、长按菜单、右滑已归档抽屉、底部三颗 */
+
+/* 顶栏：像微信，标题居中，图标不带圆底 */
+.cs-bar{position:relative;display:flex;align-items:center;gap:2px;padding:calc(var(--sat) + 6px) 8px 6px;height:calc(var(--sat) + 52px)}
+.cs-bar .back,.cs-ib{width:40px;height:40px;display:grid;place-items:center;border-radius:50%;background:none;border:0}
+.cs-bar svg{width:22px;height:22px;stroke:var(--ink);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.cs-bar .ttl{position:absolute;left:0;right:0;bottom:14px;text-align:center;pointer-events:none;font:500 17px var(--hfont,var(--sans));letter-spacing:.08em;color:var(--ink)}
+.cs-bar .ttl small{font-size:14px;color:var(--ink3);letter-spacing:0}
+.cs-bar .sp{flex:1}
+.cs-sc{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:0 0 calc(var(--sab) + 96px)}
+.cs-ls{display:flex;flex-direction:column;border-top:.5px solid rgba(120,135,165,.2)}
+
+/* 一行：头像 + 名字/时间 + 人设·条数·模型 */
+.cs-it{position:relative;display:flex;align-items:center;gap:12px;padding:12px 18px 12px 16px;/* 1021：去掉每次打开列表的「从上往下排开」入场动画（--i 递增延迟），列表直接出现，不铺开 */-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+/* 扁平行，线条隔开（线从名字下面起，不压头像） */
+.cs-it::after{content:"";position:absolute;left:76px;right:0;bottom:0;height:.5px;background:rgba(120,135,165,.22)}
+.cs-it:last-child::after{left:0}
+.cs-it.pressed{background:rgba(125,156,207,.1)}
+@keyframes cs-in{from{opacity:0;transform:translateY(14px)}}
+.cs-it.pin{background:rgba(42,48,66,.05)}
+.cs-it .av{width:48px;height:48px;border-radius:12px;font-size:17px;border:0}
+.cs-it .bd{flex:1;min-width:0}
+.cs-it .t{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.cs-it .t b{font:400 16.5px/1.35 var(--hfont,var(--sans));letter-spacing:.04em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cs-it .t time{flex:none;font:400 11.5px var(--sans);color:var(--ink3)}
+.cs-it .m{display:flex;align-items:center;gap:6px;margin-top:4px;min-width:0}
+.cs-it .mt{font-size:13px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cs-it .lk{flex:none;display:inline-flex;align-items:center;gap:3px;padding:1px 7px 1px 5px;border-radius:999px;font-size:10.5px;color:#fff;background:var(--acc)}
+.cs-it .lk svg{width:11px;height:11px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cs-it.gone{opacity:0;transform:translateX(-30px);transition:opacity .28s,transform .3s var(--spring)}
+/* [位置:phone-chats.css·.cs-it.arc] [子会话组已归档行置灰] [10-31：已归档的子会话留在组里，置灰降饱和+标「已归档」小标（.lk.gt 灰底），跟活跃的分开] [注释时间 2026-10-31] */
+.cs-it.arc .cs-fg,.cs-it.arc .cs-x{opacity:.45;filter:saturate(.35)}
+.cs-it .lk.gt{color:var(--ink2);background:rgba(125,140,165,.3)}
+
+/* 列表底部：已归档的入口提示（也可以直接右滑） */
+.cs-hint{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:14px;padding:10px 0;font:italic 12.5px var(--hmix,var(--serif));color:var(--ink3);letter-spacing:.04em}
+.cs-hint svg{width:15px;height:15px;stroke:var(--ink3);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* 底部三颗：会话 / 我的 / 配置（微信式扁平底栏） */
+.cs-tabs{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;padding:6px 0 calc(var(--sab) + 26px);background:rgba(var(--sh),.86);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);border-top:.5px solid rgba(120,135,165,.22)}
+.cs-tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:var(--ink3);background:none}
+.cs-tabs button svg{width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.cs-tabs button span{font:400 11px var(--sans);letter-spacing:.06em}
+/* [位置:phone-chats.css·选中态各规则] [批次4b选中态token化：实色强调 var(--acc)→var(--sel-ring)、浅底 rgba(...,.16)→var(--sel-bg)、半实 rgba(...,.55)→var(--sel-dim)；token 定义在 phone-new.html :root，非选中态主色一律未动，零视觉差异] [工作流/tasks/调查/2026-11-13_前端体验修复确认单.md 批次4b] [注释时间 2026-11-14] */
+.cs-tabs button.on{color:var(--sel-ring)}
+.cs-tabs button.on svg{stroke-width:1.9}
+
+/* 长按：那一行浮起来 + 菜单 */
+.cs-ov{position:absolute;inset:0;z-index:40;pointer-events:none;visibility:hidden;transition:visibility 0s .22s}
+.cs-ov.show{pointer-events:auto;visibility:visible;transition:none}
+.cs-ov .scrim{position:absolute;inset:0;background:rgba(40,52,80,.10);opacity:0;transition:opacity .16s}
+.cs-ov.show .scrim{opacity:1}
+.cs-ov .lift{position:absolute;margin:0;animation:cs-lift .32s var(--spring) both;border-radius:16px;box-shadow:0 14px 34px rgba(40,52,80,.22);background:rgba(var(--sh),.96)}
+.cs-ov .lift::after{display:none}
+@keyframes cs-lift{from{transform:none;box-shadow:none}to{transform:translate(-4px,-7px) scale(.95)}}
+.cs-ov .lift.pin{background:rgba(222,232,248,.95)}
+.cs-menu{position:absolute;right:22px;width:214px;padding:6px;border-radius:20px;background:rgba(var(--sh),.62);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);border:.5px solid var(--ring);box-shadow:0 20px 50px rgba(40,52,80,.28);transform:scale(.72);transform-origin:50% 50%;transition:transform .3s cubic-bezier(.2,1.25,.35,1)}
+.cs-ov.show .cs-menu{transform:none}
+.cs-menu button{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;width:100%;padding:11px 14px;border-radius:14px;text-align:left;font:400 15px var(--hfont,var(--sans));letter-spacing:.06em;color:var(--ink)}
+.cs-menu button:active{background:rgba(125,156,207,.14)}
+.cs-menu button i{font-style:normal;color:var(--acc)}
+.cs-menu button small{flex-basis:100%;margin-top:2px;font-size:11px;letter-spacing:0;color:var(--ink3)}
+.cs-menu button+button{border-top:.5px solid rgba(120,135,165,.14)}
+.cs-menu .red{color:var(--k-d5738c)}
+
+/* 新建会话：两种选法 */
+.ses-pop .cs-pick{display:block;width:100%;text-align:left;margin:4px 0;padding:12px 14px;border-radius:16px;border:.5px solid rgba(125,156,207,.25);background:rgba(125,156,207,.06)}
+.ses-pop .cs-pick b{display:block;font:400 15.5px var(--hfont,var(--sans));letter-spacing:.06em;color:var(--ink)}
+.ses-pop .cs-pick small{display:block;margin-top:3px;font-size:12px;color:var(--ink3)}
+.ses-pop .cs-pick.on{border-color:var(--sel-ring);background:rgba(125,156,207,.18);box-shadow:inset 0 0 0 1px var(--sel-ring)}
+.ses-pop .cs-cus{margin-top:6px}
+/* [位置:phone-chats.css·.mdw] [模型下拉放宽] [11-05 晚：列表改成只写模型名后，行内那个固定 116px 的下拉还是把 claude-opus-4-6 截成「claude-o...」；模型这一行单独放宽到 150px（别的下拉保持 116px 不动，行内仍对齐），更长的模型名照旧省略] [注释时间 2026-11-05] */
+.ses-pop .opt .ro select.mdw{width:150px}
+/* [位置:phone-chats.css·cs-inhw] [新建会话「承接会话」行] [10-29：读剪贴板填会话 id 指定承接谁；样式跟 cs-cus 现有行，输入框窄屏不挤出] [注释时间 2026-10-29] */
+.ses-pop .cs-cus .cs-inhw{display:flex;align-items:center;gap:6px;min-width:0}
+.ses-pop .cs-cus .cs-inhw input{flex:1;min-width:0;font:400 13.5px var(--hfont,var(--sans));color:var(--ink);background:rgba(127,140,180,.1);border:.5px solid rgba(127,140,180,.3);border-radius:10px;padding:8px 10px;outline:0;-webkit-appearance:none;appearance:none}
+.ses-pop .cs-cus .cs-inhw input::placeholder{color:var(--ink3);opacity:.7}
+.ses-pop .cs-cus .cs-inhb{flex:none;font:500 12px var(--hfont,var(--sans));color:var(--ink2);background:rgba(127,140,180,.16);border:0;border-radius:10px;padding:8px 10px}
+/* [位置:phone-chats.css·.cs-xq-wrap] [新建自定义会话按需展开的数量与承接会话区] [11-23：跨窗口默认数量删掉后挪进新建自定义会话，选中对应项才出现；承接会话同样挪到下方、选中继承状态或最近对话才出现] [注释时间 2026-11-23] */
+.ses-pop .cs-xq-wrap{border-top:.5px solid rgba(120,135,165,.16);margin-top:4px;padding-top:4px}
+.ses-pop .cs-xq-wrap[hidden]{display:none}
+.ses-pop .cs-xq-r{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 4px}
+.ses-pop .cs-xq-r[hidden]{display:none}
+.ses-pop .cs-xq-r>span{font:400 14px var(--hfont,var(--sans));color:var(--ink)}
+.ses-pop .cs-xq-r>span small{margin-left:5px;font-size:11px;color:var(--ink3)}
+.ses-pop .cs-xq-st{display:flex;align-items:center;gap:2px;padding:2px;border-radius:999px;background:rgba(125,156,207,.12)}
+.ses-pop .cs-xq-st button{width:28px;height:28px;border-radius:50%;background:var(--pill);color:var(--ink2);font-size:16px;line-height:1;box-shadow:0 1px 3px rgba(60,80,120,.14)}
+.ses-pop .cs-xq-st button:active{transform:scale(.88)}
+.ses-pop .cs-xq-st input{width:44px;text-align:center;font:400 13.5px var(--hnum,var(--sans));color:var(--ink);background:transparent;border:0;outline:0;padding:2px 0;-webkit-appearance:none;appearance:none}
+.ses-pop .cs-inh-row[hidden]{display:none}
+
+/* 右滑：已归档抽屉（从左边推出来）
+   [位置:phone-chats.css·.cs-dw] [归档抽屉换壳] [11-07：照旧 chat 端极简主题会话抽屉（chat.html #sessionDrawer 液态玻璃版）重做外壳——四周留 8px 浮起的全高圆角卡（30px 圆角）、液态玻璃底+斜向高光描边、纯色遮罩去模糊；搜索框换 40px 填充式矩形、行换透明圆角块去分隔线；标题/小字/搜索/取回等内容与逻辑不动] [注释时间 2026-11-07] */
+.cs-dw{position:absolute;inset:0;z-index:38;pointer-events:none}
+/* 遮罩：旧端做法——纯色加深、不带模糊（浅 .25 / 夜 .6） */
+.cs-dw .scrim{position:absolute;inset:0;background:rgba(0,0,0,.25);opacity:0;transition:opacity .3s}
+#device[data-theme="dark"] .cs-dw .scrim{background:rgba(0,0,0,.6)}
+/* 面板：四周留 8px 浮起的圆角卡（保持全高，不是底部小卡），液态玻璃底 */
+.cs-dw .pane{position:absolute;left:8px;top:calc(var(--sat) + 8px);bottom:calc(var(--sab) + 8px);width:min(84%,310px);max-width:calc(100% - 20px);display:flex;flex-direction:column;padding:14px 6px 10px;border-radius:30px;overflow:hidden;background:linear-gradient(180deg,rgba(var(--sh),.74) 0%,rgba(var(--sh),.55) 100%);-webkit-backdrop-filter:blur(30px) saturate(190%) brightness(1.04);backdrop-filter:blur(30px) saturate(190%) brightness(1.04);box-shadow:0 18px 50px rgba(0,0,0,.18),0 3px 10px rgba(0,0,0,.08);transform:translateX(calc(-100% - 20px));transition:transform .36s var(--spring)}
+/* 斜向高光描边（旧端玻璃 rim：伪元素+蒙版只留 1px 边） */
+.cs-dw .pane::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(255,255,255,.15) 40%,rgba(120,135,165,.25));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+#device[data-theme="dark"] .cs-dw .pane{background:linear-gradient(180deg,rgba(54,58,72,.74) 0%,rgba(34,38,50,.64) 100%);box-shadow:0 18px 50px rgba(0,0,0,.55),0 3px 10px rgba(0,0,0,.35)}
+#device[data-theme="dark"] .cs-dw .pane::before{background:linear-gradient(135deg,rgba(255,255,255,.28),rgba(255,255,255,.04) 40%,rgba(214,226,240,.12))}
+.cs-dw.show{pointer-events:auto}
+.cs-dw.show .scrim{opacity:1}
+.cs-dw.show .pane{transform:none}
+/* 头部：大标题 + 斜体小字保留（11-07：内容不变，只随卡片改缩进） */
+.cs-dw .dh{padding:10px 12px 12px}
+.cs-dw .dh h2{font:400 26px var(--hfont,var(--display));letter-spacing:.08em;color:var(--ink)}
+.cs-dw .dh small{display:block;margin-top:4px;font:italic 12.5px var(--hmix,var(--serif));color:var(--ink3)}
+/* [位置:phone-chats.css·.cs-dw .dh .fq] [归档抽屉搜索框] [11-01 加过滤框；2026-11-07 换壳：改旧端极简做法——高 40、圆角 16 的填充式矩形（无边框，iOS 填充灰），过滤逻辑不动] [注释时间 2026-11-07] */
+.cs-dw .dh .fq{display:block;width:100%;box-sizing:border-box;height:40px;margin-top:4px;padding:0 14px;border-radius:16px;border:0;background:rgba(118,118,128,.12);font:400 15px var(--hfont,var(--sans));color:var(--ink);outline:0;-webkit-appearance:none;appearance:none}
+.cs-dw .dh .fq::placeholder{color:var(--ink3);opacity:.75}
+#device[data-theme="dark"] .cs-dw .dh .fq{background:rgba(118,118,128,.24)}
+.cs-dw .dl{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;padding:2px 4px 8px}
+/* 行：透明圆角块，去分隔线；按住出浅色圆角块（全局 .pressed） */
+.cs-dw .cs-it{animation:none;flex:none;padding:12px 10px;border-radius:10px}
+.cs-dw .cs-it::after{display:none}
+/* [位置:phone-chats.css·.cs-dw .cs-it] [已归档抽屉行不被压扁] [抽屉列表是纵向 flex，行上 overflow:hidden 使 min-height 归零，归档多了就被压扁叠字；固定行高、列表自己滚动] [注释时间 2026-10-21；2026-11-07 换壳顺带保留 flex:none] */
+.cs-dw .cs-it{flex:none}
+/* 取回：透明+细描边胶囊（跟卡片描边一套） */
+.cs-dw .cs-back{color:var(--ink2);background:transparent;border:.5px solid rgba(120,135,165,.28)}
+#device[data-theme="dark"] .cs-dw .cs-back{border-color:rgba(214,226,240,.16)}
+/* 降级：系统减透明度 / 不支持 backdrop-filter 时面板用实色底（旧端同款） */
+@media (prefers-reduced-transparency:reduce){
+  .cs-dw .pane,#device[data-theme="dark"] .cs-dw .pane{background:rgba(var(--sh),.98);-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .cs-dw .pane,#device[data-theme="dark"] .cs-dw .pane{background:rgba(var(--sh),.98)}
+}
+/* [位置:phone-chats.css·.ses-pop.dwg .box] [chats 三抽屉玻璃底] [#58 11-01：新建/搜索/改名三个抽屉有拉高档，玻璃只给有满档的抽屉；矮弹窗（模型选择/确认框/组操作等）共用基类 .ses-pop .box，一行没动；blur 20px 级防发烫（#29）] [注释时间 2026-11-01] */
+.ses-pop.dwg .box{background:rgba(var(--sh),.9);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%)}
+.cs-back{flex:none;padding:7px 13px;border-radius:999px;font:400 12.5px var(--hfont,var(--sans));letter-spacing:.1em;color:var(--acc);background:rgba(125,156,207,.14)}
+
+/* 跨窗口注入的块：两三个字一个，一排三个 */
+.ses-pop .cs-xb{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:4px 8px 10px}
+.ses-pop .cs-xb[hidden]{display:none}
+.ses-pop .cs-xb button{height:36px;border-radius:12px;font:400 13.5px var(--hfont,var(--sans));letter-spacing:.08em;color:var(--ink2);background:rgba(125,156,207,.08);border:.5px solid rgba(125,156,207,.28)}
+.ses-pop .cs-xb button.on{color:#fff;background:var(--sel-ring);border-color:var(--sel-ring)}
+.ses-pop .cs-xb button.lock{color:var(--ink3);background:rgba(125,156,207,.16);border-style:dashed}
+/* 一轮：「· 固定」后缀已去掉（三列装不下；虚线框=固定，说明里有写） */
+
+/* 底部 tab 当页切换：我的 / 配置 挂在同一个窗口里 */
+.cs-pane{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:4px 16px calc(var(--sab) + 110px)}
+.cs-sc.off,.cs-pane.off{display:none}
+.cs-pane:not(.off),.cs-sc.in{animation:cstab .38s var(--spring)}
+@keyframes cstab{from{opacity:0;transform:translateX(calc(var(--d,1)*24px))}}
+.cs.cs-other #csFind,.cs.cs-other #csNew{visibility:hidden}
+
+/* 轻薄：命中色改白色半透明胶囊 */
+.ses-pop .cs-xb button.on{color:var(--ink);background:rgba(255,255,255,calc(.88*var(--wk)));border-color:rgba(255,255,255,calc(.95*var(--wk)));box-shadow:0 2px 8px rgba(96,120,160,.1)}
+.cs-it .lk{color:var(--ink2);background:rgba(255,255,255,calc(.7*var(--wk)))}
+.cs-it .lk svg{stroke:var(--ink2)}
+
+/* ===================== 10-19 第二轮：会话页 ===================== */
+/* 分割线全宽、稍粗；头像下面也有线 */
+.cs-ls{border-top:1px solid rgba(120,135,165,.16)}
+.cs-it::after{left:0;height:1px;background:rgba(120,135,165,.16)}
+/* 置顶：更亮（白一层），不是更深 */
+.cs-it.pin{background:rgba(255,255,255,calc(.5*var(--wk)))}
+.cs-ov .lift.pin{background:rgba(255,255,255,calc(.96*var(--wk)))}
+/* 点按：不弹也不铺开，只留按下这一刻的一层极淡底色（10-22：扩散动画迁到不跳转的列表） */
+.cs-it.pressed{background:rgba(125,156,207,.08)}
+.cs-it{overflow:hidden}
+.cs-it.pin.pressed{background:rgba(255,255,255,calc(.5*var(--wk)))}
+/* 长按菜单：更模糊；选项之间直线分割（按钮不带圆角） */
+.cs-menu{padding:0;overflow:hidden;background:rgba(var(--sh),.5);-webkit-backdrop-filter:blur(44px) saturate(180%);backdrop-filter:blur(44px) saturate(180%)}
+.cs-menu button{border-radius:0;padding:13px 18px}
+.cs-menu button+button{border-top:1px solid rgba(120,135,165,.14)}
+/* 跨窗口注入：默认白，选中浅蓝 */
+.ses-pop .cs-xb button{color:var(--ink2);background:rgba(255,255,255,calc(.72*var(--wk)));border:.5px solid rgba(255,255,255,calc(.95*var(--wk)));box-shadow:none}
+.ses-pop .cs-xb button.on{color:var(--ink);background:rgba(125,156,207,.24);border-color:rgba(125,156,207,.45);box-shadow:none}
+.ses-pop .cs-xb button.lock{color:var(--ink3);background:rgba(255,255,255,calc(.45*var(--wk)));border:.5px dashed rgba(125,156,207,.4)}
+/* 说明文字藏起来 */
+.cs-menu button small,.ses-pop .cs-pick small,.ses-pop .cs-cus .ro label small{display:none}
+
+/* 第三轮：隐藏的 .back 不占位，搜索靠左；列表顶部不渐隐（旧的 .win .sc 顶部遮罩会把第一行挡掉） */
+.cs-bar .back[hidden]{display:none}
+.cs-sc,.cs-pane{-webkit-mask-image:none;mask-image:none}
+/* 长按菜单：白色光晕，浮起来 */
+.cs-menu{border:.5px solid rgba(255,255,255,calc(.95*var(--wk)));box-shadow:0 0 0 .5px rgba(255,255,255,calc(.6*var(--wk))),0 12px 36px rgba(255,255,255,calc(.85*var(--wk))),0 2px 10px rgba(255,255,255,calc(.9*var(--wk)))}
+.cs-ov .lift{box-shadow:0 10px 30px rgba(255,255,255,calc(.85*var(--wk))),0 0 0 .5px rgba(255,255,255,calc(.9*var(--wk)))}
+/* 第四轮：.win .sc 的顶部遮罩优先级更高，这里加上 .win 才压得住；列表整体再往下一点 */
+.win .cs-sc,.win .cs-pane{-webkit-mask-image:none;mask-image:none}
+.cs-sc{padding-top:6px}
+/* 长按菜单阴影：用会话列表的底色（淡冰蓝），不用白 */
+.cs-menu{box-shadow:0 14px 38px rgba(206,218,240,.95),0 2px 10px rgba(206,218,240,.85)}
+.cs-ov .lift{box-shadow:0 12px 32px rgba(206,218,240,.95),0 0 0 .5px rgba(255,255,255,calc(.9*var(--wk)))}
+
+/* 第五轮：长按菜单再白一点；行 = 名字和日期一行 + 最后一句；左滑弹性拽出条数 / 详情 */
+.cs-menu{background:rgba(var(--sh),.74)}
+.cs-it{padding:0;touch-action:pan-y}
+.cs-fg{position:relative;z-index:1;display:flex;align-items:center;gap:12px;width:100%;padding:12px 18px 12px 16px;will-change:transform}
+.cs-it .t{align-items:center}
+.cs-it .m{margin-top:5px}
+.cs-it .mt{font-size:13.5px;color:var(--ink3)}
+.cs-x{position:absolute;inset:0;z-index:0;pointer-events:none}
+.cs-x .n{position:absolute;right:20px;top:50%;transform:translateY(-50%);font:400 14px var(--hfont,var(--sans));letter-spacing:.06em;color:var(--acc);opacity:calc(var(--sa,0) * (1 - var(--sf,0)))}
+.cs-x .d{position:absolute;left:14%;right:16px;top:50%;margin:0;transform:translateY(-50%) translateX(calc((1 - var(--sf,0)) * 24px));display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;opacity:var(--sf,0)}
+.cs-x .d div{display:flex;align-items:baseline;gap:8px;min-width:0}
+.cs-x dt{flex:none;font:400 11px var(--sans);letter-spacing:.1em;color:var(--ink3)}
+.cs-x dd{margin:0;min-width:0;font:400 13px var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs-ov .lift .cs-x{display:none}
+
+/* ===== 跨窗口注入选项（新建会话 / 聊天页「…」共用）===== */
+.xw{padding:2px 0 4px}
+.xw-m{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 4px}
+.xw-m b{display:block;font:400 15px var(--hfont,var(--sans));color:var(--ink)}
+.xw-m small{display:block;margin-top:2px;font-size:11.5px;color:var(--ink3)}
+.xw-sw{flex:none;position:relative;width:44px;height:26px;border-radius:13px;background:rgba(125,156,207,.28);transition:background .25s}
+.xw-sw::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(60,80,120,.25);transition:transform .3s var(--spring)}
+.xw-m.on .xw-sw{background:var(--sel-ring)}
+.xw-m.on .xw-sw::after{transform:translateX(18px)}
+.xw-b{transition:opacity .25s}
+.xw.off .xw-b{opacity:.35;pointer-events:none}
+.xw .cs-xb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:4px 2px 10px}
+.xw .cs-xb button{min-height:38px;padding:5px 8px;line-height:1.25;border-radius:12px;font:400 13px var(--hfont,var(--sans));letter-spacing:.02em;color:var(--ink2);background:rgba(125,156,207,.08);border:.5px solid rgba(125,156,207,.28)}
+.xw .cs-xb button.on{color:#fff;background:var(--sel-ring);border-color:var(--sel-ring)}
+.xw .cs-xb button.lock{color:var(--ink3);background:rgba(125,156,207,.16);border-style:dashed}
+/* 三列排布后装不下「· 固定」尾巴：虚线框即固定，说明弹窗里有写 */
+.xw-n{border-top:.5px solid rgba(120,135,165,.18);padding-top:4px}
+.xw-r{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 4px;transition:opacity .25s}
+.xw-r.dim{opacity:.38}
+.xw-r>span{font:400 14.5px var(--hfont,var(--sans));color:var(--ink)}
+.xw-r>span small{margin-left:6px;font-size:11px;color:var(--ink3)}
+.xw-st{display:flex;align-items:center;gap:2px;padding:2px;border-radius:999px;background:rgba(125,156,207,.1)}
+.xw-st button{width:30px;height:30px;border-radius:50%;font-size:17px;line-height:1;color:var(--acc)}
+.xw-st b{min-width:62px;text-align:center;font:400 14px var(--hnum,var(--serif));color:var(--ink)}
+.xw-st b i{font-style:normal;font-size:11px;color:var(--ink3);margin-right:3px}
+.xw-st b.bump{animation:xwb .25s var(--spring)}
+@keyframes xwb{50%{transform:scale(1.15)}}
+.ses-pop.opts .box{max-height:calc(100% - 92px - 34px)}
+/* 10-20 第十一轮：跨窗口注入去掉小字，标题旁 ? 点开说明 */
+.xw-t{display:inline-flex;align-items:center;gap:7px}
+.xw-q{width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;font:600 12px/1 var(--sans);color:var(--acc);background:rgba(125,156,207,.14);border:.5px solid rgba(125,156,207,.35)}
+/* 10-20 第十四轮：唤醒标贴在名字后面；时间推到最右 */
+.cs-it .t{justify-content:flex-start}
+.cs-it .t .lk{margin-left:-2px}
+.cs-it .t time{margin-left:auto}
+.cs-it .m:empty,.cs-it .m .mt:empty{display:none}
+/* 跨窗口说明：弹窗 */
+.xw-pop{position:absolute;inset:0;z-index:90;display:grid;place-items:center;padding:24px}
+.xw-pop .scrim{position:absolute;inset:0;background:rgba(30,40,64,.28);opacity:0;transition:opacity .25s}
+.xw-pop .box{position:relative;max-width:336px;max-height:70%;overflow-y:auto;padding:13px 16px 11px;border-radius:24px;background:rgba(var(--sh),.97);box-shadow:0 20px 50px rgba(40,52,80,.3);transform:scale(.94);opacity:0;transition:transform .3s var(--spring,cubic-bezier(.2,.9,.25,1)),opacity .22s}
+.xw-pop.show .scrim{opacity:1}.xw-pop.show .box{transform:none;opacity:1}
+.xw-pop .hd{display:block;margin:0 30px 7px;font:500 15px var(--hfont,var(--sans));letter-spacing:.08em;color:var(--ink);text-align:center}
+.xw-pop .tx{font-size:12.5px;line-height:1.58;color:var(--ink2)}
+.xw-pop .tx b{color:var(--ink);font-weight:500}
+.xw-pop .xw-li{margin:0 0 5px;padding-left:10px;text-indent:-10px}
+.xw-pop .xw-x{position:absolute;top:9px;right:9px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(125,156,207,.12)}
+.xw-pop .xw-x svg{width:13px;height:13px;stroke:var(--ink2);stroke-width:1.8;fill:none;stroke-linecap:round}
+.xw-pop .xw-li:last-child{margin-top:12px;padding-top:10px;border-top:.5px solid rgba(120,135,165,.18);text-indent:0;padding-left:0;color:var(--ink3)}
+/* 「知道了」按钮已改为右上角关闭图标（10-21） */
+/* [位置:phone-chats.css·.tk-load] [进会话的加载态容器] [1021 时是一行「拉取中…」文字；11-05 改成全局加载动画（白天纸船/夜里星光，无文字），这里只负责居中留白] [注释时间 2026-11-05] */
+.tk-load{display:grid;place-items:center;padding:24px;min-height:100%}   /* min-height:100% 让动画落在消息区正中，不是贴顶 */
+/* [位置:phone-chats.css·.ph-first] [已退役：列表首屏改用整窗毛玻璃层] [11-05：内联的 .ph-first 动画会被列表重绘刷掉，改成 phone-chats.js·load 里 P.load.show(win) 的独立层（铺满窗口 + 毛玻璃），这里不再需要留白] [注释时间 2026-11-05 改] */
+
+/* [位置:phone-chats.css·.snap-dot/.snap-p/.snap-ul] [重建快照红点与说明] [过期时在菜单里亮点，说明页列出原因] [注释时间 2026-10-21] */
+.cs-menu .snap-dot{display:inline-block;width:8px;height:8px;margin-left:8px;border-radius:50%;background:var(--acc,#7d9ccf);box-shadow:0 0 0 3px rgba(125,156,207,.22);vertical-align:middle;animation:snap-pulse 1.8s ease-in-out infinite}
+.cs-menu .snap-dot[hidden]{display:none}
+@keyframes snap-pulse{50%{box-shadow:0 0 0 6px rgba(125,156,207,.06)}}
+/* [位置:phone-chats.css·列表角标] [快照过期角标] [10-25：列表头像右上角亮个点，一眼看到哪些会话快照过期；纯展示不可点，重建仍走长按菜单；视觉同菜单红点（acc+pulse）] [注释时间 2026-10-25] */
+.cs-it .cs-fg .av{position:relative}
+.cs-it .av .snap-dot{position:absolute;top:-3px;right:-3px;width:10px;height:10px;border-radius:50%;background:var(--acc,#7d9ccf);box-shadow:0 0 0 3px rgba(125,156,207,.22);animation:snap-pulse 1.8s ease-in-out infinite}
+.cs-it .av .snap-dot[hidden]{display:none}
+.ses-pop .snap-p{margin:2px 2px 8px;font-size:13.5px;line-height:1.7;color:var(--ink2)}
+.ses-pop .snap-ul{margin:0 0 10px;padding:0 0 0 18px;font-size:13px;line-height:1.75;color:var(--ink)}
+.ses-pop .nw.ghost{margin-top:8px;background:rgba(125,156,207,.14);color:var(--ink)}
+
+/* [位置:phone-chats.css·.cs-off] [离线提示条] [连不上后台时在示例会话列表顶上提醒一句] [注释时间 2026-10-21] */
+.cs-off{margin:6px 14px 2px;padding:7px 12px;border-radius:12px;font-size:12px;letter-spacing:.06em;text-align:center;color:var(--k-c9803a);background:rgba(224,160,50,.14)}
+/* [位置:phone-chats.css·.cs-dw .cs-it] [已归档抽屉行不被压扁] [抽屉列表是纵向 flex，行上 overflow:hidden 使 min-height 归零，归档多了就被压扁叠字；固定行高、列表自己滚动] [注释时间 2026-10-21] */
+.cs-dw .cs-it{flex:none}
+
+/* [位置:phone-chats.css·顶部「···」菜单 / 多选] [会话列表右上角菜单带图标；多选时每行前圆圈 + 底栏 导出 / 归档 / 取消] [10-24 需求] [注释时间 2026-10-24] */
+.cs-top .cs-menu{top:calc(var(--sat) + 46px);right:12px;width:168px;transform-origin:100% 0}
+.cs-menu.ic button{justify-content:flex-start;flex-wrap:nowrap;gap:12px}
+.cs-menu.ic button svg{flex:none;width:19px;height:19px;stroke:var(--ink2);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+/* [位置:phone-chats.css·cs-menu off] [检索菜单项的不参与态] [#51：放大镜=参与，斜杠放大镜+整体半透明=这个组不参与 AI 检索；日夜两版都用透明度不用颜色] [注释时间 2026-10-29] */
+.cs-menu.ic button.off{opacity:.45}
+.cs-mbar{position:absolute;left:0;right:0;bottom:0;z-index:5;display:none;padding:6px 0 calc(var(--sab) + 26px);background:rgba(var(--sh),.86);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);border-top:.5px solid rgba(120,135,165,.22)}
+.cs-mbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:var(--ink);background:none;transition:opacity .2s}
+.cs-mbar button svg{width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.cs-mbar button span{font:400 11px var(--sans);letter-spacing:.06em;white-space:nowrap}   /* 10-31：加「取消全选」四字后防换行挤压 */
+.cs-mbar button.dim{opacity:.35}
+.cs-multi .cs-tabs{display:none}
+.cs-multi .cs-mbar{display:flex}
+.cs-multi .cs-it .cs-fg::before{content:"";flex:none;width:21px;height:21px;margin-right:-2px;border-radius:50%;border:1.5px solid var(--ink3);box-sizing:border-box;transition:background .18s,border-color .18s}
+.cs-multi .cs-it.sel .cs-fg::before{border-color:var(--sel-ring);background:var(--sel-ring) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'><path d='m6 12.5 4 4 8-9'/></svg>") center/13px no-repeat}
+.cs-multi .cs-it.sel{background:rgba(125,156,207,.08)}
+
+/* [位置:phone-chats.css·cs-sps 预设卡] [新会话弹窗的预设卡] [10-26：预设 = 一套建会话配置，点卡直接开始；小头像 + 名字 + 摘要一行，底子顺着 cs-pick 走] [注释时间 2026-10-26] */
+.ses-pop .cs-sps{margin:2px 0}
+.ses-pop .cs-pick.sp{display:flex;align-items:center;gap:11px;padding:10px 14px}
+.ses-pop .cs-pick.sp .av{width:34px;height:34px;font-size:15px}
+.ses-pop .cs-pick.sp .bd{flex:1;min-width:0}
+.ses-pop .cs-pick.sp .bd b{font-size:14.5px}
+.ses-pop .cs-pick.sp .bd small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* [位置:phone-chats.css·会话组] [组行头像 / 头像选择格 / 组内返回键] [10-27：会话组样式跟普通行一致，头像是功能型线条小图标；线条细、圆角矩形] [注释时间 2026-10-27] */
+.av.gi{background-color:rgba(125,156,207,.18);border-radius:12px}
+.av.gi svg{width:54%;height:54%;stroke:var(--ink2);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.cs-bar .cs-gb[hidden]{display:none}
+.gp-ics{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:8px 2px 14px}
+.gp-ic{aspect-ratio:1;border-radius:14px;display:grid;place-items:center;border:.5px solid rgba(125,156,207,.28);background:rgba(255,255,255,calc(.72*var(--wk)));transition:background .18s,border-color .18s,transform .3s var(--spring)}
+.gp-ic svg{width:52%;height:52%;stroke:var(--ink2);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.gp-ic.on{background:rgba(125,156,207,.24);border-color:var(--sel-dim);transform:scale(1.04)}
+.gp-ic.on svg{stroke:var(--ink)}
+/* [位置:phone-chats.css·组内不显示头像] [打开会话组时，里面的会话行不显示头像] [10-27 需求；host 上的 cs-ingrp 由 render 切换，长按浮起的行在 host 里所以一并生效] [注释时间 2026-10-27] */
+.cs-ingrp .cs-it .av{display:none}
+
+/* [位置:phone-chats.css·.st 会话状态标签] [会话名旁的小标签：进行中 / 待回复 / 待反馈 / 已完成] [10-27：AI 用 <status> 标记进展，一眼区分；圆角矩形、颜色各不相同] [注释时间 2026-10-27] */
+.cs-it .st{flex:none;padding:1px 7px;border-radius:6px;font-size:10.5px;letter-spacing:.04em;color:var(--stc);background:var(--stb)}
+.cs-it .st[data-st="进行中"]{--stc:#4f7fd6;--stb:rgba(79,127,214,.14)}
+.cs-it .st[data-st="待回复"]{--stc:#c9803a;--stb:rgba(201,128,58,.16)}
+.cs-it .st[data-st="待反馈"]{--stc:#8a63c9;--stb:rgba(138,99,201,.15)}
+.cs-it .st[data-st="已完成"]{--stc:#4a9a74;--stb:rgba(74,154,116,.15)}
+/* [位置:phone-chats.css·.av.gi 居中] [组头像里的图标没在正中间] [10-27：.av 的 ::after（放首字母）在组头像里是个空的网格项，占了一格把图标挤偏上 5.5px；去掉伪元素，图标按宽度等比] [注释时间 2026-10-27] */
+.av.gi::before,.av.gi::after{content:none}
+.av.gi svg{height:auto;aspect-ratio:1}
+
+/* [位置:phone-chats.css·组内页顶栏/底栏/标题居中] [会话组页面：去掉底部导航、返回箭头朝左、顶栏同底栏的白一点的玻璃底；标题文字与两侧图标垂直居中（全局，原来比图标低约 3.5px）] [10-27 需求] [注释时间 2026-10-27] */
+.cs-bar .ttl{top:calc(var(--sat) + 6px);bottom:auto;height:40px;line-height:40px}
+.cs-gb svg{transform:scaleX(-1)}
+.cs-tabs{transition:transform .38s var(--spring)}
+.cs-ingrp .cs-tabs{transform:translateY(120%);pointer-events:none}
+.cs-ingrp .cs-sc{padding-bottom:calc(var(--sab) + 24px)}
+.cs-bar{border-bottom:.5px solid transparent;transition:background .3s,border-color .3s}
+.cs-ingrp .cs-bar{background:rgba(var(--sh),.86);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);border-bottom-color:rgba(120,135,165,.22)}
+
+/* [位置:phone-chats.css·.ttl small 不参与居中] [标题（会话/组名）文字在正中，右边的 (数字) 挂在文字后面不占位] [10-27：数字也算进居中，整体居中会让标题偏左] [注释时间 2026-10-27] */
+.cs-bar .ttl small{position:absolute;white-space:nowrap}
+
+/* [位置:phone-chats.css·.st 未完成 / 组行药丸] [子会话没跑完（失败/中断/终止）的药丸色；组行里状态药丸并排时留间距] [10-27 批1] [注释时间 2026-10-27] */
+.cs-it .st[data-st="未完成"]{--stc:#b4533f;--stb:rgba(180,83,63,.13)}
+.cs-it.cs-grp .t .st{margin-left:6px}
+/* [位置:phone-chats.css·.cs-grp .gn / .m 药丸] [组行：名称旁小字写个数，状态药丸换到第二行] [10-28：药丸太多把组名挤没了；个数放到名称那行] [注释时间 2026-10-28] */
+.cs-it.cs-grp .t .gn{flex:none;font-size:12px;color:var(--ink3);letter-spacing:0;white-space:nowrap}
+.cs-it.cs-grp .m{flex-wrap:wrap}
+.cs-it.cs-grp .m .st{margin-left:0}
+.cs-it.cs-grp .m:empty{display:block;min-height:18px}
+/* [位置:phone-chats.css·.ses-pop.srch .it.fr b] [搜索结果摘要最多 4 行] [11-09 检索质量批：多词命中时后端给「命中处前后片段，词离得远给两段」，最长 300 字左右；结果行限 4 行，超出省略，不把列表撑得很长] [注释时间 2026-11-09] */
+.ses-pop.srch .it.fr b{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;word-break:break-all}
+
+/* [位置:phone-chats.js·bfChip → phone-chats.css·.cs-it .bf] [列表行「分支自」小标签] [11-10：第二行最前面一个小圆角矩形，分支图标 + 原会话名（最多占一半宽，超出省略），点它打开原会话；原会话已删除时灰着写「原会话已删除」、不可点；按下轻缩] [注释时间 2026-11-10] */
+.cs-it .m .bf{flex:none;max-width:46%;display:inline-flex;align-items:center;gap:3px;height:18px;padding:0 6px 0 4px;border-radius:6px;background:rgba(125,156,207,.14);color:var(--ink2);font-size:11px;line-height:1;transition:transform .2s var(--spring),background .18s;-webkit-tap-highlight-color:transparent}
+.cs-it .m .bf svg{flex:none;width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cs-it .m .bf em{font-style:normal;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cs-it .m .bf[data-bf]:active{transform:scale(.95);background:rgba(125,156,207,.26)}
+.cs-it .m .bf.gone{background:rgba(120,135,165,.1);color:var(--ink3)}

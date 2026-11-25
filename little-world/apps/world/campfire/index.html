@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>篝火</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #1a1a2e;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  font-family: 'Georgia', serif;
+}
+
+.sky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60%;
+  background: linear-gradient(180deg, #0d0d1a 0%, #1a1a2e 60%, #2a1a1a 100%);
+}
+
+.stars {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 55%;
+}
+
+.star {
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+  animation: twinkle var(--dur) ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+.ground {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 45%;
+  background: linear-gradient(180deg, #1a1510 0%, #12100d 100%);
+  border-top: 1px solid #2a2018;
+}
+
+.fire-container {
+  position: fixed;
+  bottom: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.logs {
+  position: relative;
+  width: 120px;
+  height: 30px;
+  margin-top: -5px;
+}
+
+.log {
+  position: absolute;
+  height: 14px;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #5a3a1a, #3a2510);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.log:nth-child(1) {
+  width: 110px;
+  left: 5px;
+  bottom: 0;
+  transform: rotate(-8deg);
+}
+
+.log:nth-child(2) {
+  width: 100px;
+  left: 10px;
+  bottom: 0;
+  transform: rotate(10deg);
+}
+
+.log:nth-child(3) {
+  width: 80px;
+  left: 20px;
+  bottom: 10px;
+  transform: rotate(-3deg);
+}
+
+.fire {
+  position: relative;
+  width: 80px;
+  height: 100px;
+  margin: 0 auto;
+}
+
+.flame {
+  position: absolute;
+  bottom: 0;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  animation: burn var(--dur) ease-in-out infinite alternate;
+}
+
+.flame-outer {
+  left: 5px;
+  width: 70px;
+  height: 90px;
+  background: linear-gradient(0deg, #c4420a 0%, #e8651a 40%, #f5a623 70%, #ffd93d 100%);
+  opacity: 0.9;
+  --dur: 0.8s;
+  filter: blur(2px);
+}
+
+.flame-mid {
+  left: 15px;
+  width: 50px;
+  height: 75px;
+  background: linear-gradient(0deg, #e8651a 0%, #f5a623 50%, #ffe066 100%);
+  opacity: 0.95;
+  --dur: 0.6s;
+}
+
+.flame-inner {
+  left: 22px;
+  width: 36px;
+  height: 55px;
+  background: linear-gradient(0deg, #f5a623 0%, #ffe066 50%, #fff5cc 100%);
+  --dur: 0.5s;
+}
+
+.flame-core {
+  left: 28px;
+  width: 24px;
+  height: 35px;
+  background: linear-gradient(0deg, #ffe066 0%, #fffbe6 100%);
+  --dur: 0.4s;
+}
+
+@keyframes burn {
+  0% { transform: scaleX(1) scaleY(1) rotate(-2deg); }
+  25% { transform: scaleX(0.9) scaleY(1.05) rotate(1deg); }
+  50% { transform: scaleX(1.05) scaleY(0.95) rotate(-1deg); }
+  75% { transform: scaleX(0.95) scaleY(1.02) rotate(2deg); }
+  100% { transform: scaleX(1.02) scaleY(0.98) rotate(-1deg); }
+}
+
+.sparks {
+  position: absolute;
+  width: 80px;
+  height: 120px;
+  bottom: 20px;
+  left: 0;
+}
+
+.spark {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: #ffd93d;
+  border-radius: 50%;
+  bottom: 50px;
+  animation: rise var(--dur) ease-out infinite;
+  animation-delay: var(--delay);
+  opacity: 0;
+}
+
+@keyframes rise {
+  0% { transform: translateY(0) translateX(0); opacity: 1; }
+  100% { transform: translateY(-100px) translateX(var(--dx)); opacity: 0; }
+}
+
+.glow {
+  position: fixed;
+  bottom: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 350px;
+  height: 200px;
+  background: radial-gradient(ellipse at center, rgba(245,166,35,0.15) 0%, rgba(245,166,35,0.05) 40%, transparent 70%);
+  z-index: 5;
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.8; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+}
+
+.message {
+  position: fixed;
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #d4a574;
+  font-size: 14px;
+  letter-spacing: 3px;
+  opacity: 0.7;
+  text-align: center;
+  z-index: 20;
+  line-height: 2;
+  animation: fadeIn 3s ease-in;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 0.7; }
+}
+
+.rocks {
+  position: fixed;
+  bottom: 16%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 160px;
+  height: 25px;
+  z-index: 8;
+}
+
+.rock {
+  position: absolute;
+  background: linear-gradient(180deg, #3a3530, #252220);
+  border-radius: 50%;
+  box-shadow: 0 2px 3px rgba(0,0,0,0.4);
+}
+
+.crackle {
+  position: fixed;
+  bottom: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #8a7560;
+  font-size: 11px;
+  letter-spacing: 5px;
+  opacity: 0;
+  z-index: 20;
+  animation: crackleAnim 4s ease-in-out infinite;
+}
+
+@keyframes crackleAnim {
+  0%, 100% { opacity: 0; }
+  30%, 70% { opacity: 0.5; }
+}
+</style>
+</head>
+<body>
+
+<div class="sky"></div>
+<div class="stars" id="stars"></div>
+<div class="ground"></div>
+
+<div class="message">
+  坐下来烤一会儿<br>火还在烧
+</div>
+
+<div class="glow"></div>
+
+<div class="rocks" id="rocks"></div>
+
+<div class="fire-container">
+  <div class="fire">
+    <div class="flame flame-outer"></div>
+    <div class="flame flame-mid"></div>
+    <div class="flame flame-inner"></div>
+    <div class="flame flame-core"></div>
+    <div class="sparks" id="sparks"></div>
+  </div>
+  <div class="logs">
+    <div class="log"></div>
+    <div class="log"></div>
+    <div class="log"></div>
+  </div>
+</div>
+
+<div class="crackle">噼 — 啪</div>
+
+<script>
+// stars
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 60; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const size = Math.random() * 2.5 + 0.5;
+  s.style.cssText = `
+    left: ${Math.random() * 100}%;
+    top: ${Math.random() * 100}%;
+    width: ${size}px;
+    height: ${size}px;
+    --dur: ${Math.random() * 3 + 2}s;
+    animation-delay: ${Math.random() * 3}s;
+  `;
+  starsEl.appendChild(s);
+}
+
+// sparks
+const sparksEl = document.getElementById('sparks');
+for (let i = 0; i < 12; i++) {
+  const sp = document.createElement('div');
+  sp.className = 'spark';
+  sp.style.cssText = `
+    left: ${Math.random() * 60 + 10}px;
+    --dur: ${Math.random() * 2 + 1.5}s;
+    --delay: ${Math.random() * 3}s;
+    --dx: ${(Math.random() - 0.5) * 40}px;
+    width: ${Math.random() * 2 + 1.5}px;
+    height: ${Math.random() * 2 + 1.5}px;
+  `;
+  sparksEl.appendChild(sp);
+}
+
+// rocks around fire
+const rocksEl = document.getElementById('rocks');
+const rockPositions = [
+  { l: 0, b: 5, w: 22, h: 16 },
+  { l: 18, b: 0, w: 20, h: 14 },
+  { l: 38, b: 2, w: 18, h: 15 },
+  { l: 55, b: 0, w: 24, h: 16 },
+  { l: 78, b: 3, w: 20, h: 14 },
+  { l: 98, b: 0, w: 22, h: 15 },
+  { l: 118, b: 4, w: 20, h: 14 },
+  { l: 136, b: 1, w: 22, h: 16 },
+];
+rockPositions.forEach(r => {
+  const rock = document.createElement('div');
+  rock.className = 'rock';
+  rock.style.cssText = `left:${r.l}px; bottom:${r.b}px; width:${r.w}px; height:${r.h}px;`;
+  rocksEl.appendChild(rock);
+});
+</script>
+</body>
+</html>

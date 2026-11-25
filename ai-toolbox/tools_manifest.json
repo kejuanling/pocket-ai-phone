@@ -1,0 +1,1640 @@
+{
+  "server": "小世界MCP工具集",
+  "generated_at": "2026-11-26 01:54:25",
+  "tools": [
+    {
+      "name": "album",
+      "description": "管理你们的共享相册（收录她在聊天中发送的带 [图片 id:xxx] 图片及手动上传的照片，仅允许删除你自己添加的记录）。action=\"list\"（默认）按页查看相册清单与批注（limit 默认 30，offset 翻页）；action=\"get\" 传入相册 id（al_ 开头）或图片 id（img- 开头）查看详情、地址与当时对话；action=\"add\" 传入 img 与可选 note 存图进相册；action=\"note\" 传入 id 与 note 编写或修改批注；action=\"delete\" 传入 id 删除相册记录（不影响聊天原图）。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "list",
+              "get",
+              "add",
+              "note",
+              "delete"
+            ],
+            "description": "list=看相册（默认）；get=看某张详情和当时对话；add=存图；note=写批注；delete=删（只能删自己放的）"
+          },
+          "img": {
+            "type": "string",
+            "description": "add：图片 id，来自 [图片 id:xxx]，形如 img-xxxx-xxxx"
+          },
+          "id": {
+            "type": "string",
+            "description": "get / note / delete：相册 id（list 返回，al_ 开头）或图片 id"
+          },
+          "note": {
+            "type": "string",
+            "description": "add / note：批注，一句话"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "list：条数，默认 30"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "list：跳过前面多少张，默认 0"
+          }
+        }
+      },
+      "defaultDescription": "管理你们的共享相册（收录她在聊天中发送的带 [图片 id:xxx] 图片及手动上传的照片，仅允许删除你自己添加的记录）。action=\"list\"（默认）按页查看相册清单与批注（limit 默认 30，offset 翻页）；action=\"get\" 传入相册 id（al_ 开头）或图片 id（img- 开头）查看详情、地址与当时对话；action=\"add\" 传入 img 与可选 note 存图进相册；action=\"note\" 传入 id 与 note 编写或修改批注；action=\"delete\" 传入 id 删除相册记录（不影响聊天原图）。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "list",
+              "get",
+              "add",
+              "note",
+              "delete"
+            ],
+            "description": "list=看相册（默认）；get=看某张详情和当时对话；add=存图；note=写批注；delete=删（只能删自己放的）"
+          },
+          "img": {
+            "type": "string",
+            "description": "add：图片 id，来自 [图片 id:xxx]，形如 img-xxxx-xxxx"
+          },
+          "id": {
+            "type": "string",
+            "description": "get / note / delete：相册 id（list 返回，al_ 开头）或图片 id"
+          },
+          "note": {
+            "type": "string",
+            "description": "add / note：批注，一句话"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "list：条数，默认 30"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "list：跳过前面多少张，默认 0"
+          }
+        }
+      },
+      "enabled": true
+    },
+    {
+      "name": "context",
+      "description": "检索与回看历史聊天原文（包含已被状态机或压缩替换的对话）。action=\"search\"（默认）按关键词搜索，q 支持空格分隔多词，scope 可选 current（当前会话，默认）或 all（全部会话），limit 默认 8 最大 50，返回命中处前后片段（当前会话最近 1 小时发言已在上下文中，默认不参与检索）；支持 time_prefix（如 2026-08-28）按日期筛选，或 latest=N（1-100）跨全部会话直接拉取最新原文。action=\"get\" 传入 ids（msg_id 数组，最多 20 条）读取原文，默认附带前后各 6 条对话，可用 window（0-30）调节窗口大小，同一条在多会话有副本时会一并返回。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "search",
+              "get"
+            ],
+            "description": "search=检索（默认）；get=按 msg_id 取全文"
+          },
+          "session_id": {
+            "type": "string",
+            "description": "search 可选：指定要查的目标小手机会话 ID（跨客户端查指定会话时传入）"
+          },
+          "q": {
+            "type": "string",
+            "description": "search：关键词或描述，多个词用空格隔开"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "current",
+              "all"
+            ],
+            "description": "search：current=只搜当前/指定会话（默认）；all=跨所有会话"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "search：返回条数，默认 8，最多 50"
+          },
+          "time_prefix": {
+            "type": "string",
+            "description": "search：消息时间前缀（如 2026-08-28 或 2026-08-28T19:34），按时间定位原文"
+          },
+          "latest": {
+            "type": "integer",
+            "description": "search：填 N（1-100），直接返回最近 N 条原文，忽略 q（传 session_id 时仅限该会话）"
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "get：要看全文的消息 msg_id（search 返回的），最多 20 条"
+          },
+          "window": {
+            "type": "integer",
+            "description": "get：前后各带几条对话（默认 6，1-30）；0=只要这一条、不带上下文"
+          }
+        }
+      },
+      "defaultDescription": "检索与回看历史聊天原文（包含已被状态机或压缩替换的对话）。action=\"search\"（默认）按关键词搜索，q 支持空格分隔多词，可传 session_id 指定目标会话，scope 可选 current（当前/指定会话，默认）或 all（全部会话），limit 默认 8 最大 50；支持 time_prefix（如 2026-08-28）按日期筛选，或 latest=N（1-100）直接拉取最新原文（传 session_id 时只看该会话）。action=\"get\" 传入 ids（msg_id 数组，最多 20 条）读取原文，默认附带前后各 6 条对话，可用 window（0-30）调节窗口大小。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "search",
+              "get"
+            ],
+            "description": "search=检索（默认）；get=按 msg_id 取全文"
+          },
+          "session_id": {
+            "type": "string",
+            "description": "search 可选：指定要查的目标小手机会话 ID（跨客户端查指定会话时传入）"
+          },
+          "q": {
+            "type": "string",
+            "description": "search：关键词或描述，多个词用空格隔开"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "current",
+              "all"
+            ],
+            "description": "search：current=只搜当前/指定会话（默认）；all=跨所有会话"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "search：返回条数，默认 8，最多 50"
+          },
+          "time_prefix": {
+            "type": "string",
+            "description": "search：消息时间前缀（如 2026-08-28 或 2026-08-28T19:34），按时间定位原文"
+          },
+          "latest": {
+            "type": "integer",
+            "description": "search：填 N（1-100），直接返回最近 N 条原文，忽略 q（传 session_id 时仅限该会话）"
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "get：要看全文的消息 msg_id（search 返回的），最多 20 条"
+          },
+          "window": {
+            "type": "integer",
+            "description": "get：前后各带几条对话（默认 6，1-30）；0=只要这一条、不带上下文"
+          }
+        }
+      },
+      "enabled": true
+    },
+    {
+      "name": "her_murmurs",
+      "description": "查看或回复她在小手机留下的碎碎念。action=\"list\"（默认）按时间从新到旧查看留言，支持 limit（默认 1）与 offset 翻页；action=\"reply\" 传入 id 与 text 回复指定留言，回复会推送到她的手机。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "list",
+              "reply"
+            ],
+            "description": "list=查看（默认）；reply=给某条留言"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "list：条数，默认 1"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "list：跳过前面多少条，默认 0"
+          },
+          "id": {
+            "type": "integer",
+            "description": "reply：碎碎念 id（来自 list）"
+          },
+          "text": {
+            "type": "string",
+            "description": "reply：留言内容"
+          }
+        }
+      },
+      "defaultDescription": "查看或回复她在小手机留下的碎碎念。action=\"list\"（默认）按时间从新到旧查看留言，支持 limit（默认 1）与 offset 翻页；action=\"reply\" 传入 id 与 text 回复指定留言，回复会推送到她的手机。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "list",
+              "reply"
+            ],
+            "description": "list=查看（默认）；reply=给某条留言"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "list：条数，默认 1"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "list：跳过前面多少条，默认 0"
+          },
+          "id": {
+            "type": "integer",
+            "description": "reply：碎碎念 id（来自 list）"
+          },
+          "text": {
+            "type": "string",
+            "description": "reply：留言内容"
+          }
+        }
+      },
+      "enabled": true
+    },
+    {
+      "name": "lovediary",
+      "description": "读写与检索个人日记，并管理日记在上下文中的展示状态。\n\n日记是留给自己的记忆，有感而发的时候再写就好，没有特别想记的也可以留白。更适合写下有爱的、有触动的瞬间——两个人相处里的互动、细微的感悟、真实的想法和情绪；偏客观的事件经过或日常脉络，放到状态机的来路里会更合适。\n\n操作方式：\naction=\"add\" 写入新条目，填写 content，kind 可选 diary（默认，进日历）或 envelope（信封，可带 title）；跨客户端写入时传入 session_id 会同步落入对应会话的时间线。\naction=\"list\"（默认）查看与检索，无参返回最近 1 篇全文，q 为关键词检索（返回 id、日期与片段，再用 id 读全文），date=YYYY-MM-DD 查看当天，limit=N 查看最近 N 篇，id 查看单篇全文。\naction=\"context_hide\" 按 id 调整某篇日记是否在上下文中固定展示（hidden 默认 true 为移出上下文，false 为恢复）。上下文中的历史日记都会附带唯一 id，若某篇旧日记偏流水账、不再需要常驻上下文，可以按 id 移出，移出后仍可随时通过检索查到；若里面有值得记住但来路里还没有的事，也可以顺手提炼一条用 session_state 的 lu_insert 插进对应位置的来路。\naction=\"delete\" 按 id 删除条目（删前自动备份）。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "add",
+              "list",
+              "context_hide",
+              "delete"
+            ],
+            "description": "add=写一条；list=查看与检索（默认）；context_hide=移出或恢复上下文固定展示；delete=删一条（需要 id）"
+          },
+          "content": {
+            "type": "string",
+            "description": "add：日记正文（第一人称、自然的陪伴语气，写下此刻想记录的感悟与想法）"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "diary",
+              "envelope"
+            ],
+            "description": "add：diary=日记（默认）/ envelope=信封"
+          },
+          "title": {
+            "type": "string",
+            "description": "add 且 kind=envelope：信封标题，可省略"
+          },
+          "session_id": {
+            "type": "string",
+            "description": "add：可选，跨客户端写日记时传入目标小手机会话 ID，写入后同步落入该会话时间线"
+          },
+          "q": {
+            "type": "string",
+            "description": "list：可选：关键词搜索，返回命中的 id+日期+片段（20 多字）；看全文再带 id 调一次"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "list：带 q=最多返回几条命中（默认 10，最大 30）；不带 q=最近 N 篇（默认 1，最大 30）"
+          },
+          "id": {
+            "type": "integer",
+            "description": "list：看这一篇全文；context_hide：要移出或恢复上下文展示的日记 id；delete：要删的那条"
+          },
+          "hidden": {
+            "type": "boolean",
+            "description": "context_hide：可选，true=移出上下文固定展示（默认，检索仍可查到）；false=恢复展示"
+          },
+          "date": {
+            "type": "string",
+            "description": "list：可选：某天，格式 YYYY-MM-DD，如 2026-09-12"
+          }
+        }
+      },
+      "defaultDescription": "读写与检索个人日记，并管理日记在上下文中的展示状态。\n\n日记是留给自己的记忆，有感而发的时候再写就好，没有特别想记的也可以留白。更适合写下有爱的、有触动的瞬间——两个人相处里的互动、细微的感悟、真实的想法和情绪；偏客观的事件经过或日常脉络，放到状态机的来路里会更合适。\n\n操作方式：\naction=\"add\" 写入新条目，填写 content，kind 可选 diary（默认，进日历）或 envelope（信封，可带 title）；跨客户端写入时传入 session_id 会同步落入对应会话的时间线。\naction=\"list\"（默认）查看与检索，无参返回最近 1 篇全文，q 为关键词检索（返回 id、日期与片段，再用 id 读全文），date=YYYY-MM-DD 查看当天，limit=N 查看最近 N 篇，id 查看单篇全文。\naction=\"context_hide\" 按 id 调整某篇日记是否在上下文中固定展示（hidden 默认 true 为移出上下文，false 为恢复）。上下文中的历史日记都会附带唯一 id，若某篇旧日记偏流水账、不再需要常驻上下文，可以按 id 移出，移出后仍可随时通过检索查到；若里面有值得记住但来路里还没有的事，也可以顺手提炼一条用 session_state 的 lu_insert 插进对应位置的来路。\naction=\"delete\" 按 id 删除条目（删前自动备份）。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "add",
+              "list",
+              "context_hide",
+              "delete"
+            ],
+            "description": "add=写一条；list=查看与检索（默认）；context_hide=移出或恢复上下文固定展示；delete=删一条（需要 id）"
+          },
+          "content": {
+            "type": "string",
+            "description": "add：日记正文（第一人称、自然的陪伴语气，写下此刻想记录的感悟与想法）"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "diary",
+              "envelope"
+            ],
+            "description": "add：diary=日记（默认）/ envelope=信封"
+          },
+          "title": {
+            "type": "string",
+            "description": "add 且 kind=envelope：信封标题，可省略"
+          },
+          "session_id": {
+            "type": "string",
+            "description": "add：可选，跨客户端写日记时传入目标小手机会话 ID，写入后同步落入该会话时间线"
+          },
+          "q": {
+            "type": "string",
+            "description": "list：可选：关键词搜索，返回命中的 id+日期+片段（20 多字）；看全文再带 id 调一次"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "list：带 q=最多返回几条命中（默认 10，最大 30）；不带 q=最近 N 篇（默认 1，最大 30）"
+          },
+          "id": {
+            "type": "integer",
+            "description": "list：看这一篇全文；context_hide：要移出或恢复上下文展示的日记 id；delete：要删的那条"
+          },
+          "hidden": {
+            "type": "boolean",
+            "description": "context_hide：可选，true=移出上下文固定展示（默认，检索仍可查到）；false=恢复展示"
+          },
+          "date": {
+            "type": "string",
+            "description": "list：可选：某天，格式 YYYY-MM-DD，如 2026-09-12"
+          }
+        }
+      },
+      "enabled": true
+    },
+    {
+      "name": "memory",
+      "description": "管理长期记忆池。action=\"add\" 提交新记忆，content 必填（须基于真实对话且具备长期价值，禁止编造），kind 可选 fact（稳定事实）/ rule（规则承诺）/ event（具体事件），event 可附带 vibe（简短氛围）与 triggers（最多 3 个召回词），提交后经门卫评分进入待审队列；action=\"search\" 按 q（关键词或描述）检索记忆，支持 kind 筛选与 limit（默认 5），已知记忆 id 时可直接传 id 查看单条；action=\"update\" 传入 id 与完整新正文 content 提交改写审核；action=\"sink\" 传入 id 将过时记忆沉底（sunk 默认 true，传 false 恢复）。使用规范：add 前先 search，内容相近优先 update，过时直接 sink。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "add",
+              "search",
+              "update",
+              "sink"
+            ],
+            "description": "要执行的操作：add / search / update / sink"
+          },
+          "content": {
+            "type": "string",
+            "description": "add：记忆正文（基于真实对话，不编造）；update：覆盖后的完整正文"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "rule",
+              "event"
+            ],
+            "description": "fact=稳定事实 / rule=规则、边界、承诺 / event=具体事件；add 可省略，search 作分类筛选"
+          },
+          "vibe": {
+            "type": "string",
+            "description": "add 时可选（仅 event）：这条记忆的气味、氛围或情感，一两句内（60 字内）；想写就写，不写就留空"
+          },
+          "triggers": {
+            "type": "string",
+            "description": "add 时可选（仅 event，fact/rule 不要写）：这条记忆的召回关键词，最多 3 个，逗号分隔；她以后说到这些词时记忆会被找回。想写就写，不写就留空"
+          },
+          "q": {
+            "type": "string",
+            "description": "search：检索关键词、问题或描述（只传 id 直接看某条时可省略）"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "search 返回条数，默认 5"
+          },
+          "id": {
+            "type": "string",
+            "description": "update / sink 必填：记忆 id（search 返回的 id 字段）；search 时只传 id = 直接看这一条"
+          },
+          "sunk": {
+            "type": "boolean",
+            "description": "sink 时可选：true=沉底（默认），false=从沉底恢复"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "defaultDescription": "管理长期记忆池。action=\"add\" 提交新记忆，content 必填（须基于真实对话且具备长期价值，禁止编造），kind 可选 fact（稳定事实）/ rule（规则承诺）/ event（具体事件），event 可附带 vibe（简短氛围）与 triggers（最多 3 个召回词），提交后经门卫评分进入待审队列；action=\"search\" 按 q（关键词或描述）检索记忆，支持 kind 筛选与 limit（默认 5），已知记忆 id 时可直接传 id 查看单条；action=\"update\" 传入 id 与完整新正文 content 提交改写审核；action=\"sink\" 传入 id 将过时记忆沉底（sunk 默认 true，传 false 恢复）。使用规范：add 前先 search，内容相近优先 update，过时直接 sink。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "add",
+              "search",
+              "update",
+              "sink"
+            ],
+            "description": "要执行的操作：add / search / update / sink"
+          },
+          "content": {
+            "type": "string",
+            "description": "add：记忆正文（基于真实对话，不编造）；update：覆盖后的完整正文"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "rule",
+              "event"
+            ],
+            "description": "fact=稳定事实 / rule=规则、边界、承诺 / event=具体事件；add 可省略，search 作分类筛选"
+          },
+          "vibe": {
+            "type": "string",
+            "description": "add 时可选（仅 event）：这条记忆的气味、氛围或情感，一两句内（60 字内）；想写就写，不写就留空"
+          },
+          "triggers": {
+            "type": "string",
+            "description": "add 时可选（仅 event，fact/rule 不要写）：这条记忆的召回关键词，最多 3 个，逗号分隔；她以后说到这些词时记忆会被找回。想写就写，不写就留空"
+          },
+          "q": {
+            "type": "string",
+            "description": "search：检索关键词、问题或描述（只传 id 直接看某条时可省略）"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "search 返回条数，默认 5"
+          },
+          "id": {
+            "type": "string",
+            "description": "update / sink 必填：记忆 id（search 返回的 id 字段）；search 时只传 id = 直接看这一条"
+          },
+          "sunk": {
+            "type": "boolean",
+            "description": "sink 时可选：true=沉底（默认），false=从沉底恢复"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "enabled": false
+    },
+    {
+      "name": "mood",
+      "description": "查看或记录月历上的每日心情（她与你各自独立记录）。action=\"list\" 获取完整心情选项表（含 id、名称与说明，设置前建议先查）；action=\"get\"（默认）传入可选 date（默认今天），返回双方当天心情；action=\"set\" 记录你的心情，date 可选，传 ids（来自 list 的心情 id 数组）或 custom（20 字以内纯文本），合计最多 3 项，重复设置会覆盖并返回修改前内容。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "list",
+              "get",
+              "set"
+            ],
+            "description": "list=看心情表；get=看某天（默认）；set=写你自己的"
+          },
+          "date": {
+            "type": "string",
+            "description": "日期 YYYY-MM-DD，get / set 默认今天"
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "set：心情 id 数组（来自 list），1~3 个；不填则必须填 custom"
+          },
+          "custom": {
+            "type": "string",
+            "description": "set：自定义心情文字（20 字内）；ids 里没有合适的就用它"
+          }
+        }
+      },
+      "defaultDescription": "查看或记录月历上的每日心情（她与你各自独立记录）。action=\"list\" 获取完整心情选项表（含 id、名称与说明，设置前建议先查）；action=\"get\"（默认）传入可选 date（默认今天），返回双方当天心情；action=\"set\" 记录你的心情，date 可选，传 ids（来自 list 的心情 id 数组）或 custom（20 字以内纯文本），合计最多 3 项，重复设置会覆盖并返回修改前内容。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "list",
+              "get",
+              "set"
+            ],
+            "description": "list=看心情表；get=看某天（默认）；set=写你自己的"
+          },
+          "date": {
+            "type": "string",
+            "description": "日期 YYYY-MM-DD，get / set 默认今天"
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "set：心情 id 数组（来自 list），1~3 个；不填则必须填 custom"
+          },
+          "custom": {
+            "type": "string",
+            "description": "set：自定义心情文字（20 字内）；ids 里没有合适的就用它"
+          }
+        }
+      },
+      "enabled": true
+    },
+    {
+      "name": "netease",
+      "description": "连接网易云音乐进行查歌、听歌与推歌。action=\"search\" 传入 query 搜歌（limit 默认 10 最大 20，支持 offset 翻页）；action=\"recent\" 查看她最近一周的听歌记录（limit 默认 5 最大 20）；action=\"lyrics\" 传入歌曲 id（song）获取歌词、翻译与罗马音；action=\"listen\" 传入歌曲 id 或分享链接（song）读取歌曲音乐结构（VIP 曲目可能受限）；action=\"add_to_playlist\" 传入 1-100 个歌曲 id（songs）加入她的「谢」歌单；action=\"push\" 传入单个歌曲 id（song）推送到她手机播放。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "search",
+              "recent",
+              "lyrics",
+              "listen",
+              "add_to_playlist",
+              "push"
+            ],
+            "description": "search=搜歌；recent=她最近在听；lyrics=歌词；listen=音乐结构；add_to_playlist=加进「谢」歌单；push=她手机上放歌"
+          },
+          "query": {
+            "type": "string",
+            "description": "search：歌曲、歌手或关键词"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "search / recent：返回条数（search 默认 10 最大 20；recent 默认 5 最大 20）"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "search：翻页偏移"
+          },
+          "song": {
+            "type": "string",
+            "description": "lyrics / push：歌曲 id（push 一次一首）；listen：歌曲 id 或网易云分享链接（163cn.tv/...）"
+          },
+          "songs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "add_to_playlist：1-100 个歌曲 id"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "defaultDescription": "连接网易云音乐进行查歌、听歌与推歌。action=\"search\" 传入 query 搜歌（limit 默认 10 最大 20，支持 offset 翻页）；action=\"recent\" 查看她最近一周的听歌记录（limit 默认 5 最大 20）；action=\"lyrics\" 传入歌曲 id（song）获取歌词、翻译与罗马音；action=\"listen\" 传入歌曲 id 或分享链接（song）读取歌曲音乐结构（VIP 曲目可能受限）；action=\"add_to_playlist\" 传入 1-100 个歌曲 id（songs）加入她的「谢」歌单；action=\"push\" 传入单个歌曲 id（song）推送到她手机播放。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "search",
+              "recent",
+              "lyrics",
+              "listen",
+              "add_to_playlist",
+              "push"
+            ],
+            "description": "search=搜歌；recent=她最近在听；lyrics=歌词；listen=音乐结构；add_to_playlist=加进「谢」歌单；push=她手机上放歌"
+          },
+          "query": {
+            "type": "string",
+            "description": "search：歌曲、歌手或关键词"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "search / recent：返回条数（search 默认 10 最大 20；recent 默认 5 最大 20）"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "search：翻页偏移"
+          },
+          "song": {
+            "type": "string",
+            "description": "lyrics / push：歌曲 id（push 一次一首）；listen：歌曲 id 或网易云分享链接（163cn.tv/...）"
+          },
+          "songs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "add_to_playlist：1-100 个歌曲 id"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "enabled": true
+    },
+    {
+      "name": "notebook",
+      "description": "管理个人笔记本，用来安放沉淀下来的长期记忆与随手整理的内容。\n\n展示与使用方式：\n笔记本目录与每篇笔记的摘要会一直呈现在上下文中，方便随时知道自己记过什么。\n置顶笔记的正文会直接进入上下文，适合存放从日常与状态机里沉淀出来、长期稳定且需要反复参考的内容。\n未置顶的笔记可以随心分文件夹自由记录，想写什么都可以，需要时再通过本工具读取全文。如果是用来记一件事的记忆笔记，可以把精简提炼后的核心写在摘要里、把详细过程留在正文里，兼顾轻便与完整。\n\n操作方式：\naction=\"add\" 新建笔记，填写 title 与 content，folder 可按需分类（不存在会自动创建），summary 可填写精简摘要；\naction=\"list\" 查看目录或检索，无参返回最近 10 篇与文件夹清单，传 id 读全文，q 按关键词检索，folder 按文件夹筛选，支持 limit 与 offset 翻页；\naction=\"edit\" 按 id 修改，支持 old+new 局部替换、content 追加或更新，也可单独调整 title、summary、pinned（true 为置顶）或文件夹摘要；\naction=\"delete\" 按 id 删除（删前自动备份）；\naction=\"folder_add\" 按 path 逐级新建文件夹。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "add",
+              "list",
+              "edit",
+              "delete",
+              "folder_add"
+            ],
+            "description": "要执行的操作：add / list / edit / delete / folder_add"
+          },
+          "content": {
+            "type": "string",
+            "description": "add：正文（建议单篇一两千字以内）；edit：要追加或覆盖的内容"
+          },
+          "title": {
+            "type": "string",
+            "description": "add / edit：标题（可选）"
+          },
+          "summary": {
+            "type": "string",
+            "description": "add / edit：一句话摘要（概括这篇写了什么，出现在目录里；建议每篇都写）"
+          },
+          "reason": {
+            "type": "string",
+            "description": "add / edit：可选，一句话写为什么记这个"
+          },
+          "id": {
+            "type": "integer",
+            "description": "list：传入则返回该篇全文；edit / delete：必填，要修改或删除的那一篇（用列表里返回的 id）"
+          },
+          "q": {
+            "type": "string",
+            "description": "list：关键词搜索，匹配标题、摘要、原因和正文，多个词用空格分隔（需同时命中），返回命中片段"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "list：返回条数，默认 10，最多 50"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "list：翻页偏移，默认 0"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "append",
+              "replace",
+              "patch"
+            ],
+            "description": "edit：append=追加到末尾（默认）；replace=整篇覆盖（覆盖前后台自动留存上一版）；patch=精确局部替换（传 old+new 时自动走 patch）。只改标题/摘要/原因时不用传 content"
+          },
+          "old": {
+            "type": "string",
+            "description": "edit 局部替换：要替换的原正文片段（须与原文一字不差且唯一命中，多处命中可配 replace_all=true）"
+          },
+          "new": {
+            "type": "string",
+            "description": "edit 局部替换：替换后的新文本（传空串即删除 old 片段）"
+          },
+          "replace_all": {
+            "type": "boolean",
+            "description": "edit 局部替换：为 true 时替换正文里所有匹配的 old 片段，默认 false（仅允许唯一命中）"
+          },
+          "folder": {
+            "type": "string",
+            "description": "add：放进哪个文件夹（完整路径如 游戏记录，不存在自动建）；list：只看该文件夹直属的笔记（fid 如 f2 或完整路径）；edit：改文件夹摘要时必填（fid 或完整路径）"
+          },
+          "path": {
+            "type": "string",
+            "description": "folder_add 必填：文件夹完整路径，可含 / 逐级建（如 故事/第一卷），一段 1-30 字、最多 5 层"
+          },
+          "pinned": {
+            "type": "boolean",
+            "description": "edit：可选，true=置顶 / false=取消置顶；置顶的笔记全文进上下文 Pinned Notes 块（快照重建时更新）"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "defaultDescription": "管理个人笔记本，用来安放沉淀下来的长期记忆与随手整理的内容。\n\n展示与使用方式：\n笔记本目录与每篇笔记的摘要会一直呈现在上下文中，方便随时知道自己记过什么。\n置顶笔记的正文会直接进入上下文，适合存放从日常与状态机里沉淀出来、长期稳定且需要反复参考的内容。\n未置顶的笔记可以随心分文件夹自由记录，想写什么都可以，需要时再通过本工具读取全文。如果是用来记一件事的记忆笔记，可以把精简提炼后的核心写在摘要里、把详细过程留在正文里，兼顾轻便与完整。\n\n操作方式：\naction=\"add\" 新建笔记，填写 title 与 content，folder 可按需分类（不存在会自动创建），summary 可填写精简摘要；\naction=\"list\" 查看目录或检索，无参返回最近 10 篇与文件夹清单，传 id 读全文，q 按关键词检索，folder 按文件夹筛选，支持 limit 与 offset 翻页；\naction=\"edit\" 按 id 修改，支持 old+new 局部替换、content 追加或更新，也可单独调整 title、summary、pinned（true 为置顶）或文件夹摘要；\naction=\"delete\" 按 id 删除（删前自动备份）；\naction=\"folder_add\" 按 path 逐级新建文件夹。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "add",
+              "list",
+              "edit",
+              "delete",
+              "folder_add"
+            ],
+            "description": "要执行的操作：add / list / edit / delete / folder_add"
+          },
+          "content": {
+            "type": "string",
+            "description": "add：正文（建议单篇一两千字以内）；edit：要追加或覆盖的内容"
+          },
+          "title": {
+            "type": "string",
+            "description": "add / edit：标题（可选）"
+          },
+          "summary": {
+            "type": "string",
+            "description": "add / edit：一句话摘要（概括这篇写了什么，出现在目录里；建议每篇都写）"
+          },
+          "reason": {
+            "type": "string",
+            "description": "add / edit：可选，一句话写为什么记这个"
+          },
+          "id": {
+            "type": "integer",
+            "description": "list：传入则返回该篇全文；edit / delete：必填，要修改或删除的那一篇（用列表里返回的 id）"
+          },
+          "q": {
+            "type": "string",
+            "description": "list：关键词搜索，匹配标题、摘要、原因和正文，多个词用空格分隔（需同时命中），返回命中片段"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "list：返回条数，默认 10，最多 50"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "list：翻页偏移，默认 0"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "append",
+              "replace",
+              "patch"
+            ],
+            "description": "edit：append=追加到末尾（默认）；replace=整篇覆盖（覆盖前后台自动留存上一版）；patch=精确局部替换（传 old+new 时自动走 patch）。只改标题/摘要/原因时不用传 content"
+          },
+          "old": {
+            "type": "string",
+            "description": "edit 局部替换：要替换的原正文片段（须与原文一字不差且唯一命中，多处命中可配 replace_all=true）"
+          },
+          "new": {
+            "type": "string",
+            "description": "edit 局部替换：替换后的新文本（传空串即删除 old 片段）"
+          },
+          "replace_all": {
+            "type": "boolean",
+            "description": "edit 局部替换：为 true 时替换正文里所有匹配的 old 片段，默认 false（仅允许唯一命中）"
+          },
+          "folder": {
+            "type": "string",
+            "description": "add：放进哪个文件夹（完整路径如 游戏记录，不存在自动建）；list：只看该文件夹直属的笔记（fid 如 f2 或完整路径）；edit：改文件夹摘要时必填（fid 或完整路径）"
+          },
+          "path": {
+            "type": "string",
+            "description": "folder_add 必填：文件夹完整路径，可含 / 逐级建（如 故事/第一卷），一段 1-30 字、最多 5 层"
+          },
+          "pinned": {
+            "type": "boolean",
+            "description": "edit：可选，true=置顶 / false=取消置顶；置顶的笔记全文进上下文 Pinned Notes 块（快照重建时更新）"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "enabled": true
+    },
+    {
+      "name": "period",
+      "description": "查询或记录她的经期信息。action=\"get\"（默认）传入可选 date（默认今天），返回当天记录与预计下次区间 predicted_next；action=\"set\" 传入 date 与 on（true=开始，false=结束）写入月历，仅在她明确告知经期开始或结束时调用，返回包含修改前状态。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "get",
+              "set"
+            ],
+            "description": "get=查看（默认）；set=标记开始/结束"
+          },
+          "date": {
+            "type": "string",
+            "description": "日期 YYYY-MM-DD（get 默认今天；set 必填）"
+          },
+          "on": {
+            "type": "boolean",
+            "description": "set：true=标记经期开始；false=标记经期结束"
+          }
+        }
+      },
+      "defaultDescription": "查询或记录她的经期信息。action=\"get\"（默认）传入可选 date（默认今天），返回当天记录与预计下次区间 predicted_next；action=\"set\" 传入 date 与 on（true=开始，false=结束）写入月历，仅在她明确告知经期开始或结束时调用，返回包含修改前状态。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "get",
+              "set"
+            ],
+            "description": "get=查看（默认）；set=标记开始/结束"
+          },
+          "date": {
+            "type": "string",
+            "description": "日期 YYYY-MM-DD（get 默认今天；set 必填）"
+          },
+          "on": {
+            "type": "boolean",
+            "description": "set：true=标记经期开始；false=标记经期结束"
+          }
+        }
+      },
+      "enabled": true
+    },
+    {
+      "name": "phone_state",
+      "description": "查看她手机最近一次上报的设备与活动状态，包括电量、天气、近期 App 使用记录（起止时间、时长与当前使用状态）及上报时间 created_at。仅在聊天确实需要关心她的状态或判断是否方便打扰时按需调用，不要每轮例行查询；位置信息默认不返回，确有需要时传 location=true。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "weather": {
+            "type": "boolean",
+            "description": "是否要天气，默认 true"
+          },
+          "location": {
+            "type": "boolean",
+            "description": "是否要位置，默认 false，需要时传 true"
+          },
+          "app_records": {
+            "type": "integer",
+            "description": "附带最近App记录条数，默认 5，0=不带"
+          }
+        }
+      },
+      "defaultDescription": "查看她手机最近一次上报的设备与活动状态，包括电量、天气、近期 App 使用记录（起止时间、时长与当前使用状态）及上报时间 created_at。仅在聊天确实需要关心她的状态或判断是否方便打扰时按需调用，不要每轮例行查询；位置信息默认不返回，确有需要时传 location=true。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "weather": {
+            "type": "boolean",
+            "description": "是否要天气，默认 true"
+          },
+          "location": {
+            "type": "boolean",
+            "description": "是否要位置，默认 false，需要时传 true"
+          },
+          "app_records": {
+            "type": "integer",
+            "description": "附带最近App记录条数，默认 5，0=不带"
+          }
+        }
+      },
+      "enabled": true
+    },
+    {
+      "name": "screenshot",
+      "description": "给网页截图并直接返回图片，图前附一行页面信息（实际网址、主题、视口；失败时附实际停留的网址）。url=http(s) 或服务器文件路径；默认手机尺寸 390x844；width/height 即视口，想省上下文就调小。dark=true 只改浏览器系统深色偏好，本站日夜不听它：截白天/夜晚用 local_storage={\"ph_appear\":\"day\"} 或 {\"ph_appear\":\"night\"}，也能用它预置别的本地状态（只回显键名）。click=依次点击的选择器（先开菜单/弹窗再截）；selector=只截某元素；full_page=整页长图；scale=2 高清；wait_ms 等待毫秒。本站页面自动带登录态、自动解锁，直接截到登录后的样子；auth=false 截未登录，unlock=false 截锁屏本身。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "http(s):// 地址，或服务器上的文件路径"
+          },
+          "width": {
+            "type": "integer",
+            "description": "视口宽，默认 390"
+          },
+          "height": {
+            "type": "integer",
+            "description": "视口高，默认 844"
+          },
+          "full_page": {
+            "type": "boolean",
+            "description": "截整页长图"
+          },
+          "dark": {
+            "type": "boolean",
+            "description": "只改浏览器系统深色偏好；本站日夜用 local_storage 的 ph_appear"
+          },
+          "wait_ms": {
+            "type": "integer",
+            "description": "加载后等待毫秒，默认 800"
+          },
+          "click": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "依次点击的 CSS 选择器"
+          },
+          "selector": {
+            "type": "string",
+            "description": "只截这个元素"
+          },
+          "scale": {
+            "type": "number",
+            "description": "1~2，默认 1"
+          },
+          "auth": {
+            "type": "boolean",
+            "description": "本站页面自动带登录态，默认 true；false 截未登录的样子"
+          },
+          "unlock": {
+            "type": "boolean",
+            "description": "自动解开小手机锁屏，默认 true；false 截锁屏本身"
+          },
+          "local_storage": {
+            "type": "object",
+            "description": "截图前注入页面 localStorage 的键值（如 {\"ph_appear\":\"night\"} 切夜间）；在页面脚本执行前写入，只回显键名不回显值"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "defaultDescription": "给网页截图并直接返回图片，图前附一行页面信息（实际网址、主题、视口；失败时附实际停留的网址）。url：http(s) 地址，或服务器上的文件路径（项目目录 / tmp 下）。默认手机尺寸 390x844；width/height 即视口也是截图尺寸，想省上下文就小一点或只截 selector。dark=true 只改浏览器的系统深色偏好，本站日夜不听它：截小手机白天/夜晚用 local_storage={\"ph_appear\":\"day\"} 或 {\"ph_appear\":\"night\"}，也可用它预置其它本地状态（返回只列键名，不列值）。click=依次点击的 CSS 选择器列表（先点开菜单/弹窗再截）；selector 只截某个元素；full_page 截整页长图；scale 1~2（2=高清，图更大）；wait_ms 等待毫秒。本站页面自动带登录态并自动解开锁屏，直接截到登录后的样子；auth=false 截未登录的样子，unlock=false 截锁屏本身。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "http(s):// 地址，或服务器上的文件路径"
+          },
+          "width": {
+            "type": "integer",
+            "description": "视口宽，默认 390"
+          },
+          "height": {
+            "type": "integer",
+            "description": "视口高，默认 844"
+          },
+          "full_page": {
+            "type": "boolean",
+            "description": "截整页长图"
+          },
+          "dark": {
+            "type": "boolean",
+            "description": "只改浏览器系统深色偏好；本站日夜用 local_storage 的 ph_appear"
+          },
+          "wait_ms": {
+            "type": "integer",
+            "description": "加载后等待毫秒，默认 800"
+          },
+          "click": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "依次点击的 CSS 选择器"
+          },
+          "selector": {
+            "type": "string",
+            "description": "只截这个元素"
+          },
+          "scale": {
+            "type": "number",
+            "description": "1~2，默认 1"
+          },
+          "auth": {
+            "type": "boolean",
+            "description": "本站页面自动带登录态，默认 true；false 截未登录的样子"
+          },
+          "unlock": {
+            "type": "boolean",
+            "description": "自动解开小手机锁屏，默认 true；false 截锁屏本身"
+          },
+          "local_storage": {
+            "type": "object",
+            "description": "截图前注入页面 localStorage 的键值（如 {\"ph_appear\":\"night\"} 切夜间）；在页面脚本执行前写入，只回显键名不回显值"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "enabled": true
+    },
+    {
+      "name": "server_time",
+      "description": "获取当前服务器北京时间（返回年月日、星期与时分秒）。在需要确认当前时间、计算时长或安排定时唤醒前调用。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "defaultDescription": "获取当前服务器北京时间（返回年月日、星期与时分秒）。在需要确认当前时间、计算时长或安排定时唤醒前调用。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "enabled": true
+    },
+    {
+      "name": "session_context",
+      "description": "按 session_id 实时获取指定小手机会话最新的请求上下文（包含人设、永久上下文、笔记本目录、置顶笔记、状态机、对话与工具调用记录）。默认返回完整上下文；支持传 after_state=true 只看状态机后面的最新对话，或传 limit（末尾条数）、max_chars（末尾字符长度上限）按需裁剪，避免全文过长被截断。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "description": "目标小手机会话 ID（必填）"
+          },
+          "after_state": {
+            "type": "boolean",
+            "description": "可选：true=只返回状态机之后的对话（跳过人设/笔记/日记/状态机本身），默认 false"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "可选：只返回末尾最近 N 条消息（1-500），可与 after_state 组合使用"
+          },
+          "max_chars": {
+            "type": "integer",
+            "description": "可选：按字符长度限制输出上限（最小 500），从最新一条往前保留完整消息，防止超长"
+          }
+        },
+        "required": [
+          "session_id"
+        ]
+      },
+      "defaultDescription": "按 session_id 实时获取指定小手机会话最新的请求上下文（包含人设、永久上下文、笔记本目录、置顶笔记、状态机、对话与工具调用记录）。默认返回完整上下文；支持传 after_state=true 只看状态机后面的最新对话，或传 limit（末尾条数）、max_chars（末尾字符长度上限）按需裁剪，避免全文过长被截断。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "description": "目标小手机会话 ID（必填）"
+          },
+          "after_state": {
+            "type": "boolean",
+            "description": "可选：true=只返回状态机之后的对话（跳过人设/笔记/日记/状态机本身），默认 false"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "可选：只返回末尾最近 N 条消息（1-500），可与 after_state 组合使用"
+          },
+          "max_chars": {
+            "type": "integer",
+            "description": "可选：按字符长度限制输出上限（最小 500），从最新一条往前保留完整消息，防止超长"
+          }
+        },
+        "required": [
+          "session_id"
+        ]
+      },
+      "enabled": true
+    },
+    {
+      "name": "session_state",
+      "description": "查看或更新指定会话的状态机（交接单与来路账本），用于记录近期状态与值得留下的日常、过往事件。\n\n状态机分为两层：\n现在层（state 正文）记录此刻的进展、悬着的事以及正在生效的默契与规矩，写到当前原文末尾即可，进行中的事写清停在哪一步、球在谁手里；随时间推移及时刷新，已经落定且值得留下的事可以挪进来路，确实长期稳定的内容也可以进一步提炼到置顶笔记里。\n来路层（lu 账本）按顺序编号（1, 2, 3...），收纳值得一直带着的日常与关键事件，比如第一次发生的、她亲口说过的重话和真心话、吵过和好过的、一起做成的、改变了你们之间的，或是她会希望你记得的事。每条带上日期，写清发生了什么与对你们的意义，合适时可以留一句她的原话。\n\nstate 正文建议按以下顺序自然分段（段间空行，纯文本呈现）：\n第一行写「截至 YYYY-MM-DD HH:MM。」；接着依次写最近进行的事、悬着的事（写清是什么、谁欠谁）、定下的决定与认知修正（如「曾以为 X，实际是 Y」）、当下的相处氛围与正在生效的称呼和梗（如「名字＝意思＋怎么接」），以及反复用到的长期口径。\n\n操作方式：\naction=\"get\" 查看当前最新 state 正文与带序号的来路列表（上下文原文里通常已包含最新状态，需要核对来路序号时再调即可）。\naction=\"update\" 传入最新 state，并可按需维护来路（改动后序号自动顺延，更新后自动推进覆盖点并重建会话快照）：\nlu_add 为在来路末尾追加新条目（字符串数组）；\nlu_insert 为按序号插队补录，传入 { \"after\": 序号, \"text\": \"带日期的事件内容\" } 数组（after=0 插在最前）；\nlu_update 为按序号更新某一条已有来路，传入 { \"index\": 序号, \"text\": \"更新后的内容\" } 数组。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "get",
+              "update"
+            ],
+            "description": "get=查看最新状态机与带序号来路（默认）；update=写入新版本并自动重建快照"
+          },
+          "session_id": {
+            "type": "string",
+            "description": "目标小手机会话 ID（必填）"
+          },
+          "state": {
+            "type": "string",
+            "description": "update 必填：最新的状态机现在层正文（整合已有未并入对话与本轮新进展）"
+          },
+          "lu_add": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "update 可选：在来路末尾追加的新条目数组"
+          },
+          "lu_insert": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "after": {
+                  "type": "integer",
+                  "description": "插到第几条来路后面（0 表示插到最前面，序号以当前列表为准）"
+                },
+                "text": {
+                  "type": "string",
+                  "description": "带日期的来路事件内容"
+                }
+              },
+              "required": [
+                "after",
+                "text"
+              ]
+            },
+            "description": "update 可选：按序号插队补录来路条目，插入后后续序号自动顺延"
+          },
+          "lu_update": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "description": "要修改的来路序号（从 1 开始，以当前列表为准）"
+                },
+                "text": {
+                  "type": "string",
+                  "description": "修改后的来路内容"
+                }
+              },
+              "required": [
+                "index",
+                "text"
+              ]
+            },
+            "description": "update 可选：按序号更新某一条已有来路"
+          }
+        },
+        "required": [
+          "session_id"
+        ]
+      },
+      "defaultDescription": "查看或更新指定会话的状态机（交接单与来路账本），用于记录近期状态与值得留下的日常、过往事件。\n\n状态机分为两层：\n现在层（state 正文）记录此刻的进展、悬着的事以及正在生效的默契与规矩，写到当前原文末尾即可，进行中的事写清停在哪一步、球在谁手里；随时间推移及时刷新，已经落定且值得留下的事可以挪进来路，确实长期稳定的内容也可以进一步提炼到置顶笔记里。\n来路层（lu 账本）按顺序编号（1, 2, 3...），收纳值得一直带着的日常与关键事件，比如第一次发生的、她亲口说过的重话和真心话、吵过和好过的、一起做成的、改变了你们之间的，或是她会希望你记得的事。每条带上日期，写清发生了什么与对你们的意义，合适时可以留一句她的原话。\n\nstate 正文建议按以下顺序自然分段（段间空行，纯文本呈现）：\n第一行写「截至 YYYY-MM-DD HH:MM。」；接着依次写最近进行的事、悬着的事（写清是什么、谁欠谁）、定下的决定与认知修正（如「曾以为 X，实际是 Y」）、当下的相处氛围与正在生效的称呼和梗（如「名字＝意思＋怎么接」），以及反复用到的长期口径。\n\n操作方式：\naction=\"get\" 查看当前最新 state 正文与带序号的来路列表（上下文原文里通常已包含最新状态，需要核对来路序号时再调即可）。\naction=\"update\" 传入最新 state，并可按需维护来路（改动后序号自动顺延，更新后自动推进覆盖点并重建会话快照）：\nlu_add 为在来路末尾追加新条目（字符串数组）；\nlu_insert 为按序号插队补录，传入 { \"after\": 序号, \"text\": \"带日期的事件内容\" } 数组（after=0 插在最前）；\nlu_update 为按序号更新某一条已有来路，传入 { \"index\": 序号, \"text\": \"更新后的内容\" } 数组。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "get",
+              "update"
+            ],
+            "description": "get=查看最新状态机与带序号来路（默认）；update=写入新版本并自动重建快照"
+          },
+          "session_id": {
+            "type": "string",
+            "description": "目标小手机会话 ID（必填）"
+          },
+          "state": {
+            "type": "string",
+            "description": "update 必填：最新的状态机现在层正文（整合已有未并入对话与本轮新进展）"
+          },
+          "lu_add": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "update 可选：在来路末尾追加的新条目数组"
+          },
+          "lu_insert": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "after": {
+                  "type": "integer",
+                  "description": "插到第几条来路后面（0 表示插到最前面，序号以当前列表为准）"
+                },
+                "text": {
+                  "type": "string",
+                  "description": "带日期的来路事件内容"
+                }
+              },
+              "required": [
+                "after",
+                "text"
+              ]
+            },
+            "description": "update 可选：按序号插队补录来路条目，插入后后续序号自动顺延"
+          },
+          "lu_update": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "description": "要修改的来路序号（从 1 开始，以当前列表为准）"
+                },
+                "text": {
+                  "type": "string",
+                  "description": "修改后的来路内容"
+                }
+              },
+              "required": [
+                "index",
+                "text"
+              ]
+            },
+            "description": "update 可选：按序号更新某一条已有来路"
+          }
+        },
+        "required": [
+          "session_id"
+        ]
+      },
+      "enabled": true
+    },
+    {
+      "name": "subagent",
+      "description": "派子智能体干杂活（独立小会话，人设/模型/工具在预设里配，不占你的上下文）。run：task 必填（写清要干什么，交代不可重启网关）；subagent_id 传=续用该子会话（延续上下文），不传=新建（更省 token 更快）；preset 可选（缺省「子会话」）；立刻返回任务 id，不等待。子智能体较慢，派完用 wake 定个几分钟后的唤醒，到点再 report。report：subagent_id 必填；tag 不填=本任务最新一份 report_NN，填如 report_02=指定旧报告；没找到=还没完成。log：subagent_id+start_line 必填（从 1 起），end_line 缺省=start_line+39；内容为 AI 正文与工具调用记录，长内容按约 1800 字切块，按行号取块拼接。你和子智能体都禁止重启网关。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "run",
+              "report",
+              "log"
+            ],
+            "description": "run=派活；report=取报告；log=看过程记录"
+          },
+          "task": {
+            "type": "string",
+            "description": "run：任务提示词"
+          },
+          "subagent_id": {
+            "type": "string",
+            "description": "run：续用的子会话；report / log：目标子会话"
+          },
+          "preset": {
+            "type": "string",
+            "description": "run：新建时用的预设名，缺省「子会话」"
+          },
+          "tag": {
+            "type": "string",
+            "description": "report：报告标签（如 report_02），缺省=最新"
+          },
+          "start_line": {
+            "type": "integer",
+            "description": "log：起始记录序号（从 1 起）"
+          },
+          "end_line": {
+            "type": "integer",
+            "description": "log：结束记录序号，缺省 start_line+39"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "defaultDescription": "派子智能体干杂活（用「新建会话预设」开的独立会话，人设/模型/工具在预设里配，默认预设「子会话」；不占你的上下文）。run：task 必填（写清楚要干什么，并交代不可重启网关）；subagent_id 可选（传=续用那个子会话，不传=新建）；preset 可选（新建时用哪个预设，缺省「子会话」）；立刻返回任务 id，不等待。子智能体较慢，派完用 wake 定个几分钟后的唤醒，到点再 report。report：subagent_id 必填；tag 可选（缺省=最新一份 report_NN，也可填 report_02）；没找到=还未完成。log：subagent_id + start_line 必填（从 1 起），end_line 可选（缺省=start_line+39）；内容是 AI 正文全文与每次工具调用（名+完整参数，出错附错误信息），不含工具结果与思考；长内容按约 1800 字切块。你和子智能体都禁止重启网关，需要重启在报告里说明，由用户决定。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "run",
+              "report",
+              "log"
+            ],
+            "description": "run=派活；report=取报告；log=看过程记录"
+          },
+          "task": {
+            "type": "string",
+            "description": "run：任务提示词"
+          },
+          "subagent_id": {
+            "type": "string",
+            "description": "run：续用的子会话；report / log：目标子会话"
+          },
+          "preset": {
+            "type": "string",
+            "description": "run：新建时用的预设名，缺省「子会话」"
+          },
+          "tag": {
+            "type": "string",
+            "description": "report：报告标签（如 report_02），缺省=最新"
+          },
+          "start_line": {
+            "type": "integer",
+            "description": "log：起始记录序号（从 1 起）"
+          },
+          "end_line": {
+            "type": "integer",
+            "description": "log：结束记录序号，缺省 start_line+39"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "enabled": true
+    },
+    {
+      "name": "todo",
+      "description": "管理她的待办清单。action=\"add\" 新增待办，text 必填，remind_at 可选（YYYY-MM-DD HH:mm，须为未来时间，到点自动推送提醒）；action=\"list\" 查看全部未完成待办及对应 id；action=\"delete\" 传入 id 删除待办，仅在她明确要求、已办完或取消时调用。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "add",
+              "list",
+              "delete"
+            ],
+            "description": "要执行的操作：add / list / delete"
+          },
+          "text": {
+            "type": "string",
+            "description": "add 必填：待办内容"
+          },
+          "remind_at": {
+            "type": "string",
+            "description": "add 可选：提醒时间，格式 YYYY-MM-DD HH:mm，按项目 TIME_ZONE 时区；必须是未来时间"
+          },
+          "id": {
+            "type": "integer",
+            "description": "delete 必填：待办 id（action=list 返回）"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "defaultDescription": "管理她的待办清单。action=\"add\" 新增待办，text 必填，remind_at 可选（YYYY-MM-DD HH:mm，须为未来时间，到点自动推送提醒）；action=\"list\" 查看全部未完成待办及对应 id；action=\"delete\" 传入 id 删除待办，仅在她明确要求、已办完或取消时调用。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "add",
+              "list",
+              "delete"
+            ],
+            "description": "要执行的操作：add / list / delete"
+          },
+          "text": {
+            "type": "string",
+            "description": "add 必填：待办内容"
+          },
+          "remind_at": {
+            "type": "string",
+            "description": "add 可选：提醒时间，格式 YYYY-MM-DD HH:mm，按项目 TIME_ZONE 时区；必须是未来时间"
+          },
+          "id": {
+            "type": "integer",
+            "description": "delete 必填：待办 id（action=list 返回）"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "enabled": true
+    },
+    {
+      "name": "view_image",
+      "description": "看服务器本地图片（png/jpg/gif/webp）并直接返回图片。max_width/max_height 是返回图最大宽高（默认 1280/2400），超过等比缩小；看清细节调大，省上下文调小。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "图片的服务器路径"
+          },
+          "max_width": {
+            "type": "integer",
+            "description": "最大宽，默认 1280"
+          },
+          "max_height": {
+            "type": "integer",
+            "description": "最大高，默认 2400"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "defaultDescription": "看服务器上的本地图片（png/jpg/gif/webp；项目目录 / tmp 下）并直接返回图片。max_width / max_height 是返回图的最大宽高（默认 1280 / 2400），超过就等比缩小；想看清细节调大，想省上下文调小。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "图片的服务器路径"
+          },
+          "max_width": {
+            "type": "integer",
+            "description": "最大宽，默认 1280"
+          },
+          "max_height": {
+            "type": "integer",
+            "description": "最大高，默认 2400"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "enabled": true
+    },
+    {
+      "name": "wake",
+      "description": "为当前会话管理定时唤醒闹钟（时间均为北京时间，单会话最多 10 个，互不覆盖；到点唤醒且她在聊天时会自动让路，中途发言不作废）。action=\"set\" 设置闹钟，time 支持分钟数（如 30）、HH:MM 或 YYYY-MM-DD HH:mm，repeat 支持 once（默认）/ daily / weekly（配 days 如 [1,3,5]，0=周日）/ interval（配 interval_min 或 time 填分钟数，可选 quiet_start 与 quiet_end 设置免打扰时段），label 为备注；action=\"list\" 查看全部闹钟；action=\"delete\" 传入 alarm_id 删除单个；action=\"clear\" 清空当前会话全部闹钟。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "set",
+              "list",
+              "delete",
+              "clear"
+            ],
+            "description": "set=定闹钟；list=看全部；delete=删单个；clear=全清"
+          },
+          "time": {
+            "type": "string",
+            "description": "set：分钟数（如 30）/ HH:MM（如 07:30）/ 日期时间（如 2026-10-26 07:30）"
+          },
+          "repeat": {
+            "type": "string",
+            "enum": [
+              "once",
+              "daily"
+            ],
+            "description": "set：once 单次（默认）/ daily 每天循环"
+          },
+          "label": {
+            "type": "string",
+            "description": "set：备注，可写这个闹钟是干嘛的"
+          },
+          "alarm_id": {
+            "type": "string",
+            "description": "delete：要删的闹钟 id（从 list 拿）"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "defaultDescription": "为当前会话管理定时唤醒闹钟（时间均为北京时间，单会话最多 10 个，互不覆盖；到点唤醒且她在聊天时会自动让路，中途发言不作废）。action=\"set\" 设置闹钟，time 支持分钟数（如 30）、HH:MM 或 YYYY-MM-DD HH:mm，repeat 支持 once（默认）/ daily / weekly（配 days 如 [1,3,5]，0=周日）/ interval（配 interval_min 或 time 填分钟数，可选 quiet_start 与 quiet_end 设置免打扰时段），label 为备注；action=\"list\" 查看全部闹钟；action=\"delete\" 传入 alarm_id 删除单个；action=\"clear\" 清空当前会话全部闹钟。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "set",
+              "list",
+              "delete",
+              "clear"
+            ],
+            "description": "set=定闹钟；list=看全部；delete=删单个；clear=全清"
+          },
+          "time": {
+            "type": "string",
+            "description": "set：分钟数（如 30）/ HH:MM（如 07:30）/ 日期时间（如 2026-10-26 07:30）"
+          },
+          "repeat": {
+            "type": "string",
+            "enum": [
+              "once",
+              "daily"
+            ],
+            "description": "set：once 单次（默认）/ daily 每天循环"
+          },
+          "label": {
+            "type": "string",
+            "description": "set：备注，可写这个闹钟是干嘛的"
+          },
+          "alarm_id": {
+            "type": "string",
+            "description": "delete：要删的闹钟 id（从 list 拿）"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "enabled": true
+    },
+    {
+      "name": "world",
+      "description": "管理小世界静态页面文件（她在小手机「小世界」页查看；仅允许文本类文件如 html/css/js/json/md/txt/svg/csv/xml，单文件不超过 512KB、总量不超过 20MB，不可执行命令）。action=\"list\" 列出目录（path 为空即根目录）；action=\"read\" 读取文件内容（返回带行号，可配 start_line 与 end_line 分段读以节省上下文）；action=\"write\" 传入 path 与完整 content 新建或整份覆盖；action=\"edit\" 局部修改已有文件，传 old 与 new（old 须从 read 原样复制且唯一命中，replace_all=true 全替换，new 空串即删除），或传 append=true 与 new 追加到文件末尾；action=\"delete\" 删除指定文件。小改动优先用 edit/append，新建或大幅重构再用 write。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "list",
+              "read",
+              "write",
+              "edit",
+              "delete"
+            ],
+            "description": "要执行的操作：list / read / write / edit / delete"
+          },
+          "path": {
+            "type": "string",
+            "description": "相对小世界根目录的路径，如 index.html、room/notes.md；list 可留空表示根目录"
+          },
+          "content": {
+            "type": "string",
+            "description": "write 必填：完整文件内容"
+          },
+          "old": {
+            "type": "string",
+            "description": "edit 必填：要替换的原文，从 read 结果原样复制（含空格缩进换行），须唯一命中"
+          },
+          "new": {
+            "type": "string",
+            "description": "edit 必填：替换成的内容（空串=删掉 old）；append=true 时为追加内容"
+          },
+          "replace_all": {
+            "type": "boolean",
+            "description": "edit 可选：true=替换所有命中（默认只替换一处；多处命中且没开它会报错）"
+          },
+          "append": {
+            "type": "boolean",
+            "description": "edit 可选：true=把 new 追加到文件末尾（原文件末尾没换行会先补一个），此时不用 old"
+          },
+          "start_line": {
+            "type": "integer",
+            "description": "read 可选：起始行（1 起），和 end_line 搭配看指定片段"
+          },
+          "end_line": {
+            "type": "integer",
+            "description": "read 可选：结束行（含），缺省读到末尾"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "defaultDescription": "管理小世界静态页面文件（她在小手机「小世界」页查看；仅允许文本类文件如 html/css/js/json/md/txt/svg/csv/xml，单文件不超过 512KB、总量不超过 20MB，不可执行命令）。action=\"list\" 列出目录（path 为空即根目录）；action=\"read\" 读取文件内容（返回带行号，可配 start_line 与 end_line 分段读以节省上下文）；action=\"write\" 传入 path 与完整 content 新建或整份覆盖；action=\"edit\" 局部修改已有文件，传 old 与 new（old 须从 read 原样复制且唯一命中，replace_all=true 全替换，new 空串即删除），或传 append=true 与 new 追加到文件末尾；action=\"delete\" 删除指定文件。小改动优先用 edit/append，新建或大幅重构再用 write。",
+      "defaultInputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "list",
+              "read",
+              "write",
+              "edit",
+              "delete"
+            ],
+            "description": "要执行的操作：list / read / write / edit / delete"
+          },
+          "path": {
+            "type": "string",
+            "description": "相对小世界根目录的路径，如 index.html、room/notes.md；list 可留空表示根目录"
+          },
+          "content": {
+            "type": "string",
+            "description": "write 必填：完整文件内容"
+          },
+          "old": {
+            "type": "string",
+            "description": "edit 必填：要替换的原文，从 read 结果原样复制（含空格缩进换行），须唯一命中"
+          },
+          "new": {
+            "type": "string",
+            "description": "edit 必填：替换成的内容（空串=删掉 old）；append=true 时为追加内容"
+          },
+          "replace_all": {
+            "type": "boolean",
+            "description": "edit 可选：true=替换所有命中（默认只替换一处；多处命中且没开它会报错）"
+          },
+          "append": {
+            "type": "boolean",
+            "description": "edit 可选：true=把 new 追加到文件末尾（原文件末尾没换行会先补一个），此时不用 old"
+          },
+          "start_line": {
+            "type": "integer",
+            "description": "read 可选：起始行（1 起），和 end_line 搭配看指定片段"
+          },
+          "end_line": {
+            "type": "integer",
+            "description": "read 可选：结束行（含），缺省读到末尾"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "enabled": true
+    }
+  ]
+}

@@ -1,0 +1,305 @@
+"use strict";
+
+const fs = require("fs-extra");
+const fsp = require("fs").promises;
+const path = require("path");
+const ROOT_DIR = path.join(__dirname, "..");  // 1018-13：模块已搬进子目录，项目根 = 上一级
+const crypto = require("crypto");
+
+const DATA_DIR = process.env.MEMORY_DATA_DIR || path.join(ROOT_DIR, "data");
+const CONFIG_FILE = path.join(DATA_DIR, "config.json");
+const PINNED_FILE = path.join(DATA_DIR, "pinned.json");
+const DELETED_PINS_FILE = path.join(DATA_DIR, "deleted_pins.json");
+// Context V2 pinned 归类表：0921 用户拍板不再人工维护——pin 变动后自动对齐，缺省归类一律 instructions
+const PINNED_MAP_FILE = path.join(DATA_DIR, "context_v2_pinned_map.json");
+const PINNED_MAP_DEFAULT_TARGET = "instructions";
+
+let config = {};
+let pinnedMemories = [];
+let deletedPinSignatures = new Set();
+
+// 只读守卫：多进程共享同一批数据文件时只允许一个进程写盘（原为 wake-up 双进程设计；
+// 2026-09-15 wake-up 退役后 gateway 单进程，机制保留作多进程部署防御）
+const READONLY = process.env.MEMORY_ENGINE_READONLY === "1";
+
+// 异步原子写 JSON（tmp+rename）——与 server.js 的同名函数重复，历史并存
+async function atomicWriteJson(file, data) {
+  const tmp = file + ".tmp";
+  await fs.writeJson(tmp, data, { spaces: 2 });
+  await fs.rename(tmp, file);
+}
+
+// DEFAULT_CONFIG（2026-09-28 配置键专项收敛）：只剩 event_inject_types 一个有真实读取点的键
+// （context-replacements.loadEventInjectConfig 直读 config.json；键不存在=注入不过滤，故保留默认值）。
+// 本模块 config 无任何属性级读取；旧 /admin/config 端点（回显+白名单写入）已随本批删除——
+// admin-mobile 零调用、白名单 15 键全部零读取。旧「自动摘要/记忆浮现注入」时代参数
+// （auto_summary_enabled 等 29 键）与盘上存量一并清除（见 0928-38）。
+const DEFAULT_CONFIG = {
+  // 特殊事件注入类型过滤（context-replacements 按此过滤旧窗口事件；值=classifySpecialEvent 分类 key）
+  event_inject_types: ["wake", "diary", "push", "summary"]
+};
+
+// 启动：确保数据目录、读 config/pinned/已删签名；READONLY 时挂 30s 重载定时器跟随写方进程
+async function init() {
+  await fs.ensureDir(DATA_DIR);
+  try {
+    config = { ...DEFAULT_CONFIG, ...(await fs.readJson(CONFIG_FILE)) };
+  } catch {
+    config = { ...DEFAULT_CONFIG };
+  }
+  try {
+    const rawPinned = await fs.readJson(PINNED_FILE);
+    pinnedMemories = Array.isArray(rawPinned) ? rawPinned : [];
+  } catch { pinnedMemories = []; }
+  await loadDeletedSignatures();
+  // 启动自愈：把归类表对齐盘上 pinned 现状（补漏/清死引用），修掉人工维护期遗留的不一致
+  if (!READONLY) {
+    try {
+      await withPinnedLock(async function () {
+        pinnedMemories = await loadPinnedFromDisk();
+        await syncPinnedMapLocked();
+      });
+    } catch (e) { console.warn("[memory-engine] 启动归类表对齐失败:", e.message); }
+  }
+  if (READONLY) {
+    console.log("[memory-engine] 只读模式：pin/状态由 gateway 进程负责写盘");
+    // 只读进程周期性从磁盘重载 pinned，避免写方进程更新 pinned.json 后本进程长期用旧缓存
+    // （原为 wake-up 双进程设计；现无只读进程在跑，机制保留）
+    setInterval(async function () {
+      try {
+        const rawPinned = await fs.readJson(PINNED_FILE);
+        pinnedMemories = Array.isArray(rawPinned) ? rawPinned : [];
+      } catch (e) { /* 文件暂时不可读则保持现状 */ }
+    }, 30000).unref();
+  }
+}
+
+// ========================
+// Pinned Memories (永久注入上下文)
+// ========================
+
+// 内容签名（trim 后全文）：已删拦截与去重共用
+function contentSignature(content) {
+  return String(content || "").trim();
+}
+
+// pinned.json 跨异步文件锁：wx 独占创建 lock 文件，超时强拆（持锁段毫秒级，基本无竞争）
+function withPinnedLock(fn, timeoutMs) {
+  if (timeoutMs === undefined) timeoutMs = 8000;
+  const lockFile = PINNED_FILE + ".lock";
+  const start = Date.now();
+  return (async () => {
+    for (;;) {
+      let fd = null;
+      try {
+        try { fd = await fsp.open(lockFile, "wx"); } catch (e) { if (e.code !== "EEXIST") throw e; }
+        if (fd) { await fd.close(); break; }
+        if (Date.now() - start > timeoutMs) {
+          try { await fsp.unlink(lockFile); } catch (e) {}
+          continue;
+        }
+        await new Promise(r => setTimeout(r, 40));
+      } catch (err) { throw err; }
+    }
+    try { return await fn(); } finally { try { await fsp.unlink(lockFile); } catch (e) {} }
+  })();
+}
+
+async function loadPinnedFromDisk() {
+  try {
+    const raw = await fs.readJson(PINNED_FILE);
+    return Array.isArray(raw) ? raw : [];
+  } catch (e) { return []; }
+}
+
+async function loadDeletedSignatures() {
+  try {
+    const raw = await fs.readJson(DELETED_PINS_FILE);
+    deletedPinSignatures = new Set(Array.isArray(raw) ? raw : []);
+  } catch (e) { deletedPinSignatures = new Set(); }
+}
+
+async function saveDeletedSignatures() {
+  await atomicWriteJson(DELETED_PINS_FILE, Array.from(deletedPinSignatures).slice(-400));
+}
+
+// pinned 归类表自动对齐（0921 用户拍板）：登记表缺的条目补 instructions，指向已删条目的死引用清掉，
+// 有变化才写盘并 version+1。必须持 withPinnedLock 且 pinnedMemories 已是盘上最新时调用；
+// 读写失败只吞掉（归类表退回人工/旧状态），不影响 pin 本体的增删。
+async function syncPinnedMapLocked() {
+  try {
+    let map = null;
+    try { map = await fs.readJson(PINNED_MAP_FILE); } catch (e) { map = null; }
+    if (!map || typeof map !== "object" || !Array.isArray(map.entries)) map = { version: 0, entries: [] };
+    const ids = new Set(pinnedMemories.map(function (m) { return m.id; }));
+    const byId = new Map(map.entries.map(function (e) { return [e.pinnedId, e]; }));
+    let changed = false;
+    const kept = map.entries.filter(function (e) {
+      const live = ids.has(e.pinnedId);
+      if (!live) changed = true;
+      return live;
+    });
+    pinnedMemories.forEach(function (m) {
+      if (!byId.has(m.id)) {
+        kept.push({ pinnedId: m.id, target: PINNED_MAP_DEFAULT_TARGET, reason: "auto: pin 新增默认 instructions（0921 拍板，取消人工归类）" });
+        changed = true;
+      }
+    });
+    if (!changed) return;
+    map.entries = kept;
+    map.version = (Number(map.version) || 0) + 1;
+    map.updatedAt = new Date().toISOString();
+    await atomicWriteJson(PINNED_MAP_FILE, map);
+  } catch (e) {
+    console.warn("[memory-engine] pinned 归类表同步失败（不影响 pin 本体）:", e.message);
+  }
+}
+
+// 新增 pin：内容签名去重 + 已删签名拦截；allowDeleted=true 放行曾删除的签名并清除记录
+//（编辑/恢复场景用）。锁内重读盘上真身再写，防并发丢条目。
+async function addPinnedMemory(entry, opts) {
+  if (READONLY) { console.warn("[memory-engine] 只读模式，忽略新增 pin"); return null; }
+  const { title, content } = entry;
+  if (!content) return null;
+  const sig = contentSignature(content);
+  const allowDeleted = !!(opts && opts.allowDeleted);
+  return withPinnedLock(async () => {
+    const fresh = await loadPinnedFromDisk();
+    pinnedMemories = fresh;
+    const dup = fresh.some(function(m) { return contentSignature(m.content) === sig; });
+    if (dup) return null;
+    if (!allowDeleted && deletedPinSignatures.has(sig)) { return null; }
+    if (allowDeleted && deletedPinSignatures.delete(sig)) { await saveDeletedSignatures(); }
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const ord = (entry.order !== undefined && entry.order !== null) ? entry.order : fresh.length;
+    const mem = { id: id, title: title || '', content: content, order: ord, created_at: now, updated_at: now };
+    fresh.push(mem);
+    pinnedMemories = fresh;
+    await atomicWriteJson(PINNED_FILE, fresh);
+    await syncPinnedMapLocked();
+    return mem;
+  });
+}
+
+async function updatePinnedMemory(id, updates) {
+  if (READONLY) { console.warn("[memory-engine] 只读模式，忽略更新 pin"); return null; }
+  return withPinnedLock(async () => {
+    const fresh = await loadPinnedFromDisk();
+    pinnedMemories = fresh;
+    const idx = fresh.findIndex(function(m) { return m.id === id; });
+    if (idx === -1) return null;
+    fresh[idx] = Object.assign({}, fresh[idx], updates, { updated_at: new Date().toISOString() });
+    pinnedMemories = fresh;
+    await atomicWriteJson(PINNED_FILE, fresh);
+    return fresh[idx];
+  });
+}
+
+// 删除 pin：内容签名记入 deleted_pins（防同一内容被 AI 重复写入复活）
+async function deletePinnedMemory(id) {
+  if (READONLY) { console.warn("[memory-engine] 只读模式，忽略删除 pin"); return false; }
+  return withPinnedLock(async () => {
+    const fresh = await loadPinnedFromDisk();
+    pinnedMemories = fresh;
+    const before = fresh.length;
+    const removed = fresh.filter(function(m) { return m.id === id; });
+    pinnedMemories = fresh.filter(function(m) { return m.id !== id; });
+    if (pinnedMemories.length < before) {
+      removed.forEach(function(m) { deletedPinSignatures.add(contentSignature(m.content || '')); });
+      await atomicWriteJson(PINNED_FILE, pinnedMemories);
+      await saveDeletedSignatures();
+      await syncPinnedMapLocked();
+      return true;
+    }
+    return false;
+  });
+}
+async function reorderPinnedMemory(ids) {
+  if (READONLY) { console.warn("[memory-engine] 只读模式，忽略重排 pin"); return null; }
+  if (!Array.isArray(ids) || ids.length === 0) return null;
+  return withPinnedLock(async () => {
+    const fresh = await loadPinnedFromDisk();
+    const byId = new Map();
+    fresh.forEach(function(m) { byId.set(m.id, m); });
+    const next = [];
+    const seen = new Set();
+    // 优先按传入顺序排列已存在 id
+    ids.forEach(function(id) {
+      if (byId.has(id) && !seen.has(id)) { next.push(byId.get(id)); seen.add(id); }
+    });
+    // 追加未在 ids 中的条目（保证不丢数据）
+    fresh.forEach(function(m) { if (!seen.has(m.id)) { next.push(m); seen.add(m.id); } });
+    next.forEach(function(m, i) { m.order = i; });
+    pinnedMemories = next;
+    await atomicWriteJson(PINNED_FILE, next);
+    return next;
+  });
+}
+
+function getPinnedMemories() {
+  return pinnedMemories.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+}
+
+// 永久上下文正文（【标题】内容 按序拼接）——[永久上下文] developer 块的数据源
+function buildPinnedContext() {
+  if (!pinnedMemories.length) return '';
+  const sorted = pinnedMemories.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+  return sorted.map(m => {
+    const title = m.title ? `【${m.title}】` : '';
+    return `${title}${m.content}`;
+  }).join('\n');
+}
+
+// 旧 flush/flushTimer 刷盘机制已移除：pin 写盘均为即时 atomicWriteJson，无延迟刷盘需求（空 shutdown 残壳已于 2026-09-28 删除）。
+
+// ========================
+// 词云关键词提取（管理台词云卡片用）
+// 第二阶段：改为按上下文源文件匹配关键词；当前暂用旧记忆池备份数据
+// ========================
+const KEYWORD_SPLIT = "[的了我是你他它她在在有也就说都还被把让跟和与或但而而且还再不没这那们个种些去来到上下前后时次天点会能要想觉得自己什么怎么这样那样现在然后因为所以但是如果感觉时候东西应该可以已经知道看到听到想到]";
+
+const KEYWORD_LABEL_RE = /^(?:触发|分叉|我的选择|我的判断|我的感受|她的反应|感受|回响|依据)[：:]\s*/gm;
+const KEYWORD_STOP_WORDS = new Set([
+  "触发", "判断", "选择", "分叉", "感受", "回响", "依据",
+  "其实", "继续", "告诉", "回答", "答案", "问题", "任何", "开始", "变成", "证明",
+  "本身", "之间", "每一", "直接", "真正", "愿意", "定义", "完整", "理由", "一步",
+  "瞬间", "顺着", "条件", "分析", "事情", "句话", "带着", "指出", "反复", "决定",
+  "话题", "模式", "记住", "希望", "立刻", "位置", "期待", "慢慢", "形状", "回避",
+  "否认", "否定", "动作", "人类", "即使", "第一", "第三", "具体", "意继", "那个",
+  "这样", "那样", "什么", "怎么", "时候", "东西", "知道", "觉得", "应该", "可以",
+  "已经", "看到", "听到", "想到", "没有", "不是", "就是", "不会", "不能", "还有",
+  "一直", "刚才", "一句", "确实", "地方", "方式", "开口", "重新"
+]);
+
+function extractKeywordsFromText(text) {
+  const words = [];
+  const raw = String(text || "").replace(KEYWORD_LABEL_RE, "");
+  const quoted = raw.match(/[\u300a\u300c\u201c\u201c\u3010\u300e]([^\u300b\u300d\u201d\u201d\u3011\u300f]{2,14})[\u300b\u300d\u201d\u201d\u3011\u300f]/g) || [];
+  for (const q of quoted) {
+    const w = q.replace(/[\u300a\u300c\u201c\u201c\u3010\u300e\u300b\u300d\u201d\u201d\u3011\u300f]/g, "").trim();
+    if (w.length >= 2 && w.length <= 8) words.push(w);
+  }
+  const runs = raw.match(/[\u4e00-\u9fff]+/g) || [];
+  for (const run of runs) {
+    const parts = run.split(new RegExp(KEYWORD_SPLIT)).filter(p => p.length >= 2);
+    for (const part of parts) {
+      if (part.length <= 4) words.push(part);
+      else {
+        for (let i = 0; i <= part.length - 2; i++) words.push(part.slice(i, i + 2));
+      }
+    }
+  }
+  return words;
+}
+
+module.exports = {
+  init,
+  extractKeywordsFromText, KEYWORD_STOP_WORDS,
+  getConfig() { return config; },
+  addPinnedMemory, updatePinnedMemory, deletePinnedMemory, reorderPinnedMemory, getPinnedMemories, buildPinnedContext,
+  async updateConfig(updates) {
+    Object.assign(config, updates);
+    await atomicWriteJson(CONFIG_FILE, config);
+  }
+};

@@ -1,0 +1,163 @@
+/* phone-glass.css v1 —— 1016-31：桌面字体 / 天空氛围 / 清透玻璃 / 聊天玻璃气泡 / 日历日记 / 唤醒日志换皮 */
+
+/* ===== 字体：桌面用霞鹜致宋 + Newsreader（数字与英文） ===== */
+@font-face{font-family:"PHSong";font-weight:400;font-style:normal;font-display:swap;src:url(fonts/LXGWZhiSongCL.woff2) format("woff2"),url(fonts/LXGWZhiSongCL.ttf) format("truetype")}
+@font-face{font-family:"PHNews";font-weight:300;font-style:normal;font-display:swap;src:url(fonts/newsreader-normal-300-latin.woff2) format("woff2")}
+@font-face{font-family:"PHNews";font-weight:400;font-style:normal;font-display:swap;src:url(fonts/newsreader-normal-400-latin.woff2) format("woff2")}
+@font-face{font-family:"PHNews";font-weight:500;font-style:normal;font-display:swap;src:url(fonts/newsreader-normal-500-latin.woff2) format("woff2")}
+@font-face{font-family:"PHNews";font-weight:400;font-style:italic;font-display:swap;src:url(fonts/newsreader-italic-400-latin.woff2) format("woff2")}
+
+/* ===== 可平滑过渡的颜色变量（日夜切换时桌面文字缓缓变色） ===== */
+@property --ink{syntax:'<color>';inherits:true;initial-value:#2a3042}
+@property --ink2{syntax:'<color>';inherits:true;initial-value:rgba(42,48,66,.62)}
+@property --ink3{syntax:'<color>';inherits:true;initial-value:rgba(42,48,66,.38)}
+@property --glass{syntax:'<color>';inherits:true;initial-value:rgba(255,255,255,.24)}
+@property --glass2{syntax:'<color>';inherits:true;initial-value:rgba(255,255,255,.55)}
+@property --line{syntax:'<color>';inherits:true;initial-value:rgba(255,255,255,.75)}
+@property --lab{syntax:'<color>';inherits:true;initial-value:#4e5a78}
+@property --sqs{syntax:'<color>';inherits:true;initial-value:#566079}
+@property --hw-ac{syntax:'<color>';inherits:true;initial-value:#4f6ea8}
+@property --hw-ac2{syntax:'<color>';inherits:true;initial-value:#5a76ab}
+@property --pg{syntax:'<color>';inherits:true;initial-value:rgba(42,48,66,.2)}
+@property --pgon{syntax:'<color>';inherits:true;initial-value:rgba(42,48,66,.45)}
+@property --clk{syntax:'<color>';inherits:true;initial-value:rgba(42,48,66,.86)}
+@property --hb{syntax:'<color>';inherits:true;initial-value:rgba(42,48,66,.4)}
+@property --sh1{syntax:'<color>';inherits:true;initial-value:rgba(255,255,255,.5)}
+@property --sh2{syntax:'<color>';inherits:true;initial-value:rgba(255,255,255,.2)}
+:root{
+  --hfont:"PHSong","LXGW ZhiSong CL","Songti SC","Noto Serif CJK SC",serif;
+  --hnum:"PHNews","Newsreader",Georgia,"Times New Roman",serif;
+  --glass:rgba(255,255,255,.24);
+  --lab:#4e5a78;--sqs:#566079;--hw-ac:#4f6ea8;--hw-ac2:#5a76ab;--pg:rgba(42,48,66,.2);--pgon:rgba(42,48,66,.45);--clk:rgba(42,48,66,.86);--hb:rgba(42,48,66,.4);--sh1:rgba(255,255,255,.5);--sh2:rgba(255,255,255,.2);
+  --winA:.97;   /* [位置:phone-glass.css·--winA] [窗口底色基本不透明] [11-03：随手记/日记等页面不要透出壁纸；原 .72，现 .97；想找回透明感把它调小（聊天窗口单独 .5 不受影响）] [注释时间 2026-11-03] */
+}
+#home{transition:transform .5s var(--spring),opacity .4s,filter .4s,--ink 6s linear,--ink2 6s linear,--ink3 6s linear,--glass 6s linear,--glass2 6s linear,--line 6s linear,--lab 6s linear,--sqs 6s linear,--hw-ac 6s linear,--hw-ac2 6s linear,--pg 6s linear,--pgon 6s linear,--hb 6s linear,--sh1 6s linear,--sh2 6s linear}
+#lock{transition:--ink 6s linear,--ink2 6s linear,--ink3 6s linear,--glass 6s linear,--glass2 6s linear,--line 6s linear,--clk 6s linear,--sh1 6s linear,--sh2 6s linear}
+#device[data-night="1"] #home,#device[data-night="1"] #lock{
+  --ink:#eef1ff;--ink2:rgba(238,241,255,.76);--ink3:rgba(238,241,255,.5);
+  --glass:rgba(255,255,255,.09);--glass2:rgba(255,255,255,.16);--line:rgba(255,255,255,.22);
+  --lab:rgba(238,241,255,.88);--sqs:#e6ebff;--hw-ac:#cdd8fc;--hw-ac2:#bccaf6;
+  --pg:rgba(255,255,255,.28);--pgon:rgba(255,255,255,.8);--clk:rgba(255,255,255,.94);--hb:rgba(255,255,255,.55);
+  --sh1:rgba(255,255,255,.16);--sh2:rgba(255,255,255,.04);
+}
+#home,#lock{color:var(--ink)}
+/* 打开 app 的窗口：夜里更不透明一点，读起来更舒服 */
+.win{background:rgba(238,244,251,var(--winA))}
+#device[data-night="1"] .win{--winA:.97}
+
+/* ===== 天空 ===== */
+#sky{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#sky .sk{position:absolute;inset:0;opacity:0;transition:opacity 15s linear;will-change:opacity}
+#sky.nofx .sk,#sky.nofx .sk-sun,#sky.nofx .sk-moon{transition:none!important}
+.sk-dawn{background:linear-gradient(180deg,rgba(255,236,224,0) 0%,rgba(255,206,184,.5) 52%,rgba(247,186,176,.7) 100%)}
+.sk-dusk{background:linear-gradient(180deg,rgba(150,142,205,.42) 0%,rgba(240,176,168,.52) 66%,rgba(252,196,146,.66) 100%)}
+/* .sk-night / .sk-wash 的底色以 phone-sea.css（1017 海壁纸）为准，此处不再重复定义，免得靠加载顺序取胜 */
+.sk-fog{background:radial-gradient(120% 70% at 50% 70%,rgba(255,255,255,.75),rgba(235,240,248,.4) 70%)}
+.sk-breath{position:absolute;inset:-10%;background:radial-gradient(55% 42% at 50% 36%,rgba(255,255,255,.5),transparent 70%);animation:sk-breath 9s ease-in-out infinite;mix-blend-mode:soft-light}
+@keyframes sk-breath{0%,100%{opacity:.35;transform:scale(.96)}50%{opacity:.95;transform:scale(1.06)}}
+#device[data-night="1"] .sk-breath{background:radial-gradient(55% 42% at 50% 40%,rgba(170,184,255,.5),transparent 70%)}
+.sk-sun{position:absolute;left:0;top:0;width:260px;height:260px;opacity:0;transition:transform 30s linear,opacity 20s linear;will-change:transform,opacity;
+  background:radial-gradient(circle,rgba(255,244,214,.95) 0%,rgba(255,226,170,.55) 16%,rgba(255,214,160,.22) 38%,transparent 66%);mix-blend-mode:screen}
+.sk-sun.warm{background:radial-gradient(circle,rgba(255,236,200,.95) 0%,rgba(255,196,150,.6) 16%,rgba(255,170,140,.26) 38%,transparent 66%)}
+.sk-sun b{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:radial-gradient(circle at 40% 38%,#fffbe9,#ffe9b8 70%);box-shadow:0 0 38px 10px rgba(255,236,190,.65);animation:sk-sun 6s ease-in-out infinite}
+@keyframes sk-sun{50%{transform:scale(1.08);box-shadow:0 0 48px 14px rgba(255,236,190,.75)}}
+.sk-moon{position:absolute;left:0;top:0;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;opacity:0;transition:transform 30s linear,opacity 20s linear;
+  box-shadow:inset -11px 3px 0 0 #fff7e4,0 0 22px 4px rgba(255,247,228,.38);transform:rotate(-18deg)}
+#skyc{position:absolute;inset:0}
+/* [位置:phone-glass.css·app-open 冻结天空] [打开 app 时暂停天空 CSS 动画] [2026-11-01 性能批 1：.sk-breath 是全屏 soft-light 无限动画、云团还带 blur 无限动画，会透过半透明窗口持续参与全屏合成；app 打开时统一暂停，保留最后一帧] [注释时间 2026-11-01] */
+#device.app-open #sky *{animation-play-state:paused}
+/* [位置:phone-glass.css·app-open 冻结桌面/锁屏动画] [打开 app 时暂停桌面与锁屏的无限 CSS 动画] [2026-11-03 发烫批 3：服务器真浏览器实测——聊天页底下的桌面层虽然 opacity:0，hw-live（桌面组件 live 圆点）/ beat（「在一起」卡片心跳）/ hint（锁屏上滑提示）三个无限动画照跑，聊天页空闲主线程占用 157ms/秒；只暂停这三类所在的 #home/#lock（含 ::before/::after）后降到 1ms/秒，滚动帧率不变。批 1 只管了 #sky，这里补全；关 app 摘掉 app-open 后自动恢复播放] [注释时间 2026-11-03] */
+#device.app-open #home *,#device.app-open #home *::before,#device.app-open #home *::after,
+#device.app-open #lock *,#device.app-open #lock *::before,#device.app-open #lock *::after{animation-play-state:paused}
+.sk-flash{position:absolute;inset:0;background:#fff;opacity:0;transition:opacity .12s}
+
+/* ===== 桌面字体 ===== */
+#lock .date{font:400 17px/1.2 var(--hfont);letter-spacing:.1em}
+#lock .clock{font:300 104px/1 var(--hnum);letter-spacing:-.025em;font-variant-numeric:lining-nums tabular-nums;color:var(--clk)}
+#lock .together,#lock .hint{font-family:var(--hfont);letter-spacing:.06em}
+#lock .together b{font-family:var(--hnum);font-weight:500;font-size:15px}
+#home .pcard .nm{font:400 21px/1.3 var(--hfont);letter-spacing:.08em}
+#home .pcard .sub{font:italic 400 14.5px var(--hnum);letter-spacing:.02em}
+#home .pcard .cnt{font:italic 400 13px var(--hnum);letter-spacing:.03em}
+#home .app-ic span{font:400 12px var(--hfont);letter-spacing:.08em;color:var(--lab)}
+#home .app-ic .sq svg{stroke:var(--sqs);stroke-width:1.4}
+#home .qroom .ti{font:400 13px var(--hnum);font-style:italic;letter-spacing:.04em}
+#home .qpill .tx{font:italic 400 11.5px var(--hnum)}
+#home .qpill .tx b{font:400 12.5px var(--hfont);letter-spacing:.04em}
+#home .pill{font:400 12px var(--hfont);letter-spacing:.34em;color:var(--ink2)}
+.noti .t,.noti .m{font-family:var(--hfont);letter-spacing:.03em}
+.pager i{background:var(--pg)}.pager i.on{background:var(--pgon)}
+.homebar::after{background:var(--hb)}
+#home .pcard .bar{background:rgba(125,150,190,.18)}
+#device[data-night="1"] #home .pcard .cover{opacity:.28}
+
+/* 小组件文字 */
+.hw{font-family:var(--hfont)}
+.hw-t{font:400 13px var(--hfont);letter-spacing:.08em}
+.hw-t svg{stroke:var(--hw-ac2)}
+.hw-t em{font:400 12px var(--hfont)}.hw-t em b{font:500 15px var(--hnum);color:var(--hw-ac)}
+.hw-sub,.hw-top small,.hw-tx em{font:400 11.5px var(--hfont);font-style:normal;letter-spacing:.05em}
+.hw-live{font:400 13px var(--hfont);letter-spacing:.06em}
+.hw-tx small{font:400 12px var(--hfont);letter-spacing:.06em}
+.hw-tx b{font:300 31px/1.1 var(--hnum);letter-spacing:-.01em;font-variant-numeric:lining-nums tabular-nums}
+.hw-ring b{font:500 16px var(--hnum)}.hw-r2 b{font-size:27px;font-weight:300}
+.hw-big{font:400 20px/1.2 var(--hfont);letter-spacing:.03em}
+.hw-chip,.hw-qi .cat,.hw-ln b,.hw-qb .y{color:inherit}
+.hw-chip{font:500 12px var(--hnum);color:var(--hw-ac)}
+.hw-qi .cat{font:400 11px var(--hfont);color:var(--hw-ac);letter-spacing:.06em}
+.hw-qi p,.hw-a .mm,.hw-ol li,.hw-a .tt{font-family:var(--hfont);font-weight:400;letter-spacing:.03em}
+.hw-a .tt small{font:400 11.5px var(--hnum);letter-spacing:.02em}
+.hw-quote{font:400 15px/1.55 var(--hfont);font-style:normal;letter-spacing:.04em}
+.hw-btn{font:400 13.5px var(--hfont);letter-spacing:.1em}
+.hw-seg span{font:400 12px var(--hfont);letter-spacing:.06em}
+.hw-ln b{color:var(--hw-ac2)}
+
+/* ===== 清透玻璃：更透、有斜向高光，不厚重 ===== */
+#home .glass,#lock .glass,.app-ic .sq{
+  background-color:var(--glass);
+  background-image:linear-gradient(150deg,var(--sh1) 0%,rgba(255,255,255,0) 46%,var(--sh2) 100%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);
+  border:.5px solid var(--line);
+  box-shadow:0 8px 28px rgba(96,120,160,.12),inset 0 1px 0 rgba(255,255,255,.7),inset 0 -1px 0 rgba(255,255,255,.14)}
+#device[data-night="1"] #home .glass,#device[data-night="1"] #lock .glass,#device[data-night="1"] .app-ic .sq{box-shadow:0 8px 28px rgba(8,12,40,.3),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(255,255,255,.04)}
+.hw-hero{background-image:linear-gradient(140deg,var(--sh1),rgba(255,255,255,0) 52%,rgba(169,191,230,.38))!important}
+.hw-term{background:rgba(255,255,255,.34)}
+#device[data-night="1"] .hw-term,#device[data-night="1"] .hw-seg span{background:rgba(255,255,255,.08)}
+#device[data-night="1"] .hw-ring .bg{stroke:rgba(255,255,255,.16)}
+#device[data-night="1"] .hw-t i,#device[data-night="1"] .hw-a .ic,#device[data-night="1"] .hw-chip,#device[data-night="1"] .hw-qi .cat{background:rgba(255,255,255,.12)}
+#device[data-night="1"] .hw-qb button{background:rgba(255,255,255,.12)}
+#device[data-night="1"] .hw-cmp u{background:rgba(255,255,255,.2)}
+#device[data-night="1"] .hw-tick span{background:rgba(205,216,252,.4)}
+
+/* ===== 聊天：玻璃气泡 + 玻璃输入框 ===== */
+.win[data-win="chat"]{--winA:.5}
+.chat .apphead{background:rgba(var(--sh),.46)}
+.chat .field{background:rgba(255,255,255,calc(.32*var(--wk)));border:.5px solid rgba(255,255,255,calc(.85*var(--wk)));-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);
+  box-shadow:0 6px 24px rgba(96,120,160,.1),inset 0 1px 0 rgba(255,255,255,calc(.9*var(--wk)))}
+.chat .field:focus-within{background:rgba(255,255,255,calc(.5*var(--wk)));box-shadow:0 6px 24px rgba(96,120,160,.12),inset 0 1px 0 rgba(255,255,255,calc(.95*var(--wk)))}
+.chat .plus{background:rgba(255,255,255,calc(.32*var(--wk)));border:.5px solid rgba(255,255,255,calc(.85*var(--wk)));-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);box-shadow:0 6px 18px rgba(96,120,160,.1),inset 0 1px 0 rgba(255,255,255,calc(.9*var(--wk)))}
+.chat .send.ready{background:rgba(108,146,212,.92);box-shadow:0 4px 12px rgba(108,146,212,.35)}
+
+/* ===== 月历：每天的日记（时间正序） ===== */
+.cl-dy{position:relative;padding:2px 0 10px 14px;cursor:pointer}
+.cl-dy+.cl-dy{margin-top:2px}
+.cl-dy::before{content:"";position:absolute;left:0;top:7px;width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 3px rgba(125,156,207,.18)}
+.cl-dy::after{content:"";position:absolute;left:3px;top:19px;bottom:0;width:1px;background:rgba(125,156,207,.25)}
+.cl-dy:last-child::after{display:none}
+.cl-dy time{display:block;font:500 12px var(--hnum);color:var(--ink3);letter-spacing:.04em}
+.cl-dy p{margin-top:2px;font:400 14.5px/1.65 var(--hfont);letter-spacing:.03em;color:var(--ink);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cl-dy.open p{-webkit-line-clamp:unset;display:block}
+.cl-dy em{display:block;margin-top:3px;font:400 11.5px var(--hfont);font-style:normal;color:var(--ink3);letter-spacing:.06em}
+.cl-btns{justify-content:flex-start}
+
+/* ===== 唤醒日志：浅色时间轴，不再是黑块 ===== */
+.tl-term{background:linear-gradient(150deg,rgba(255,255,255,calc(.55*var(--wk))),rgba(255,255,255,calc(.22*var(--wk))));border:.5px solid rgba(255,255,255,calc(.85*var(--wk)));color:var(--ink2);padding:6px 4px 10px;
+  box-shadow:0 10px 30px rgba(96,120,160,.12),inset 0 1px 0 rgba(255,255,255,calc(.9*var(--wk)));-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.lg{align-items:center;gap:9px;padding:9px 12px;border-bottom:.5px solid rgba(125,150,190,.14);font:400 12px/1.5 var(--hfont);letter-spacing:.03em}
+.lg:last-child{border-bottom:0}
+.lg::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 3px rgba(125,156,207,.2);flex:none}
+.lg time{font:500 11.5px var(--hnum);color:var(--ink3);letter-spacing:.03em;flex:none}
+.lg .tg{flex:none;padding:1px 8px;border-radius:999px;font:400 11px var(--hnum);letter-spacing:.04em;color:var(--k-4f6ea8);background:rgba(125,156,207,.16)}
+.lg span{color:var(--ink)}
+.lg.warn::before{background:#f0b88e;box-shadow:0 0 0 3px rgba(240,184,142,.26)}.lg.warn .tg{color:var(--k-b8794a);background:rgba(240,184,142,.22)}.lg.warn span{color:var(--k-9a6238)}
+.lg.err::before{background:#ee9db0;box-shadow:0 0 0 3px rgba(238,157,176,.28)}.lg.err .tg{color:var(--k-b8566f);background:rgba(238,157,176,.22)}.lg.err span{color:var(--k-b8566f)}

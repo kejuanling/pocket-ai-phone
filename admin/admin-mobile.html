@@ -1,0 +1,2035 @@
+ <!DOCTYPE html>
+ <html lang="zh">
+ <head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+ <title>管理台</title>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="/admin/mobile.css">
+ <script id="admin-ds-20261016-js">(function(){try{var t=localStorage.getItem("han_theme");var m=t==="claude"?"light":(t==="dark"?"dark":"");if(m)document.documentElement.setAttribute("data-ds",m);}catch(e){}})();</script>
+</head>
+ <body>
+ <div class="header" style="display:none"><h1>管理台</h1><p id="headerSub" aria-live="polite">HEARTBEAT · Runtime</p></div>
+ 
+ <!-- Tab 1: 状态 -->
+<div class="tab-content active" id="tab-status">
+   <div class="card"><div class="card-title">服务状态</div>
+     <div class="stat-row"><span class="stat-label">运行时长</span><span class="stat-value" id="st-uptime">-</span></div>
+     <div class="stat-row"><span class="stat-label">唤醒服务</span><span class="stat-value" id="st-wake">-</span></div>
+     <div class="stat-row"><span class="stat-label">API 地址</span><span class="stat-value" id="st-api-url">-</span></div>
+     <div class="stat-row"><span class="stat-label">模型</span><span class="stat-value" id="st-model">-</span></div>
+     <div class="stat-row"><span class="stat-label">网关密钥</span><span class="stat-value" id="st-gateway-key">-</span></div>
+     <div class="stat-row"><span class="stat-label">推送图标</span><span class="stat-value" id="st-icon">-</span></div>
+   </div>
+   <div class="card"><div class="card-title">唤醒配置</div>
+     <div class="stat-row"><span class="stat-label">日间唤醒间隔</span><span class="stat-value" id="wake-day-after">-</span></div>
+     <div class="stat-row"><span class="stat-label">夜间唤醒间隔</span><span class="stat-value" id="wake-night-after">-</span></div>
+     <div class="stat-row"><span class="stat-label">日间检查间隔</span><span class="stat-value" id="wake-day-check">-</span></div>
+     <div class="stat-row"><span class="stat-label">夜间检查间隔</span><span class="stat-value" id="wake-night-check">-</span></div>
+     <div class="stat-row"><span class="stat-label">日间时段</span><span class="stat-value" id="wake-hours">-</span></div>
+   </div>
+   <div class="card"><div class="card-title">天气配置</div>
+     <div class="stat-row"><span class="stat-label">启用</span><span class="stat-value" id="weather-enabled">-</span></div>
+     <div class="stat-row"><span class="stat-label">地点</span><span class="stat-value" id="weather-location">-</span></div>
+     <div class="stat-row"><span class="stat-label">经纬度</span><span class="stat-value" id="weather-coords">-</span></div>
+     <div class="stat-row"><span class="stat-label">单位</span><span class="stat-value" id="weather-units">-</span></div>
+   </div>
+
+   <button type="button" class="btn btn-primary" onclick="restartService()" style="margin-top:4px;background:#c89098">重启服务</button>
+
+</div>
+
+<!-- Tab 2: 配置 -->
+<div class="tab-content" id="tab-config">
+   <div class="card"><div class="card-title">环境变量</div><div id="env-list"></div>
+     <button type="button" class="btn btn-primary" onclick="openEnvEditor()">编辑环境变量</button>
+   </div>
+   <div class="card"><div class="card-title">网易云环境</div><div id="netease-status"></div>
+     <button type="button" class="btn btn-outline" onclick="openNeteaseEditor()">编辑网易云环境</button>
+   </div>
+
+   <div class="card" data-collapse-id="cross-inject-config" data-default="collapsed">
+     <div class="card-title collapsible" onclick="toggleCard(this)"><span>跨窗口注入 · 日记条数</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+     <div class="hint-card">
+       <div class="hint-body" style="font-size:11px;color:var(--text3);margin-top:6px;">控制 V2 上下文「Earlier Days」块注入的近期日记篇数（默认 3）。保存后写入 data/cross_inject_config.json，下次请求即生效。</div>
+     </div>
+     <div class="card-body">
+       <div class="cc-cfg-grid">
+         <label class="cc-cfg-item"><span>Earlier Days 注入篇数</span>
+           <input type="number" id="cross-inject-diary-count" min="1" max="20" style="width:80px">
+         </label>
+       </div>
+       <div class="cc-cfg-btns">
+         <button type="button" class="cc-btn primary" onclick="saveCrossInjectConfig()">保存</button>
+         <button type="button" class="cc-btn secondary" onclick="loadCrossInjectConfig()">重新载入</button>
+       </div>
+       <div id="cross-inject-config-msg" class="cc-cfg-msg"></div>
+     </div>
+   </div>
+   <div class="card" data-collapse-id="relevant-config" data-default="collapsed">
+     <div class="card-title collapsible" onclick="toggleCard(this)"><span>相关记忆注入</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+     <div class="hint-card">
+       <div class="hint-body" style="font-size:11px;color:var(--text3);margin-top:6px;">只注入 event 类（「记住的一件事/做出来的东西」，之后聊天可能还会引用）。命中机制：triggers 关键词命中才入围（无命中不入围），混合分 = 词面×词面权重 + 语义×语义权重（vibe 影响语义向量），每轮最多 1 条，分低于门槛不注入。真注入开关关闭时，预览开关会照常算分，把「本应注入哪条」写进下方预览卡；点头后再开真注入。存量记忆需先重跑补标签（triggers/vibe/worth），否则 event 池为空、注入/预览都不触发。</div>
+     </div>
+     <div class="card-body">
+       <div class="cc-cfg-grid">
+         <label class="cc-cfg-item"><span>真注入（进 prompt）</span>
+           <span class="switch"><input type="checkbox" id="relevant-enabled"><span class="slider"></span></span>
+         </label>
+         <label class="cc-cfg-item"><span>观察模式（预览）</span>
+           <span class="switch"><input type="checkbox" id="relevant-preview-sw"><span class="slider"></span></span>
+         </label>
+         <label class="cc-cfg-item"><span>词面权重</span>
+           <input type="number" id="relevant-ww" min="0" step="0.05" style="width:80px">
+         </label>
+         <label class="cc-cfg-item"><span>语义权重</span>
+           <input type="number" id="relevant-sw" min="0" step="0.05" style="width:80px">
+         </label>
+         <label class="cc-cfg-item"><span>混合分门槛</span>
+           <input type="number" id="relevant-ms" min="0" max="1" step="0.05" style="width:80px">
+         </label>
+         <label class="cc-cfg-item"><span>每轮最多条数</span>
+           <input type="number" id="relevant-tk" min="1" step="1" style="width:80px">
+         </label>
+       </div>
+       <div class="cc-cfg-btns">
+         <button type="button" class="cc-btn primary" onclick="saveRelevantConfig()">保存</button>
+         <button type="button" class="cc-btn secondary" onclick="loadRelevantConfig()">重新载入</button>
+       </div>
+       <div id="relevant-config-msg" class="cc-cfg-msg"></div>
+     </div>
+   </div>
+   <div class="card" data-collapse-id="relevant-preview" data-default="collapsed">
+     <div class="card-title collapsible" onclick="toggleCard(this)"><span>相关注入预览（近 20 轮）</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+     <div class="hint-card">
+       <div class="hint-body" style="font-size:11px;color:var(--text3);margin-top:6px;">观察模式下，每轮聊天后这里记录「本应注入哪条 + 混合分」（不进 prompt、不浮现、不打点）。词面命中即 ≥0.5（词面权重 0.5 起）；语义分再往上加，语义低说明 vibe 语境不搭，自然排不上去。</div>
+     </div>
+     <div class="card-body" style="height:320px;overflow-y:auto;overscroll-behavior:contain;">
+       <div id="relevant-preview-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+     </div>
+   </div>
+
+   <div class="card" data-collapse-id="summary-history" data-default="collapsed">
+     <div class="card-title collapsible" onclick="toggleCard(this)"><span>两块总结版本存档</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+     <div class="hint-card">
+       <div class="hint-body" style="font-size:11px;color:var(--text3);margin-top:6px;">系统注入的两大块总结（Core Identity 自我准则 / Long-term Understanding 长期理解）每次生成的新内容都会自动存一版，每块保留最近 10 版。可展开看全文、编辑文本、删除某一版。</div>
+     </div>
+     <div class="card-body">
+       <style>
+         #summary-history-box{gap:14px!important;min-width:0}
+         #summary-history-box .sh-sec{font-size:12px;font-weight:700;color:var(--text);letter-spacing:.2px;margin:4px 0 2px;padding:3px 0 3px 10px;border-left:3px solid var(--accent)}
+         #summary-history-box .sh-block{min-width:0;border:1px solid var(--border);border-radius:13px;padding:12px;background:var(--card-bg,#fff);margin:0 0 8px;box-shadow:0 1px 3px rgba(0,0,0,.035);transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease;animation:sh-enter .24s ease both}
+         #summary-history-box .sh-block:hover{border-color:rgba(120,120,120,.45);box-shadow:0 4px 14px rgba(0,0,0,.055)}
+         #summary-history-box .sh-head{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:13px;font-weight:650;color:var(--text);min-width:0}
+         #summary-history-box .sh-ver{display:inline-flex;align-items:center;border-radius:7px;padding:3px 7px;background:var(--accent-soft,rgba(140,120,130,.12));color:var(--accent);font-size:12px;font-weight:700;white-space:nowrap}
+         #summary-history-box .sh-head .sh-meta{font-weight:400;color:var(--text3);font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+         #summary-history-box .sh-head .sh-sp{flex:1;min-width:8px}
+         #summary-history-box .sh-actions{display:flex;gap:6px;flex-wrap:wrap;width:100%;margin-top:3px}
+         #summary-history-box .sh-act{font:inherit;font-size:11px;line-height:1.4;min-height:32px;padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;touch-action:manipulation;transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease}
+         #summary-history-box .sh-act:active{transform:scale(.97)}
+         #summary-history-box .sh-act[data-shact="use"]{background:var(--accent);border-color:var(--accent);color:#fff}
+         #summary-history-box .sh-act:hover{color:var(--accent);border-color:var(--accent)}
+         #summary-history-box .sh-act[data-shact="use"]:hover{color:#fff;filter:brightness(.96)}
+         #summary-history-box .sh-body{margin-top:10px;font-size:12px;color:var(--text2);line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
+         #summary-history-box .sh-fade{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap}
+         #summary-history-box .sh-full{overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;max-height:0;opacity:0;transition:max-height .32s ease,opacity .22s ease}
+         #summary-history-box .sh-full.sh-open{max-height:12000px;opacity:1}
+         #summary-history-box .sh-toggle{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;color:var(--accent);padding:7px 0 0;touch-action:manipulation}
+         #summary-history-box .sh-toggle:focus-visible,#summary-history-box .sh-act:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+         #summary-history-box .sh-empty{font-size:12px;color:var(--text3);padding:10px 12px;border:1px dashed var(--border);border-radius:10px;line-height:1.7}
+         #summary-history-search{width:100%;min-width:0;box-sizing:border-box;margin:0 0 12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--input-bg,transparent);color:var(--text);font:inherit;font-size:13px;outline:none;transition:border-color .2s ease,box-shadow .2s ease}
+         #summary-history-search:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(140,120,130,.12)}
+         @keyframes sh-enter{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+         @media(min-width:680px){#summary-history-box .sh-block{padding:14px 16px}#summary-history-box .sh-actions{width:auto;margin-left:auto}#summary-history-box .sh-head{flex-wrap:nowrap}#summary-history-box .sh-head .sh-meta{overflow-wrap:normal}}
+         @media(prefers-reduced-motion:reduce){#summary-history-box .sh-block,#summary-history-box .sh-act,#summary-history-box .sh-full,#summary-history-search{animation:none;transition:none}}
+       </style>
+         <input id="summary-history-search" type="search" placeholder="搜索版本号或总结内容…" autocomplete="off" aria-label="搜索总结版本">
+       <div id="summary-history-box" style="display:flex;flex-direction:column;gap:10px;"></div>
+     </div>
+   </div>
+
+   <div class="card" data-collapse-id="distill-config" data-default="collapsed">
+     <div class="card-title collapsible" onclick="toggleCard(this)"><span>记忆蒸馏 · 定时设置</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+     <div class="hint-card">
+       <div class="hint-body" style="font-size:11px;color:var(--text3);margin-top:6px;">每天在设定时间把「用户日记」分批喂给模型抽取记忆候选，产出全部进待审队列等你裁决，不会直接入库。开关关掉就不自动跑；「立即跑一次」不受开关约束，随时可以手动跑。保存后写入 data/memory_distill_config.json，立即生效。</div>
+     </div>
+     <div class="card-body">
+       <div class="cc-cfg-grid">
+         <label class="cc-cfg-item"><span>自动蒸馏</span>
+           <span class="switch"><input type="checkbox" id="distill-enabled"><span class="slider"></span></span>
+         </label>
+         <label class="cc-cfg-item"><span>每天运行时间</span>
+           <input type="time" id="distill-time" step="60" style="width:120px">
+         </label>
+         <label class="cc-cfg-item"><span>每批日记篇数</span>
+           <input type="number" id="distill-batch-size" min="1" max="20" step="1" style="width:80px">
+         </label>
+       </div>
+       <div class="cc-cfg-btns">
+         <button type="button" class="cc-btn primary" onclick="saveDistillConfig()">保存</button>
+         <button type="button" class="cc-btn secondary" onclick="loadDistillConfig()">重新载入</button>
+         <button type="button" class="cc-btn" id="distill-run-btn" onclick="runDistillNow()">立即跑一次</button>
+       </div>
+       <div id="distill-config-msg" class="cc-cfg-msg"></div>
+     </div>
+   </div>
+
+   <div class="card" data-collapse-id="summary-config" data-default="collapsed">
+     <div class="card-title collapsible" onclick="toggleCard(this)"><span>两块总结 · 定时设置</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+     <div class="hint-card">
+       <div class="hint-body" style="font-size:11px;color:var(--text3);margin-top:6px;">每次对话开头那两块：Core Identity（写「规矩」，取材记忆池全部活跃 rule 条目）与 Long-term Understanding（写「理解」，取材全部活跃 fact 条目）——不是置顶那几条。每晚到点检查一次：记忆池没变化就完全不动（比对指纹，不调模型），变了才重新生成并写缓存。模型挂了沿用上一版，连上一版都没有才回退直注原始条目。开「增量生成」时，变化不多就只把「上一版 + 新增/改动/移除」喂给模型；关掉则每次全量重生成。</div>
+     </div>
+     <div class="card-body">
+       <div class="cc-cfg-grid">
+         <label class="cc-cfg-item"><span>每晚自动检查</span>
+           <span class="switch"><input type="checkbox" id="summary-enabled"><span class="slider"></span></span>
+         </label>
+         <label class="cc-cfg-item"><span>检查时间</span>
+           <input type="time" id="summary-time" step="60" style="width:120px">
+         </label>
+         <label class="cc-cfg-item"><span>增量生成</span>
+           <span class="switch"><input type="checkbox" id="summary-incremental"><span class="slider"></span></span>
+         </label>
+       </div>
+       <div id="summary-status" style="font-size:11px;color:var(--text3);margin:8px 0 2px;line-height:1.8;white-space:pre-wrap;"></div>
+       <div class="cc-cfg-btns">
+         <button type="button" class="cc-btn primary" onclick="saveSummaryConfig()">保存</button>
+         <button type="button" class="cc-btn secondary" onclick="loadSummaryConfig()">重新载入</button>
+         <button type="button" class="cc-btn" id="summary-run-btn" onclick="runSummaryNow(false)">立即生成</button>
+         <button type="button" class="cc-btn" id="summary-force-btn" onclick="runSummaryNow(true)">强制重生成</button>
+       </div>
+       <div id="summary-config-msg" class="cc-cfg-msg"></div>
+     </div>
+   </div>
+
+   <div class="card" data-collapse-id="backfill-config" data-default="collapsed">
+     <div class="card-title collapsible" onclick="toggleCard(this)"><span>老数据重跑 · 逐批整理</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+     <div class="hint-card">
+       <div class="hint-body" style="font-size:11px;color:var(--text3);margin-top:6px;">把记忆池里已有的活跃记忆一批一批过一遍，让模型判断该怎么整理：润色改写 / 补充信息 / 合并碎片 / 补抽漏掉的 / 建议沉底。**产出一律进待审**，不会自己动池子。每条都会先回原文取证，原文对不上的一律不动。「建议沉底」是删除级动作，不进待审，单独列出来等你定夺。</div>
+     </div>
+     <div class="card-body">
+       <div class="cc-cfg-grid">
+         <label class="cc-cfg-item"><span>每晚自动跑一批</span>
+           <span class="switch"><input type="checkbox" id="bf-enabled"><span class="slider"></span></span>
+         </label>
+         <label class="cc-cfg-item"><span>跑的时间</span>
+           <input type="time" id="bf-time" step="60" style="width:120px">
+         </label>
+         <label class="cc-cfg-item"><span>每批条数</span>
+           <input type="number" id="bf-batch-size" min="1" max="60" step="1" style="width:90px">
+         </label>
+       </div>
+       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+         <button type="button" class="cc-btn" id="bf-run-btn" onclick="runBackfillNow(false)">立即跑一批</button>
+         <button type="button" class="cc-btn secondary" id="bf-dry-btn" onclick="runBackfillNow(true)">试试组装（不调模型）</button>
+       </div>
+       <div id="bf-config-msg" class="cc-cfg-msg"></div>
+     </div>
+   </div>
+   <div class="card" data-collapse-id="cc-config" data-default="collapsed">
+     <div class="card-title collapsible" onclick="toggleCard(this)"><span>压缩参数配置</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+     <div class="card-body">
+       <div class="cc-cfg-grid">
+         <label class="cc-cfg-field">自动分块间隔（分钟）
+           <input type="number" id="cc-cfg-gap" min="1" step="1"></label>
+         <label class="cc-cfg-field">自动分块目标条数
+           <input type="number" id="cc-cfg-chunk" min="1" step="1"></label>
+         <label class="cc-cfg-field">块最少条数
+           <input type="number" id="cc-cfg-chunk-min" min="1" step="1"></label>
+         <label class="cc-cfg-field">块最多条数
+           <input type="number" id="cc-cfg-chunk-max" min="1" step="1"></label>
+         <label class="cc-cfg-field">上下文容量上限<span class="hint-i" onclick="event.preventDefault();event.stopPropagation();showHintText(this,'上下文容量上限','按 token 估算，0=不限。超过时网关塞一条隐藏提醒，让 AI 自己压缩上下文。')">?</span>
+           <input type="number" id="cc-cfg-ctx-limit" min="0" step="1000"></label>
+         <label class="cc-cfg-field">提醒上限<span class="hint-i" onclick="event.preventDefault();event.stopPropagation();showHintText(this,'提醒上限','后台提醒卡的超限门槛（token 估算），0=不提醒。只管提醒显示，与容量提醒/自动压缩无关。')">?</span>
+           <input type="number" id="cc-cfg-alert-limit" min="0" step="1000"></label>
+         <label class="cc-cfg-field">容量提醒开关
+           <span class="switch"><input type="checkbox" id="cc-cfg-ctx-remind"><span class="slider"></span></span></label>
+         <label class="cc-cfg-field">AI 压缩保护最近条数（AI 建的替换块不许覆盖最近 N 条，0=不保护）
+           <input type="number" id="cc-cfg-protect-recent" min="0" step="1"></label>
+       </div>
+        <div class="cc-cfg-hint hint-body" id="cc-config-hint"><b>生效范围提醒</b>：「保留最近 / 消息少于 N 条 / 摘要字数 / 分块间隔」作用于「整段对话的自动压缩计划」；<b>「自动分块目标 / 最少 / 最多条数」</b>同时作用于「整段对话自动压缩计划」和「未覆盖区·自动分块」。请保持：摘要最少 ≤ 摘要最多；块最少 ≤ 目标 ≤ 块最多。</div>
+
+       <div class="cc-cfg-btns">
+         <button type="button" class="cc-btn primary" onclick="saveCompactionConfig()">保存参数</button>
+         <button type="button" class="cc-btn secondary" onclick="renderCompactionConfig()">重新载入</button>
+       </div>
+       <div id="cc-config-msg" class="cc-cfg-msg"></div>
+     </div>
+   </div>
+   <div class="card" data-collapse-id="tools-config" data-default="collapsed" style="margin-bottom:14px">
+     <div class="card-title collapsible" onclick="toggleCard(this)"><span>工具集（小世界MCP）</span><span class="tools-manifest-time" id="tools-manifest-time" style="font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--text3);margin-left:auto;margin-right:8px"></span><span class="collapse-arrow">▾</span></div>
+     <div class="card-body">
+       <div id="tools-list"><div class="loading">加载中...</div></div>
+       <div class="tools-actions">
+         <button type="button" class="cc-btn primary" onclick="saveToolsConfig()" style="flex:1">保存全部改动（即时生效）</button>
+         <button type="button" class="cc-btn secondary" onclick="loadToolsConfig()">刷新</button>
+       </div>
+       <div id="tools-msg" class="tools-msg"></div>
+     </div>
+   </div>
+
+</div>
+
+<!-- Tab 3: 记忆 -->
+<div class="tab-content" id="tab-memory" style="position:relative">
+   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 0;padding:0 2px">
+     <div style="flex-shrink:0"><h2 style="font-family:'Noto Serif SC',serif;font-size:27px;font-weight:700;color:var(--tab-active);letter-spacing:4px;margin:0;line-height:1.35">记忆池</h2>
+     <div style="width:38px;height:4px;border-radius:2px;background:var(--accent);margin-top:10px;box-shadow:0 2px 8px rgba(200,144,152,.30)"></div></div>
+     <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+       <button type="button" class="mp-import-pair" id="mempool-batch-import-btn" onclick="openMemPoolBatchImportPanel()" title="批量导入记忆（JSON，全部进待审队列）" aria-label="导入">导入</button>
+       <button type="button" class="mp-btn primary mp-add-ghost" onclick="openMemPoolAdd()" style="flex-shrink:0">＋ 新增记忆</button>
+     </div>
+   </div>
+   <div style="display:flex;gap:6px;justify-content:flex-end;align-items:center;margin:8px 2px 0">
+     <button type="button" class="mp-import-pair" onclick="openMemPoolExportPanel()" title="导出活跃记忆（完整原子记忆列表，JSON）" aria-label="导出">导出</button>
+     <button type="button" class="mp-import-pair" onclick="openMemPoolOverwritePanel()" title="覆盖导入：按 id 覆盖 / 新增 / 沉底 / 恢复（先预览再确认）" aria-label="覆盖导入">覆盖导入</button>
+   </div>
+   <div id="mem-mempool-wrap">
+      <div class="mp-head">
+        <div id="mempool-clean-msg" style="width:100%;font-size:11px;color:var(--text3);min-height:0;margin-top:0"></div>
+      </div>
+       <div id="mempool-stats" class="mp-stats" style="margin-top:14px"><span class="mp-stat">统计中...</span></div>
+      <div class="mp-controls" id="mempool-controls">
+        <input type="text" id="mempool-search" placeholder="搜索记忆（关键词）..." oninput="mempoolSearchInput(this.value)">
+        <select id="mempool-cat" onchange="loadMemPool()"><option value="">全部分类</option></select>
+        <select id="mempool-sort" onchange="loadMemPool()"><option value="recent">最新</option><option value="oldest">最旧</option><option value="pinned">已pin</option><option value="sunk">已沉底</option></select>
+      </div>
+      <div id="mempool-list" class="mp-list"><div class="loading">加载中...</div></div>
+    </div></div>
+
+<!-- Tab 4: 压缩 -->
+<div class="tab-content" id="tab-compaction">
+     <div class="cc-head">
+       <div class="cc-head-title">
+         <h2 class="cc-head-h2">上下文压缩</h2>
+         <div class="cc-head-underline"></div>
+       </div>
+       <div class="cc-head-actions">
+         <label class="cc-session-sel" title="选择要操作的会话（默认跟随聊天页当前会话）">
+           <select id="adm-session-sel" onchange="onAdminSessionChange()" aria-label="选择会话"></select>
+         </label>
+         <button type="button" class="cc-btn secondary" onclick="loadCompactionPreview()">刷新</button>
+       </div>
+     </div>
+    <div id="compaction-summary" style="margin-top:0"></div>
+
+    <!-- 2026-10-04：旧压缩系统下线，压缩页只保留状态机视图。
+         旧块数据仍在（存量继续注入上下文），但不再有独立的「旧块」视图——
+         要查看/启停某个旧块，聊天页会话菜单的压缩弹窗仍按会话显示它。
+         原先这里有一行「压缩只走状态机…」的说明（cs-mode），用户要求去掉：
+         页面上只有一个视图时，这句话是废话。 -->
+
+    <!-- 状态机面板 -->
+    <div id="cs-panel" class="cs-panel">
+
+      <!-- 状态卡 -->
+      <div class="cs-card cs-state-card" id="cs-state-card">
+        <div class="cs-state-head">
+          <span class="cs-state-title">当前状态</span>
+          <span class="cs-ver" id="cs-ver">—</span>
+          <span class="cs-tag cs-tag-seed hide" id="cs-seed">块模式种子</span>
+          <span class="cs-state-meta" id="cs-state-meta"></span>
+        </div>
+        <div class="cs-cover" id="cs-cover"></div>
+        <div class="cs-state-body collapsed" id="cs-state-body">这个会话还没有状态。在下面的未覆盖区选一段原文，点「并入状态」。</div>
+        <div class="cs-acts">
+          <button type="button" class="cs-btn" id="cs-expand-btn" onclick="csToggleExpand()">展开全文</button>
+          <button type="button" class="cs-btn" id="cs-edit-btn" onclick="csOpenEdit()">编辑</button>
+          <button type="button" class="cs-btn danger" onclick="csUndo()">撤销最后一次并入</button>
+        </div>
+        <div class="cs-chain" id="cs-chain"></div>
+        <div class="cs-chain-hint">点任一版可预览 · 再点一次切到那一版（已撤销的划线版 = 恢复，不调模型；所有版本都保留）</div>
+      </div>
+
+      <!-- 迁移期提示（种子状态才显示） -->
+      <div class="cs-note hide" id="cs-note"></div>
+
+      <!-- diff 面板（预览后出现） -->
+      <div class="cs-diff hide" id="cs-diff">
+        <div class="cs-diff-head" id="cs-diff-head"></div>
+        <div class="cs-diff-list" id="cs-diff-list"></div>
+        <div class="cs-diff-foot">
+          <button type="button" class="cs-btn" onclick="csCancelPreview()">丢弃这份候选</button>
+          <button type="button" class="cs-btn primary" id="cs-commit-btn" onclick="csCommit()">确认并入</button>
+        </div>
+      </div>
+
+      <!-- 未覆盖区 -->
+      <div class="cs-sec-title" id="cs-uncov-title">还没并入的原文</div>
+      <div class="cs-uncov-meta" id="cs-uncov-meta"></div>
+      <div class="cs-range-row">
+        <input type="text" id="cs-range-input" placeholder="如 5669-5674" inputmode="numeric">
+        <button type="button" class="cs-btn" onclick="csAutoChunk()">自动分块</button>
+        <button type="button" class="cs-btn primary" id="cs-preview-btn" onclick="csPreview()">▸ 并入状态</button>
+      </div>
+      <div class="cs-msg" id="cs-msg" aria-live="polite"></div>
+      <div class="cs-sec-title hide" id="cs-preview-title"></div>
+      <div class="cs-preview-msgs" id="cs-preview-msgs"></div>
+
+      <!-- 并入记录（2026-10-04 按用户要求：挪到原「历史归档」的位置，
+           并改用历史归档那种折叠样式 details/summary） -->
+      <details class="cs-arch" id="cs-hist-arch">
+        <summary>并入记录 · 这个会话的状态演进</summary>
+        <div class="cs-arch-inner">
+          <div class="cs-chain-hint" style="padding-top:2px">点任意版本先预览它的正文，再点一次切到那一版（已撤销的切回去 = 恢复，不调模型）：</div>
+          <div id="cs-hist-list"></div>
+        </div>
+      </details>
+    </div>
+     <div class="cc-orig-search-wrap">
+       <div class="search-bar" style="margin-bottom:6px">
+         <input type="text" id="cc-original-search" placeholder="搜索原文…" oninput="scheduleCcOriginalSearch()">
+       </div>
+       <div id="cc-original-search-info" style="font-size:11px;color:var(--text3);margin-bottom:4px" aria-live="polite"></div>
+       <div id="cc-original-results"></div>
+     </div>
+     <div id="compaction-chunks" style="margin-top:4px"></div>
+     <div id="compaction-msg" style="margin-top:12px;font-size:12px;color:var(--accent);min-height:18px;text-align:center" aria-live="polite"></div>
+     <div id="compaction-cfg-tip" style="margin-top:8px;font-size:12px;color:var(--text3);text-align:center"></div>
+    <!-- 底部多选操作栏 -->
+
+</div>
+
+
+<div class="tab-content" id="tab-prompts">
+   <div class="card" data-collapse-id="wake-prompt" data-default="collapsed">
+     <div class="card-title collapsible" onclick="toggleCard(this)"><span>唤醒提示词</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+     <div class="card-body">
+         <textarea id="wake-prompt-edit" rows="8" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.7);font-size:12px;font-family:monospace;line-height:1.6;resize:vertical;"></textarea>
+         <div class="env-row" style="margin-top:8px;gap:8px;">
+           <button type="button" class="btn btn-primary" onclick="saveWakePrompt()" style="flex:1;background:var(--accent)">保存</button>
+           <button type="button" class="btn btn-outline" onclick="loadWakePrompt()" style="flex:1">重新载入</button>
+         </div>
+         <div class="hint-body" style="font-size:11px;color:var(--text3);margin-top:6px;">保存后写入 wake_prompt.txt，下次唤醒即生效。</div>
+     </div>
+   </div>
+   <div class="card" data-collapse-id="context-digest-prompt" data-default="collapsed">
+     <div class="card-title collapsible" onclick="toggleCard(this)"><span>摘要整理提示词</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+     <div class="card-body">
+         <textarea id="context-digest-prompt-edit" rows="12" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.7);font-size:12px;font-family:monospace;line-height:1.6;resize:vertical;"></textarea>
+         <div class="env-row" style="margin-top:8px;gap:8px;">
+           <button type="button" class="btn btn-primary" onclick="saveContextDigestPrompt()" style="flex:1;background:var(--accent)">保存</button>
+           <button type="button" class="btn btn-outline" onclick="loadContextDigestPrompt()" style="flex:1">重新载入</button>
+           <button type="button" class="btn btn-outline" onclick="resetContextDigestPrompt()" style="flex:1">恢复默认</button>
+         </div>
+         <div class="hint-body" style="font-size:11px;color:var(--text3);margin-top:6px;">context_digest 工具的整理提示词。模板须含 ${instruction}（AI 的整理指令）与 ${materials}（召回的摘要材料）两个占位符；保存后写入 data/context_digest_prompt.json，下次调用即生效。</div>
+     </div>
+   </div>
+   <div class="card" data-collapse-id="ctx-limit-prompt" data-default="collapsed">
+     <div class="card-title collapsible" onclick="toggleCard(this)"><span>容量提醒提示词</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+     <div class="card-body">
+       <div class="hint-body" style="font-size:11px;color:var(--text3);margin-bottom:4px;"></div>
+       <textarea id="ctx-limit-prompt-edit" rows="14" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.7);font-size:12px;line-height:1.6;font-family:monospace;resize:vertical;"></textarea>
+       <div class="env-row" style="margin-top:8px;gap:8px;">
+         <button type="button" class="btn btn-primary" onclick="saveCtxLimitPrompt()" style="flex:1;background:var(--accent)">保存</button>
+         <button type="button" class="btn btn-outline" onclick="loadCtxLimitPrompt()" style="flex:1">重新载入</button>
+         <button type="button" class="btn btn-outline" onclick="resetCtxLimitPrompt()" style="flex:1">恢复默认</button>
+       </div>
+       <div class="hint-body" style="font-size:11px;color:var(--text3);margin-top:6px;">保存后写入 data/ctx_limit_prompt.json，下次触发容量提醒即生效。</div>
+     </div>
+   </div>
+
+     <!-- 状态机提示词（2026-10-04 新增，用户要求把状态机提示词搬到管理台提示词页） -->
+     <div class="card" data-collapse-id="cs-prompt-config" data-default="collapsed">
+       <div class="card-title collapsible" onclick="toggleCard(this)"><span>会话状态机提示词</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+       <div class="card-body">
+         <div style="font-size:11px;color:var(--text3);margin-bottom:6px;line-height:1.6">
+           状态机每次算新状态时用的提示词。<b>System</b> 决定「状态怎么写」，<b>User 模板</b> 决定「每次喂它什么」。
+           User 模板里的占位符 <code>${PREV_STATE}</code> / <code>${CHUNK_INFO}</code> / <code>${CONVERSATION_TEXT}</code> 会被替换，删掉会导致内容缺失。
+         </div>
+         <div style="font-size:11px;color:var(--text3);margin:8px 0 3px;">System</div>
+         <textarea id="cs-prompt-system" rows="20" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.7);font-size:12px;line-height:1.6;font-family:monospace;resize:vertical;"></textarea>
+         <div style="font-size:11px;color:var(--text3);margin:10px 0 3px;">User 模板</div>
+         <textarea id="cs-prompt-user" rows="8" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.7);font-size:12px;line-height:1.6;font-family:monospace;resize:vertical;"></textarea>
+         <div class="env-row" style="margin-top:8px;gap:8px;">
+           <button type="button" class="btn btn-primary" onclick="saveCsPrompt()" style="flex:1;background:var(--accent)">保存</button>
+           <button type="button" class="btn btn-outline" onclick="loadCsPrompt()" style="flex:1">重新载入</button>
+           <button type="button" class="btn btn-outline" onclick="resetCsPrompt()" style="flex:1">恢复默认</button>
+         </div>
+         <div class="hint-body" style="font-size:11px;color:var(--text3);margin-top:6px;" id="cs-prompt-status">
+           保存后写入 data/conversation_state_prompt.json，<b>下次算新状态</b>时生效（已在算的那次不受影响）。留空则用代码内置默认。
+         </div>
+       </div>
+     </div>
+           <div class="card" data-collapse-id="judge-prompt-config" data-default="collapsed">
+      <div class="card-title collapsible" onclick="toggleCard(this)"><span>记忆流水线·判定提示词</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+      <div class="card-body">
+        <div class="hint-body" style="font-size:11px;color:var(--text3);margin-bottom:6px;">新记忆入库前，流水线用它调用 LLM 判定「候选 × 已有记忆」的关系（duplicate=重复 / update=更新 / coexist=共存 / need_review=待审）并决定去向：重复拒收、更新与待审进人工队列、共存直接入库。占位符 ${existing_kind} ${existing_text} ${candidate_kind} ${candidate_text} 运行时自动填充。可直接修改保存覆盖内置；「恢复内置默认」清空自定义。</div>
+        <div class="cc-cfg-msg" id="judge-prompt-msg" style="margin-bottom:8px"></div>
+        <textarea id="judge-prompt-template" rows="10" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.85);font-size:12px;font-family:inherit;margin-bottom:10px"></textarea>
+        <div style="display:flex;gap:10px">
+          <button type="button" class="cc-btn primary" onclick="saveJudgePrompt()">保存提示词</button>
+          <button type="button" class="cc-btn secondary" onclick="resetJudgePrompt()">恢复内置默认</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" data-collapse-id="distill-prompt-config" data-default="collapsed">
+      <div class="card-title collapsible" onclick="toggleCard(this)"><span>记忆蒸馏·抽取提示词</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+      <div class="card-body">
+        <div class="hint-body" style="font-size:11px;color:var(--text3);margin-bottom:6px;">后台蒸馏每批把「若干篇日记 + 按日期检索到的当天对话原文」打包喂给模型，用它抽取值得长期记住的候选——产出全部进记忆待审队列，不直接入池。占位符 ${DIARY_COUNT} 运行时替换为本次日记篇数；「上一批已提取的记忆」与「=== 材料 ===」由运行时自动拼在 User 提示词之后，不需要自己写。两边都留空即用内置默认；点「恢复内置默认」清空自定义。</div>
+        <div class="cc-cfg-msg" id="distill-prompt-msg" style="margin-bottom:8px"></div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">System 提示词（角色、字段定义、取舍标准）</div>
+        <textarea id="distill-sys-prompt" rows="12" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.85);font-size:12px;font-family:inherit;line-height:1.6;margin-bottom:10px;min-height:220px;max-height:420px;resize:vertical;"></textarea>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">User 提示词（可用占位符 ${DIARY_COUNT}）</div>
+        <textarea id="distill-user-prompt" rows="6" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.85);font-size:12px;font-family:inherit;line-height:1.6;margin-bottom:10px;resize:vertical;"></textarea>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button type="button" class="cc-btn primary" onclick="saveDistillPrompt()">保存提示词</button>
+          <button type="button" class="cc-btn secondary" onclick="loadDistillPrompt()">重新载入</button>
+          <button type="button" class="cc-btn secondary" onclick="resetDistillPrompt()">恢复内置默认</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" data-collapse-id="summary-prompt-config" data-default="collapsed">
+      <div class="card-title collapsible" onclick="toggleCard(this)"><span>两块总结·合并提示词（1003-15）</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+      <div class="card-body">
+        <div class="hint-body" style="font-size:11px;color:var(--text3);margin-bottom:6px;">一次 LLM 调用同时生成两块（Core Identity + Long-term Understanding），模型根据全部材料自己分配，两块不重复。占位符（运行时自动填充）：${RULE_COUNT} 规则类条数、${RULE_PREVIOUS_BLOCK} 上一版、${RULE_DELTA_BLOCK} 增量、${RULE_MEMORY_LIST} 规则类清单，${FACT_*} 同义为事实类。全量模式两块材料都喂；增量模式只喂「上一版 + 增量记忆」，模型可调用关键词检索工具补充材料（最多 4 轮）。两边都留空即用内置默认；点「恢复内置默认」清空自定义。</div>
+        <div class="cc-cfg-msg" id="summary-prompt-msg" style="margin-bottom:8px"></div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">System 提示词（一次生成两块的角色与规则、块标记【CORE_IDENTITY】【UNDERSTANDING】）</div>
+        <textarea id="summary-sys-prompt" rows="14" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.85);font-size:12px;font-family:inherit;line-height:1.6;margin-bottom:10px;min-height:300px;max-height:520px;resize:vertical;"></textarea>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">User 提示词（两块材料分节，可用占位符 ${RULE_*} ${FACT_*}）</div>
+        <textarea id="summary-user-prompt" rows="8" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.85);font-size:12px;font-family:inherit;line-height:1.6;margin-bottom:10px;resize:vertical;"></textarea>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button type="button" class="cc-btn primary" onclick="saveSummaryPrompt()">保存两块提示词</button>
+          <button type="button" class="cc-btn secondary" onclick="loadSummaryPrompt()">重新载入</button>
+          <button type="button" class="cc-btn secondary" onclick="resetSummaryPrompt()">恢复内置默认</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" data-collapse-id="bf-prompt-config" data-default="collapsed">
+      <div class="card-title collapsible" onclick="toggleCard(this)"><span>老数据重跑·整理提示词</span><span class="hint-i" onclick="event.stopPropagation();showHintCard(this)">?</span><span class="collapse-arrow">▾</span></div>
+      <div class="card-body">
+        <div class="hint-body" style="font-size:11px;color:var(--text3);margin-bottom:6px;">决定模型怎么对待那些老记忆：什么该润色、什么该合并、什么该沉底。可用占位符：${MEM_COUNT} 本批条数、${MATERIALS} 记忆与原文清单。★ 内置默认里的铁律「不确定就 keep」「原文对不上就 keep」别删——删了它会开始乱改。</div>
+        <div class="cc-cfg-msg" id="bf-prompt-msg" style="margin-bottom:8px"></div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">System 提示词（动作定义 + 铁律）</div>
+        <textarea id="bf-sys-prompt" rows="14" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.85);font-size:12px;font-family:inherit;line-height:1.6;margin-bottom:10px;min-height:260px;max-height:460px;resize:vertical;"></textarea>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">User 提示词</div>
+        <textarea id="bf-user-prompt" rows="8" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.85);font-size:12px;font-family:inherit;line-height:1.6;margin-bottom:10px;resize:vertical;"></textarea>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button type="button" class="cc-btn primary" onclick="saveBackfillPrompt()">保存提示词</button>
+          <button type="button" class="cc-btn secondary" onclick="loadBackfillPrompt()">重新载入</button>
+          <button type="button" class="cc-btn secondary" onclick="resetBackfillPrompt()">恢复内置默认</button>
+        </div>
+      </div>
+    </div>
+
+</div>
+
+<!-- 通用说明（问号图标） -->
+<!-- 1005-16b：评估理由顶部横幅（右上角叉关闭，12s 自动消失兜底） -->
+<div class="mp-reason-banner" id="mpReasonBanner" style="display:none">
+  <div class="mp-reason-banner-title" id="mp-reason-title"></div>
+  <div class="mp-reason-banner-text" id="mp-reason-text"></div>
+  <button type="button" class="mp-reason-banner-x" onclick="closeMpReasonBanner()" title="关闭">&times;</button>
+</div>
+
+<!-- 1005-16b：评估理由顶部横幅（右上角叉关闭，12s 自动消失兜底） -->
+<div class="mp-reason-banner" id="mpReasonBanner" style="display:none">
+  <div class="mp-reason-banner-title" id="mp-reason-title"></div>
+  <div class="mp-reason-banner-text" id="mp-reason-text"></div>
+  <button type="button" class="mp-reason-banner-x" onclick="closeMpReasonBanner()" title="关闭">&times;</button>
+</div>
+
+<div class="modal-overlay" id="hintModal">
+  <div class="modal" style="max-width:min(94vw,520px)">
+    <h3 id="hintModalTitle" style="margin:0 0 10px;font-size:15px;color:var(--tab-active)">说明</h3>
+    <div id="hintModalBody" style="font-size:12px;color:var(--text2);line-height:1.75;max-height:60vh;overflow-y:auto"></div>
+    <div class="modal-actions" style="margin-top:12px">
+      <button type="button" class="btn btn-primary" onclick="closeModal('hintModal')" style="background:var(--accent)">知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑永久注入上下文 -->
+
+
+<div class="tab-bar">
+  <button type="button" class="tab-item active" data-tab="status" onclick="switchTab('status')">
+    <span class="tab-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span class="tab-label">状态</span>
+  </button>
+  <button type="button" class="tab-item" data-tab="config" onclick="switchTab('config')">
+    <span class="tab-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span><span class="tab-label">配置</span>
+  </button>
+  <button type="button" class="tab-item" data-tab="memory" onclick="switchTab('memory')">
+    <span class="tab-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg></span><span class="tab-label">记忆</span>
+  </button>
+  <button type="button" class="tab-item" data-tab="compaction" onclick="switchTab('compaction')">
+    <span class="tab-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span class="tab-label">压缩</span>
+  </button>
+  <button type="button" class="tab-item" data-tab="prompts" onclick="switchTab('prompts')">
+    <span class="tab-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="tab-label">提示词</span>
+  </button>
+  <!-- 2026-09-19 系统页下线：标签按钮一并注释（整段保留可恢复）
+  <button type="button" class="tab-item" data-tab="system" onclick="switchTab('system')">
+    <span class="tab-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span><span class="tab-label">系统</span>
+  </button>
+  -->
+
+</div>
+
+
+ 
+ <div class="back-top" id="backTopBtn" onclick="scrollToTop()" title="回到顶部" role="button" tabindex="0">↑</div>
+ <div class="toast" id="toast" role="status" aria-live="polite"></div>
+ <div class="global-loading" id="globalLoading" aria-hidden="true"></div>
+
+<div class="log-fab" id="logFab" title="生成日志" role="button" tabindex="0" aria-label="生成日志">
+  📋
+  <span class="log-fab-badge" id="logFabBadge">0</span>
+</div>
+<div class="log-panel" id="logPanel">
+  <div class="log-panel-head">
+    <span class="log-panel-title">生成日志</span>
+    <div class="log-panel-head-right">
+      <button type="button" class="log-panel-clear-btn" onclick="clearCompactionLogs()" aria-label="全部标为已读">已读</button>
+      <button type="button" class="log-panel-close-btn" onclick="closeLogPanel()" aria-label="关闭日志面板">×</button>
+    </div>
+  </div>
+  <div class="log-panel-body" id="logPanelBody">
+    <div class="log-panel-empty">暂无生成记录</div>
+  </div>
+</div>
+ 
+ <!-- Env Editor Modal -->
+ <div class="modal-overlay" id="envModal">
+   <div class="modal"><h3>编辑环境变量</h3><p style="font-size:12px;color:var(--text3);margin:-2px 0 12px">保存后立即热生效，无需重启；若个别改动未按预期生效，可点「重启服务」兜底</p><div id="env-editor-fields"></div>
+     <div class="modal-actions">
+       <button type="button" class="btn btn-outline" onclick="closeModal('envModal')">取消</button>
+       <button type="button" class="btn btn-primary" id="env-save-btn" onclick="saveEnv()">保存</button>
+     </div>
+   </div>
+ </div>
+ 
+ <!-- NetEase Editor Modal -->
+ <div class="modal-overlay" id="neteaseModal">
+   <div class="modal"><h3>编辑网易云环境</h3><p style="font-size:12px;color:var(--text3);margin:-2px 0 12px">MUSIC_U / __csrf 在 music.163.com 登录后的浏览器 Cookie 中获取；留空表示不修改</p>
+     <div class="form-group"><label>MUSIC_U <span style="color:var(--text3);font-size:11px">必填</span></label><textarea id="netease-music-u" rows="4" style="width:100%;box-sizing:border-box;font-size:11px;resize:vertical" placeholder="已设置，留空则不修改"></textarea></div>
+     <div class="form-group"><label>__csrf <span style="color:var(--text3);font-size:11px">可选</span></label><input type="text" id="netease-csrf" placeholder="已设置，留空则不修改"></div>
+     <div class="modal-actions">
+       <button type="button" class="btn btn-outline" onclick="closeModal('neteaseModal')">取消</button>
+       <button type="button" class="btn btn-primary" id="netease-save-btn" onclick="saveNetease()">保存</button>
+     </div>
+   </div>
+ </div>
+ 
+ 
+ <!-- 手动改写当前状态正文（2026-10-04）。语义：直接覆盖当前版、保存即生效、不产生新版本。
+      所以这个弹框的提示要说清「覆盖、不可回退」——同版本内手改没有存档。 -->
+ <div class="modal-overlay" id="csEditModal">
+   <div class="modal modal-edit-mem" style="max-width:min(94vw,720px)">
+     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-shrink:0">
+       <h3 style="margin:0;font-size:16px">编辑当前状态</h3>
+       <button type="button" onclick="closeModal('csEditModal')" style="background:rgba(0,0,0,0.04);border:none;font-size:16px;color:var(--text2);cursor:pointer;padding:6px 10px;border-radius:8px;line-height:1">&times;</button>
+     </div>
+     <div id="cs-edit-meta" style="font-size:11px;color:var(--text3);margin-bottom:8px"></div>
+     <textarea id="cs-edit-content" rows="18" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,0.85);font-size:13px;line-height:1.65;color:var(--text2);resize:vertical;font-family:inherit"></textarea>
+     <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.6">
+       保存后<strong>直接覆盖当前这一版</strong>的正文并立即对上下文生效（覆盖区间不变）。不会产生新版本；
+       同一版内改了什么没有存档，改错了只能重写一遍。要回到模型写的原版，去「并入记录」里翻更早的版本。
+     </div>
+     <div style="display:flex;gap:10px;margin-top:12px">
+       <button type="button" class="btn btn-primary" onclick="csSaveEdit()" style="flex:1;background:var(--accent)">保存并生效</button>
+       <button type="button" class="btn btn-outline" onclick="closeModal('csEditModal')" style="flex:1">取消</button>
+     </div>
+   </div>
+ </div>
+
+ <div class="modal-overlay" id="ccAiEditModal">
+   <div class="modal modal-edit-mem" style="max-width:min(94vw,660px)">
+     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-shrink:0">
+       <h3 id="cc-ai-edit-title" style="margin:0;font-size:16px">编辑 AI 记忆</h3>
+       <button type="button" onclick="closeModal('ccAiEditModal')" style="background:rgba(0,0,0,0.04);border:none;font-size:16px;color:var(--text2);cursor:pointer;padding:6px 10px;border-radius:8px;line-height:1">&times;</button>
+     </div>
+     <div id="cc-ai-edit-meta" style="font-size:11px;color:var(--text3);margin-bottom:8px"></div>
+     <textarea id="cc-ai-edit-content" rows="14" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,0.85);font-size:13px;line-height:1.5;color:var(--text2);resize:vertical;font-family:inherit"></textarea>
+     <div style="display:flex;gap:10px;margin-top:12px">
+       <button type="button" class="btn btn-primary" onclick="ccSaveAiEdit()" style="flex:1;background:var(--accent)">保存</button>
+       <button type="button" class="btn btn-outline" onclick="closeModal('ccAiEditModal')" style="flex:1">取消</button>
+     </div>
+   </div>
+ </div>
+ 
+   <div class="modal-overlay" id="mempoolEditModal">
+    <div class="modal modal-edit-mem" style="max-width:min(94vw,680px)">
+      <div class="mp-modal-head">
+        <h3 id="mempool-modal-title">新增记忆</h3>
+        <button type="button" class="mp-modal-x" onclick="closeModal('mempoolEditModal')">&times;</button>
+      </div>
+      <div class="mp-modal-fields">
+        <label>分类<select id="mempool-edit-cat"></select></label>
+      </div>
+      <textarea id="mempool-edit-content" rows="10" placeholder="记忆内容..."></textarea>
+      <div class="mp-modal-actions">
+        <button type="button" class="mp-btn primary" id="mp-save-btn" onclick="saveMemPoolEdit()">保存</button>
+        <button type="button" class="mp-btn" onclick="closeModal('mempoolEditModal')">取消</button>
+      </div>
+    </div>
+  </div>
+    <div class="modal-overlay" id="mempoolExportModal">
+    <div class="modal" style="max-width:min(94vw,420px)">
+      <div class="mp-modal-head">
+        <h3>导出记忆池</h3>
+        <button type="button" class="mp-modal-x" onclick="closeModal('mempoolExportModal')">&times;</button>
+      </div>
+      <div class="mp-modal-fields">
+        <label>类别<select id="mempool-export-cat"></select></label>
+      </div>
+      <div style="font-size:11px;color:var(--text3)">导出 JSON（含 id/分类/来源/内容全字段，可直接用于清洗），只含活跃条目。</div>
+      <div class="mp-modal-actions">
+        <button type="button" class="mp-btn" onclick="closeModal('mempoolExportModal')">取消</button>
+        <button type="button" class="mp-btn primary" onclick="exportMemPool()">导出</button>
+      </div>
+    </div>
+  </div>
+    <div class="modal-overlay" id="mempoolOverwriteModal">
+    <div class="modal" style="max-width:min(94vw,720px)">
+      <div class="mp-modal-head">
+        <h3>覆盖导入 · 清洗记忆池</h3>
+        <button type="button" class="mp-modal-x" onclick="closeModal('mempoolOverwriteModal')">&times;</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.7">
+        用「导出」得到的 JSON，改完再导回来。<br>
+        <b>有 id：按 id 覆盖</b>（正文 / 分类 / 备注 / 关键词 / 氛围 / 置顶等，文件里没写的字段不动）；<b>没有 id：新增</b>；<b>status 写 archived：沉底</b>；<b>status 写 active：恢复已沉底的</b>。已被取代的条目状态不动；id 找不到算失败（想新增请去掉 id）。<br>
+        先点「预览」看会发生什么（不写入任何数据），再点「确认导入」才真正写入，写入前自动备份。
+      </div>
+      <input type="file" id="mempool-ovr-file" accept=".json,application/json" onchange="onMemPoolOvrFile(this)" style="font-size:12px;margin-bottom:6px;max-width:100%">
+      <textarea id="mempool-ovr-ta" rows="3" oninput="onMemPoolOvrInput()" placeholder="也可以直接粘贴 JSON（导出文件的整体内容，或条目数组）" style="width:100%;font-size:12px;font-family:monospace;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,0.85);color:var(--text2);resize:vertical"></textarea>
+      <div id="mempool-ovr-src" style="font-size:11px;color:var(--text3);min-height:14px;margin:4px 0"></div>
+      <div id="mempool-ovr-preview" style="font-size:12px;color:var(--text2);min-height:18px;margin:8px 0;max-height:38vh;overflow:auto;line-height:1.7"></div>
+      <div class="mp-modal-actions">
+        <button type="button" class="mp-btn" onclick="closeModal('mempoolOverwriteModal')">关闭</button>
+        <button type="button" class="mp-btn" onclick="previewMemPoolOverwrite()">预览</button>
+        <button type="button" class="mp-btn primary" id="mempool-ovr-do-btn" onclick="doMemPoolOverwrite()" style="display:none">确认导入</button>
+      </div>
+    </div>
+  </div>
+    <div class="modal-overlay" id="mempoolBatchImportModal">
+    <div class="modal" style="max-width:min(94vw,720px)">
+      <div class="mp-modal-head">
+        <h3>批量导入记忆 · JSON</h3>
+        <button type="button" class="mp-modal-x" onclick="closeModal('mempoolBatchImportModal')">&times;</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.7">
+        JSON 格式（与导出对齐）：顶层数组或 <b>{items:[...]}</b>，每条 <b>{category?, content}</b>。<br>
+        category 可选：fact / rule / quote / milestone（或旧类名 关于她/认账/拓本），缺省或留空=自动识别。<br>
+        <b>导入去向固定为「待审」</b>：全部条目进记忆 Review 队列人工裁决，不会直接入库。<br>
+        先「解析预览」看统计（分类数量 / 与已有记忆去重 / 格式失败），再「确认导入」。
+      </div>
+      <textarea id="mempool-batch-import-ta" rows="10" placeholder='[{"category":"fact","content":"她喝奶茶只要三分糖"},{"content":"这条不写分类，自动识别"}]' style="width:100%;font-size:12px;font-family:monospace;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.85);color:var(--text2);resize:vertical"></textarea>
+      <div id="mempool-batch-import-preview" style="font-size:12px;color:var(--text2);min-height:18px;margin:8px 0;max-height:30vh;overflow:auto;line-height:1.7"></div>
+      <div class="mp-modal-actions">
+        <button type="button" class="mp-btn" onclick="closeModal('mempoolBatchImportModal')">关闭</button>
+        <button type="button" class="mp-btn" onclick="previewMemPoolBatchImport()">解析预览</button>
+        <button type="button" class="mp-btn primary" id="mempool-batch-import-do-btn" onclick="doMemPoolBatchImport()" style="display:none">确认导入</button>
+      </div>
+    </div>
+  </div>
+<div class="modal-overlay" id="pushEditModal">
+    <div class="modal modal-edit-mem" style="max-width:min(94vw,680px)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-shrink:0">
+        <h3 id="push-modal-title" style="margin:0;font-size:16px">编辑推送</h3>
+        <button type="button" onclick="closeModal('pushEditModal')" style="background:rgba(0,0,0,0.04);border:none;font-size:16px;color:var(--text2);cursor:pointer;padding:6px 10px;border-radius:8px;line-height:1">&times;</button>
+      </div>
+      <input id="push-edit-title" placeholder="标题" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,0.85);font-size:13px;color:var(--text2);margin-bottom:10px">
+      <textarea id="push-edit-body" rows="10" placeholder="内容..." style="width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,0.85);font-size:13px;line-height:1.5;color:var(--text2);resize:vertical;font-family:inherit"></textarea>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button type="button" class="btn btn-primary" onclick="savePushEdit()" style="flex:1;background:var(--accent)">保存</button>
+        <button type="button" class="btn btn-outline" onclick="closeModal('pushEditModal')" style="flex:1">取消</button>
+      </div>
+    </div>
+  </div>
+
+
+<!-- 留纸：全文查看弹窗 -->
+
+ 
+ 
+<!-- 2026-09-30 V9a：通用确认弹窗 confirmModal 已删——JS 侧改用原生 confirm 后此 markup 成死代码（相关 id 在 mobile.js 零引用） -->
+ 
+ 
+ <script src="/admin/mobile.js"></script>
+ <!-- ══════════════════════════════════════════════════════════════════
+  会话状态机前端（2026-10-03 新增）
+  内联在 html 里而不是拆新文件：省掉两条静态路由，也不去动 admin-mobile.js
+  那个 25 万字符的巨文件。样式沿用本页既有的 --accent / --text3 / card 变量。
+  ══════════════════════════════════════════════════════════════════ -->
+<style id="cs-style">
+/* 2026-10-04：视图切换按钮已撤（压缩页只剩状态机），cs-mode-btn 样式随之删除；
+   cs-panel 由「.on 切换显示」改为默认可见。
+   再后来用户要求把「压缩只走状态机…」那行说明也去掉（页面上只有一个视图时是废话），
+   cs-mode / cs-mode-hint 两个容器与样式一并删除。 */
+
+.cs-panel{display:block}
+.cs-card{background:var(--card,#fff);border:1px solid var(--line,#ece7e4);border-radius:14px;padding:13px 14px;margin-bottom:12px}
+.cs-state-card{border-color:var(--accent-line,#f5c9dc);
+  box-shadow:inset 0 1px 0 var(--accent-soft,#fdeef4),0 6px 18px -14px rgba(194,24,91,.4)}
+.cs-state-head{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.cs-state-title{font-weight:700;font-size:15px}
+.cs-ver{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--accent,#c2185b);color:#fff}
+.cs-tag{font-size:11px;padding:2px 8px;border-radius:6px;font-weight:700}
+.cs-tag-seed{background:#eaf1fb;color:#2b5fa8;border:1px solid #c3d6f0}
+.cs-state-meta{margin-left:auto;font-size:11px;color:var(--text3,#9c938f)}
+.cs-cover{display:flex;gap:12px;flex-wrap:wrap;padding:9px 0 2px;font-size:11.5px;color:var(--text2,#6b625e)}
+.cs-cover b{color:var(--ink,var(--text,#2b2523))}
+.cs-state-body{margin:11px 0 0;padding:13px 14px;background:#fdfbfc;border:1px solid var(--line,#ece7e4);
+  border-radius:11px;font-size:14px;line-height:1.75;color:#3a3331;white-space:pre-wrap;word-break:break-word}
+.cs-state-body.collapsed{max-height:140px;overflow:hidden;
+  -webkit-mask-image:linear-gradient(180deg,#000 58%,transparent);mask-image:linear-gradient(180deg,#000 58%,transparent)}
+.cs-acts{display:flex;gap:7px;padding:12px 0 0;flex-wrap:wrap}
+.cs-btn{flex:1;min-width:84px;padding:10px 6px;border-radius:10px;font:600 12.5px/1 inherit;cursor:pointer;
+  border:1px solid var(--line2,#e0d9d5);background:var(--card,#fff);color:var(--text2,#6b625e)}
+.cs-btn.primary{background:var(--accent,#c2185b);border-color:var(--accent,#c2185b);color:#fff}
+.cs-btn.danger{border-color:#f5c9c9;color:#c62828}
+.cs-btn:disabled{opacity:.45;cursor:not-allowed}
+.cs-chain{display:flex;align-items:center;gap:5px;padding:12px 0 2px;flex-wrap:wrap}
+.cs-chain .v{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:8px;border:1px solid var(--line2,#e0d9d5);
+  background:var(--card,#fff);color:var(--text2,#6b625e);cursor:pointer}
+.cs-chain .v.cur{background:var(--accent,#c2185b);border-color:var(--accent,#c2185b);color:#fff}
+.cs-chain .v.pv{background:#eaf1fb;border-color:#c3d6f0;color:#2b5fa8}
+.cs-chain .v.un{color:#b9b1ad;border-style:dashed;text-decoration:line-through}
+.cs-chain .sep{color:var(--text3,#9c938f);font-size:11px}
+.cs-hist .st{font-size:11px;font-weight:700;border-radius:5px;padding:1px 6px;margin-right:6px}
+.cs-hist .st.current{background:var(--accent,#c2185b);color:#fff}
+.cs-hist .st.undone{background:#f2efed;color:#b9b1ad;border:1px dashed #d8d0cc}
+.cs-chain-hint{padding-top:8px;font-size:11.5px;color:var(--text3,#9c938f)}
+
+.cs-note{padding:10px 12px;border-radius:11px;font-size:12px;line-height:1.6;
+  background:#fdf3e3;border:1px solid #f0dab3;color:#7d4f0c;margin-bottom:12px}
+.cs-note.gap{background:#eaf1fb;border-color:#c3d6f0;color:#1e4a86}
+
+.cs-diff{border:1px solid var(--line,#ece7e4);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.cs-diff-head{padding:9px 12px;background:#faf7f6;font-size:12px;font-weight:700;color:var(--text2,#6b625e);
+  border-bottom:1px solid var(--line,#ece7e4)}
+.cs-diff-list{max-height:340px;overflow:auto}
+.cs-op{padding:10px 12px;border-bottom:1px solid var(--line,#ece7e4);font-size:13px;display:flex;gap:9px;align-items:flex-start}
+.cs-op:last-child{border-bottom:0}
+.cs-op .ico{flex:none;width:17px;height:17px;border-radius:5px;display:grid;place-items:center;
+  font-size:11px;font-weight:700;color:#fff;margin-top:2px}
+.cs-op.add .ico{background:#2e7d5b}
+.cs-op.update .ico{background:#2b5fa8}
+.cs-op.remove .ico{background:#c62828}
+.cs-op.remove{background:#fdecec}
+.cs-op.blocked .txt{text-decoration:line-through;opacity:.5}
+.cs-op .txt{flex:1;min-width:0;line-height:1.55}
+.cs-op .why{display:block;color:var(--text3,#9c938f);font-size:11.5px;margin-top:2px}
+.cs-op .blk{flex:none;font-size:11px;padding:3px 9px;border-radius:7px;border:1px solid #f5c9c9;
+  background:#fff;color:#c62828;font-weight:700;cursor:pointer}
+.cs-op .blk.on{background:#c62828;color:#fff;border-color:#c62828}
+.cs-diff-foot{padding:9px 12px;background:#faf7f6;border-top:1px solid var(--line,#ece7e4);display:flex;gap:8px}
+
+.cs-sec-title{font-size:11.5px;font-weight:700;color:var(--text3,#9c938f);margin:16px 0 8px;
+  display:flex;align-items:center;gap:9px}
+.cs-sec-title::after{content:"";flex:1;height:1px;background:var(--line2,#e0d9d5)}
+.cs-uncov-meta{font-size:11.5px;color:var(--text2,#6b625e);margin-bottom:9px}
+.cs-range-row{display:flex;gap:7px;align-items:center}
+.cs-range-row input{flex:1;min-width:0;padding:10px;border-radius:10px;border:1px solid var(--line2,#e0d9d5);
+  background:var(--card,#fff);color:var(--text,#2b2523);font:13px/1 inherit}
+.cs-msg{margin-top:10px;font-size:12px;color:var(--accent,#c2185b);min-height:18px;text-align:center}
+.cs-msg.err{color:#c62828}
+.cs-msg.ok{color:#2e7d5b}
+.cs-preview-msgs{margin-top:10px;max-height:300px;overflow:auto;border:1px solid var(--line,#ece7e4);
+  border-radius:11px;background:var(--card,#fff)}
+.cs-pm{border-top:1px solid var(--line,#ece7e4);padding:9px 12px}
+.cs-pm:first-child{border-top:0}
+.cs-pm .who{font-size:11px;font-weight:700;margin-bottom:3px}
+.cs-pm.her .who{color:var(--accent,#c2185b)}
+.cs-pm.me .who{color:#2b5fa8}
+.cs-pm .who em{font-style:normal;color:var(--text3,#9c938f);font-weight:400;margin-left:5px}
+.cs-pm .bd{font-size:13.5px;line-height:1.6;word-break:break-word}
+
+.cs-arch{border:1px dashed var(--line2,#e0d9d5);border-radius:12px;background:#faf8f7;margin-top:12px}
+.cs-arch summary{padding:12px 14px;font-size:13px;font-weight:600;color:var(--text2,#6b625e);cursor:pointer;list-style:none}
+.cs-arch summary::-webkit-details-marker{display:none}
+.cs-arch summary::before{content:"▸ ";color:var(--text3,#9c938f)}
+.cs-arch[open] summary::before{content:"▾ "}
+.cs-arch-inner{padding:0 14px 12px}
+.cs-mini{display:flex;gap:7px;align-items:center;padding:7px 0;border-top:1px solid var(--line,#ece7e4);font-size:12px}
+.cs-mini .n{color:var(--text3,#9c938f);width:46px;flex:none;font-weight:700}
+.cs-mini .r{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2,#6b625e)}
+.cs-mini .z{color:var(--text3,#9c938f);font-size:11px;flex:none}
+.cs-hist{padding:10px 12px;border-top:1px solid var(--line,#ece7e4);font-size:12.5px;line-height:1.6}
+.cs-hist .v{font-weight:700;color:var(--accent,#c2185b);margin-right:6px}
+.cs-hist .c{color:var(--text3,#9c938f);font-size:11px}
+.hide{display:none!important}
+</style>
+
+
+<script>
+/* ── 会话状态机前端 ────────────────────────────────────────────── */
+(function () {
+  "use strict";
+  var CS_API = location.pathname.indexOf('/heartbeat/admin/') === 0 ? '/heartbeat/admin/conversation-state' : '/admin/conversation-state';
+  var ccApi = function (p) {
+    return (location.pathname.indexOf('/heartbeat/admin/') === 0 ? '/heartbeat/admin' : '/admin') + p;
+  };
+  var CS = { mode: 'state', state: null, preview: null, busy: false, previewVersion: null };
+
+  function $(id) { return document.getElementById(id); }
+  function show(el, on) { if (el) el.classList.toggle('hide', !on); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function currentSession() {
+    var sel = $('adm-session-sel');
+    return sel && sel.value ? sel.value : '';
+  }
+  function msg(txt, kind) {
+    var el = $('cs-msg');
+    if (!el) return;
+    el.textContent = txt || '';
+    el.className = 'cs-msg' + (kind ? ' ' + kind : '');
+  }
+
+  function csrfHeaders() {
+    var h = { 'Content-Type': 'application/json' };
+    try {
+      var m = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
+      if (m) h['x-csrf-token'] = decodeURIComponent(m[1]);
+    } catch (e) { }
+    return h;
+  }
+  function req(path, opts) {
+    opts = opts || {};
+    return fetch(path, {
+      method: opts.method || 'GET',
+      headers: csrfHeaders(),
+      credentials: 'include',
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (!r.ok || j.ok === false) throw new Error(j.error || j.message || ('HTTP ' + r.status));
+        return j;
+      });
+    });
+  }
+  /* ── 视图：2026-10-04 起只保留状态机 ──
+     原先两套并存（状态机 / 旧块）供切换；旧压缩系统下线后旧块视图整体撤掉。
+     保留 csSetMode 作空壳：聊天页与其它入口可能还调它，让它恒定落在状态机。
+     「压缩只走状态机…」那行说明随后按用户要求删除（页面上只有一个视图时是废话）。 */
+  window.csSetMode = function () {
+    CS.mode = 'state';
+    $('cs-panel').classList.add('on');
+    // 旧块列表容器藏起来（数据仍由 preview 提供，聊天页压缩弹窗要用）。
+    var chunks = $('compaction-chunks');
+    if (chunks) chunks.style.display = 'none';
+    var searchWrap = document.querySelector('.cc-orig-search-wrap');
+    if (searchWrap) searchWrap.style.display = '';
+    loadCsState();
+  };
+
+  /* ── 读状态 ── */
+  function loadCsState() {
+    var sid = currentSession();
+    if (!sid) {
+      CS.state = null;
+      renderState(null);
+      msg('先在上面选一个会话');
+      return Promise.resolve();
+    }
+    return req(CS_API + '?session=' + encodeURIComponent(sid)).then(function (j) {
+      CS.state = j;
+      // 2026-10-04：盘上有待确认的候选就直接把 diff 面板显示出来。
+      // 之前候选只存在浏览器内存里，刷新或切会话就没了——用户反馈
+      // 「我刚生成了一个，成功了，但没显示，不知道到哪去了」。现在 preview 会落盘，这里读回来复原。
+      var cand = j && j.candidate;
+      if (cand && cand.exists && cand.candidate && cand.candidate.state) {
+        CS.preview = cand.candidate;
+        renderDiff(cand.candidate);
+        msg('这个会话有一份算好但还没并入的候选状态（' + String(cand.candidate.state).length + ' 字 · ' +
+          String(cand.candidate.created_at || '').slice(0, 16).replace('T', ' ') + ' 算的）——确认无误就点「确认并入」');
+      } else {
+        CS.preview = null;
+        show($('cs-diff'), false);
+        $('cs-preview-msgs').innerHTML = '';
+        show($('cs-preview-title'), false);
+      }
+      renderState(j);
+      renderRangeInfo();
+    }).catch(function (e) { msg(e.message, 'err'); });
+  }
+
+  function renderState(j) {
+    var body = $('cs-state-body');
+    var ver = $('cs-ver');
+    var cov = $('cs-cover');
+    var note = $('cs-note');
+    var expandBtn = $('cs-expand-btn');
+    var acts = $('cs-state-card').querySelectorAll('.cs-acts .cs-btn');
+    var undoBtn = acts.length ? acts[acts.length - 1] : null;
+    var hasVersions = !!(j && j.versions && j.versions.length);
+
+    if (!j || !j.exists) {
+      ver.textContent = '—';
+      cov.innerHTML = '';
+      // 指针模型：整条撤销后链保留，并入记录里所有版本标「已撤销·可恢复」
+      body.textContent = hasVersions
+        ? '状态已整条撤销。在下方「并入记录」里点任意版本可原样恢复（不调模型），或重新并入。'
+        : '这个会话还没有状态。在下面的未覆盖区选一段原文，点「并入状态」。';
+      body.classList.add('collapsed');
+      expandBtn.textContent = '展开全文';
+      expandBtn.disabled = true;
+      // 没状态就没得改（同理没得撤销）
+      var editBtn = $('cs-edit-btn');
+      if (editBtn) editBtn.disabled = true;
+      show($('cs-seed'), false);
+      // 注意：没有正式状态时**仍可能有待确认的候选**（用户算完还没点并入就是这状态），
+      // 所以这里不直接隐藏 note，交给 renderNote 按「有没有候选」决定显示什么。
+      renderNote(j || {});
+      if (undoBtn) undoBtn.disabled = !hasVersions;
+      renderChain([]);
+      renderMergeHistory(j || { versions: [] });
+      return;
+    }
+    expandBtn.disabled = false;
+    var editBtnOn = $('cs-edit-btn');
+    if (editBtnOn) editBtnOn.disabled = false;
+    body.textContent = j.text;
+    ver.textContent = 'v' + j.version;
+    var c = j.cover || {};
+    cov.innerHTML = '<span>覆盖 <b>' + esc(c.label_start || '') + ' ~ ' + esc(c.label_end || '') + '</b></span>' +
+      '<span>已并入 <b>' + j.version + '</b> 次</span>' +
+      '<span><b>' + j.text.length + '</b> 字</span>' +
+      '<span>更新于 <b>' + esc(String(j.updated_at || '').slice(0, 16).replace('T', ' ')) + '</b></span>';
+    show($('cs-seed'), !!j.seed_from_legacy);
+    if (undoBtn) undoBtn.disabled = !j.versions || j.versions.length < 1;
+    renderChain(j.versions || []);
+    renderNote(j);
+    renderMergeHistory(j);
+  }
+
+  function renderNote(j) {
+    var note = $('cs-note');
+    if (!note) return;
+    // 2026-10-04：待确认的候选提示。候选已落盘（刷新/切会话都不丢），
+    // 所以提示放在状态卡上——不点开 diff 面板也能知道「有一份算好的在那儿」。
+    var cand = j && j.candidate && j.candidate.exists ? j.candidate.candidate : null;
+    if (cand && cand.state) {
+      var when = String(cand.created_at || '').slice(0, 16).replace('T', ' ');
+      var r = cand.range || {};
+      note.className = 'cs-note gap';
+      note.innerHTML = '<b>有一份算好但还没并入的候选状态（v' + ((cand.prev_version || 0) + 1) + '）：</b>' +
+        cand.state.length + ' 字 · ' + (r.range_label || (r.start_num + '~' + r.end_num + ' 条')) +
+        ' · ' + when + ' 算的。' +
+        '<br>它存在服务器上，刷新或切到别的会话再回来都还在。' +
+        '看完下面的候选内容，确认无误点「确认并入」才真正生效；不想要就点「丢弃这份候选」。';
+      show(note, true);
+      return;
+    }
+    if (j.seed_from_legacy) {
+      note.className = 'cs-note gap';
+      note.innerHTML = '<b>迁移期：</b>这份状态是用旧块摘要回填的种子（<b>继承旧块「记忆列表」写法</b>）。' +
+        '下次并入新原文时会换成真·原文驱动的状态。';
+      show(note, true);
+    } else {
+      show(note, false);
+    }
+  }
+
+  function renderChain(versions) {
+    var el = $('cs-chain');
+    if (!el) return;
+    if (!versions || versions.length < 2) { el.innerHTML = ''; return; }
+    var parts = [];
+    versions.forEach(function (v, i) {
+      if (i) parts.push('<span class="sep">·</span>');
+      // 指针模型：current 高亮；undone（被回滚掉、可恢复）虚线划掉；superseded 正常灰
+      var cls = 'v';
+      if (v.status === 'current') cls += ' cur';
+      else if (v.status === 'undone') cls += ' un';
+      parts.push('<span class="' + cls + '" data-csv="' + v.version + '" onclick="csPickVersion(this)">v' + v.version + '</span>');
+    });
+    el.innerHTML = parts.join('');
+  }
+
+  window.csPickVersion = function (el) {
+    var v = Number(el.getAttribute('data-csv'));
+    if (CS.previewVersion === v) { // 再点一次 = 切到那一版（已撤销版 = 恢复；都不调模型）
+      if (!confirm('切到 v' + v + '？状态正文与覆盖范围会变成那一版的样子（链上其他版本都保留，随时可再切）。')) return;
+      doRollback(v);
+      return;
+    }
+    CS.previewVersion = v;
+    var all = el.parentNode.querySelectorAll('.v');
+    for (var i = 0; i < all.length; i++) all[i].classList.remove('pv');
+    el.classList.add('pv');
+    req(CS_API + '/version?session=' + encodeURIComponent(currentSession()) + '&version=' + v)
+      .then(function (j) {
+        var body = $('cs-state-body');
+        body.textContent = j.text;
+        body.classList.remove('collapsed');
+        $('cs-expand-btn').textContent = '收起';
+        msg('正在预览 v' + v + '（再点一次该版本号即回滚）', 'ok');
+      }).catch(function (e) { msg(e.message, 'err'); });
+  };
+
+  function doRollback(v) {
+    msg('回滚中…');
+    req(CS_API + '/rollback?session=' + encodeURIComponent(currentSession()), { method: 'POST', body: { version: v } })
+      .then(function () {
+        CS.previewVersion = null;
+        msg('已回滚到 v' + v, 'ok');
+        return loadCsState();
+      }).catch(function (e) { msg(e.message, 'err'); });
+  }
+
+  window.csToggleExpand = function () {
+    var b = $('cs-state-body');
+    var btn = $('cs-expand-btn');
+    var c = b.classList.toggle('collapsed');
+    btn.textContent = c ? '展开全文' : '收起';
+  };
+
+  // 手动改写当前状态正文（2026-10-04，用户要求「当前状态的内容加个编辑」）
+  // 语义：直接覆盖当前版、保存即生效、不产生新版本（用户拍板）。
+  window.csOpenEdit = function () {
+    var st = CS.state;
+    if (!st || !st.exists) { msg('这个会话还没有状态，没什么可改', 'err'); return; }
+    var ta = $('cs-edit-content');
+    if (!ta) return;
+    ta.value = st.text || '';
+    var c = st.cover || {};
+    var meta = $('cs-edit-meta');
+    if (meta) {
+      meta.textContent = '当前 v' + st.version + ' · ' + String(st.text || '').length + ' 字 · 覆盖 ' +
+        (c.label_start || '?') + ' ~ ' + (c.label_end || '?') +
+        (st.manual_edit ? '（上次手改于 ' + String(st.manual_edit.at).slice(0, 16).replace('T', ' ') + '）' : '');
+    }
+    openModal('csEditModal');
+  };
+
+  window.csSaveEdit = function () {
+    var sid = currentSession();
+    var ta = $('cs-edit-content');
+    if (!sid || !ta) return;
+    var text = String(ta.value || '').trim();
+    if (!text) { msg('状态正文不能为空', 'err'); return; }
+    if (text === String((CS.state && CS.state.text) || '')) {
+      msg('内容没变，不用保存', 'ok');
+      closeModal('csEditModal');
+      return;
+    }
+    if (!confirm('覆盖当前状态正文？\n\n保存后立即对上下文生效，覆盖区间不变。\n同一版内改的内容没有存档，改错了只能重写一遍。')) return;
+    req(CS_API + '/edit?session=' + encodeURIComponent(sid), {
+      method: 'POST',
+      body: { confirm: true, text: text },
+    }).then(function (r) {
+      closeModal('csEditModal');
+      msg('已保存并生效（状态 → v' + r.version + '，' + String(r.text || '').length + ' 字）', 'ok');
+      return loadCsState();
+    }).catch(function (e) { msg(e.message, 'err'); });
+  };
+
+  // 并入记录：折叠区（renderState 每次刷新都会重画）
+  function renderMergeHistory(st) {
+    var list = $('cs-hist-list');
+    if (!list) return;
+    var versions = (st && st.versions) || [];
+    // 版本数写进折叠标题上：折叠着的时候也能看见有几个版本（原先那个计数 span 已随卡片一起删）
+    var arch = $('cs-hist-arch');
+    var sum = arch && arch.querySelector('summary');
+    if (sum) {
+      sum.textContent = '并入记录 · 这个会话的状态演进' +
+        (versions.length ? '（' + versions.length + ' 版 · 保留最近 5 版）' : '（还没有并入）');
+    }
+    if (!versions.length) {
+      list.innerHTML = '<div class="cs-hist" style="border-top:0;color:var(--text3,#9c938f)">还没有并入过。在下面的未覆盖区选一段原文开始。</div>';
+      return;
+    }
+    var h = [];
+    versions.forEach(function (v) {
+      var statusTxt = v.status === 'current' ? '当前' : (v.status === 'undone' ? '已撤销·点2下恢复' : '');
+      var rng = v.range ? ('覆盖 第 ' + (v.range.start_index + 1) + '~' + (v.range.end_index + 1) + ' 条') : '覆盖区间未定';
+      h.push('<div class="cs-hist"><span class="v">v' + v.version + '</span>' +
+        (statusTxt ? '<span class="st ' + v.status + '">' + statusTxt + '</span>' : '') +
+        esc(v.at ? String(v.at).slice(0, 16).replace('T', ' ') : '') +
+        ' · ' + esc(rng) +
+        '<span class="c"> · 状态 ' + v.chars + ' 字</span></div>');
+    });
+    list.innerHTML = h.join('');
+  }
+
+  window.csUndo = function () {
+    var sid = currentSession();
+    if (!sid) return;
+    if (!confirm('撤销最后一次并入？\n\n被吃掉的那段原文会回到「还没并入」区；这一版会标「已撤销」留在并入记录里，随时可原样恢复（不调模型）。')) return;
+    msg('撤销中…');
+    // 2026-10-04：服务端 undo 加了 confirm 闸（空 body POST 曾真的删掉生产状态，1004-03 事故）
+    req(CS_API + '/undo?session=' + encodeURIComponent(sid), { method: 'POST', body: { confirm: true } })
+      .then(function (j) {
+        msg(j.removedAll ? '已整条撤销，原文全部回到未覆盖区' : ('已退回到 v' + j.rolled_to), 'ok');
+        CS.preview = null; show($('cs-diff'), false);
+        return loadCsState();
+      }).catch(function (e) { msg(e.message, 'err'); });
+  };
+
+  /* ── 区间 ── */
+  // 状态吃掉的是时间线上一段连续前缀，所以「还没并入的」就是它后面那一段。
+  // 没有 covered_range（比如状态是刚建的、记录还没写）就退回让用户手填。
+  var CS_TOTAL = 0;
+
+  function renderRangeInfo() {
+    var sid = currentSession();
+    if (!sid) return;
+    req(ccApi('/context-compaction/range-preview?session_id=' + encodeURIComponent(sid) + '&start=1&end=1'))
+      .then(function (j) {
+        CS_TOTAL = j.compactCount || 0;
+        var st = CS.state;
+        var cr = st && st.covered_range;
+        var el = $('cs-uncov-meta');
+        if (!el) return;
+        if (!cr || typeof cr.end_index !== 'number') {
+          el.innerHTML = '本会话可压缩 <b>' + CS_TOTAL + '</b> 条。填一个区间，或点「自动分块」。';
+        } else {
+          var from0 = cr.end_index + 2;   // end_index 是 0-based 的「最后一条已覆盖」在可压缩列表里的下标
+          if (from0 > CS_TOTAL) {
+            el.innerHTML = '全部 <b>' + CS_TOTAL + '</b> 条都已并入状态。要再并入得先撤销，或换个会话。';
+          } else {
+            el.innerHTML = '状态已吃掉第 1~' + (from0 - 1) + ' 条，<b>还没并入的是第 ' + from0 + '~' + CS_TOTAL + ' 条</b>。';
+          }
+        }
+        // 进页面就把未并入区的原文亮出来（默认最新 50 条），不用填区间也不用点按钮
+        csSuggestAndPreview(true);
+      }).catch(function () { });
+  }
+
+  // ── 分块建议 + 原文预览（同一个来源）──
+  // 规则：建议起点 = 已并入到哪 + 1，纯函数。切了不并入，下次建议不变（不会跳过）。
+  // 切点用旧块「自动分块」同一套规则（splitRangeByGaps，按时间间隔找自然边界，
+  // 所以第一块可能是 156 条这种非整数），但 dryRun:true 只算不建——真建块会撞状态的重叠断言。
+  // preview 区间 = 建议区间：建议切哪段，原文就显示哪段的全部，没有条数上限。
+  function csChunkCfg() {
+    // 兜底默认对齐 context-replacements.js 的内置默认（100/40/160 口径），
+    // 不要再用 config.json 当时的值——1003-33 踩过：最少=100 会让 100~200 条的会话
+    // 切不开（每段都≥100，总长落在区间内 ⇒ 唯一解是整段一块），「目标100」形同虚设。
+    // 权威值是压缩页「压缩参数配置」里的四个旋钮，这里只是配置缺失时的兜底。
+    var cfg = { gapMinutes: 60, chunkSize: 100, chunkMin: 40, chunkMax: 200 };
+    try {
+      var gap = $('cc-cfg-gap'); if (gap && gap.value) cfg.gapMinutes = +gap.value || 60;
+      var cs = $('cc-cfg-chunk'); if (cs && cs.value) cfg.chunkSize = +cs.value || 100;
+      var cm = $('cc-cfg-chunk-min'); if (cm && cm.value) cfg.chunkMin = +cm.value || 40;
+      var cx = $('cc-cfg-chunk-max'); if (cx && cx.value) cfg.chunkMax = +cx.value || 200;
+    } catch (e) { }
+    return cfg;
+  }
+
+  // quiet=true（进页面自动跑）：填建议区间 + 显示该段原文，不弹提示；
+  // quiet=false（点「自动分块」）：同上 + 弹提示说明。
+  function csSuggestAndPreview(quiet) {
+    var sid = currentSession();
+    if (!sid) { if (!quiet) msg('先选会话', 'err'); return; }
+    var cr = CS.state && CS.state.covered_range;
+    var from = (cr && typeof cr.end_index === 'number') ? cr.end_index + 2 : 1;
+    var total = CS_TOTAL;
+    if (!total) { if (!quiet) msg('这个会话没有可压缩的内容', 'err'); return; }
+    if (from > total) {
+      if (!quiet) msg('全部都已并入了，先撤销一次', 'err');
+      show($('cs-preview-title'), false);
+      $('cs-preview-msgs').innerHTML = '';
+      return;
+    }
+    var cfg = csChunkCfg();
+    req(ccApi('/context-compaction/blocks?session_id=' + encodeURIComponent(sid)), {
+      method: 'POST',
+      body: {
+        action: 'split_range',
+        start: from, end: total,
+        gapMinutes: cfg.gapMinutes,
+        chunkSize: cfg.chunkSize, chunkMin: cfg.chunkMin, chunkMax: cfg.chunkMax,
+        dryRun: true,
+      },
+    }).then(function (j) {
+      if (!j.ok) { if (!quiet) msg(j.message || j.error || '分块失败', 'err'); return; }
+      var segs = j.segments || [];
+      if (!segs.length) { if (!quiet) msg('这一段切不出块边界，手动填区间吧', 'err'); return; }
+      var s = segs[0].start + 1, e = segs[0].end + 1;   // 服务端切点是 0-based
+      $('cs-range-input').value = s + '-' + e;
+      renderPreviewMsgs({ start: s, end: e });
+      if (!quiet) {
+        msg('建议并入第 ' + s + '~' + e + ' 条（' + (e - s + 1) + ' 条）。' +
+          (segs.length > 1 ? '整段按 ' + cfg.gapMinutes + ' 分钟间隔还能再切 ' + (segs.length - 1) + ' 块。' : '') +
+          '不并入的话，下次建议还是这一段。', 'ok');
+      }
+    }).catch(function (e) { if (!quiet) msg(e.message, 'err'); });
+  }
+
+  window.csAutoChunk = function () { csSuggestAndPreview(false); };
+
+  function parseRange() {
+    var raw = String($('cs-range-input').value || '').trim();
+    var m = raw.match(/^(\d+)\s*[-~～]\s*(\d+)$/);
+    if (m) return { start: +m[1], end: +m[2] };
+    if (/^\d+$/.test(raw)) return { start: +raw, end: +raw };
+    return null;
+  }
+
+  /* ── 预览（调模型，不落盘）──
+     1007-05 异步化：生成已挪到独立进程 state-worker，这里提交任务后轮询
+     GET /admin/conversation-state 的 candidate（算好即出现）与日志（logId 精确匹配失败/中断）。 */
+  window.csPreview = function () {
+    if (CS.busy) return;
+    var sid = currentSession();
+    if (!sid) { msg('先在上面选一个会话', 'err'); return; }
+    var r = parseRange();
+    if (!r) { msg('区间格式不对，填「起-止」，比如 5669-5674', 'err'); return; }
+    if (r.end < r.start) { msg('结束号要大于起始号', 'err'); return; }
+    if (r.end - r.start + 1 > 1000) { msg('区间太大（' + (r.end - r.start + 1) + ' 条）。分几次并入，先填 1000 条以内的一段。', 'err'); return; }
+    // 挡住重复并入已覆盖的区间：状态吃掉的是连续前缀，重跑一遍只会得到「无变更」，
+    // 白花一次模型调用，还让人以为状态机坏了
+    var cr = CS.state && CS.state.covered_range;
+    if (cr && typeof cr.end_index === 'number' && r.start <= cr.end_index + 1) {
+      if (!confirm('第 ' + r.start + '~' + r.end + ' 条已经在状态覆盖范围里了（第 1~' + (cr.end_index + 1) +
+        ' 条）。\n\n真要重跑一遍吗？多数情况下结果会是「没有变更」，白花一次模型调用。建议先撤销，或把起点填到第 ' +
+        (cr.end_index + 2) + ' 条。')) return;
+    }
+    // 1011-03：提交前先查本会话是否已有未确认候选——有则询问，用户确认覆盖才允许提交。
+    // 10-11 事故：旧候选（2658 字）被自动重算无条件覆盖丢失，用户没点「丢弃」的候选必须保留。
+    var doCsSubmit = function (overwrite) {
+      CS.busy = true;
+      var btn = $('cs-preview-btn');
+      btn.disabled = true; btn.textContent = '已提交，后台计算中…';
+      msg('已提交生成（后台计算，几十秒到几分钟），算好后这里出 diff');
+      show($('cs-diff'), false);
+
+      var body = { start: r.start, end: r.end };
+      if (overwrite) body.overwrite = true;
+
+      req(CS_API + '/preview?session=' + encodeURIComponent(sid), { method: 'POST', body: body })
+        .then(function (j) {
+          if (j && j.ok && j.submitted) {
+            // 异步任务已受理：轮询候选出现 / 日志翻失败
+            startCsPolling(sid, r, j.logId);
+          } else if (j && j.ok) {
+            // 兼容旧同步响应（改造后不再发生，保留兜底）
+            CS.preview = j;
+            renderDiff(j);
+            renderPreviewMsgs(r);
+            // 后端已把这版候选落盘，这里同步状态卡上的提示（刷新后仍在）
+            if (CS.state) renderNote({ candidate: { exists: true, candidate: j }, seed_from_legacy: false });
+            msg('算好了（已存在服务器上，刷新不会丢），确认无误再并入');
+            finishCsPreview();
+          } else {
+            throw new Error((j && j.error) || '提交失败');
+          }
+        })
+        .catch(function (e) { msg(e.message, 'err'); finishCsPreview(); });
+    };
+
+    req(CS_API + '?session=' + encodeURIComponent(sid), { method: 'GET' })
+      .then(function (j) {
+        var cand = j && j.candidate;
+        if (cand && cand.exists && cand.candidate && cand.candidate.state) {
+          var ex = cand.candidate;
+          var exChars = String(ex.state || '').length;
+          var exVer = ex.prev_version !== undefined && ex.prev_version !== null ? (Number(ex.prev_version) + 1) : null;
+          var exWhen = ex.created_at ? String(ex.created_at).replace('T', ' ').slice(0, 16) : '时间未知';
+          var tip = '这个会话已有一份未确认的候选（' + (exVer != null ? 'v' + exVer + '，' : '') + exChars + ' 字，' + exWhen + '）。\n\n重新生成会覆盖它，旧候选将无法找回。\n确定覆盖吗？（不覆盖就点取消，旧候选会继续保留）';
+          if (!confirm(tip)) return;   // 用户取消：旧候选原样保留，不提交
+          doCsSubmit(true);
+        } else {
+          doCsSubmit(false);
+        }
+      })
+      .catch(function (e) { msg(e.message, 'err'); });
+  };
+
+  var _csPollTimer = null;
+  function startCsPolling(sid, range, logId) {
+    stopCsPolling();
+    _csPollTimer = setInterval(function () {
+      req(CS_API + '?session=' + encodeURIComponent(sid), { method: 'GET' })
+        .then(function (j) {
+          var cand = j && j.candidate;
+          // GET /admin/conversation-state 的 candidate 是壳（{ok,exists,candidate:{...}}），正文在 cand.candidate
+          if (cand && cand.exists && cand.candidate && cand.candidate.state) {
+            // 候选出现 = 算好了（worker 已落盘，刷新不丢）
+            stopCsPolling();
+            CS.preview = cand.candidate;
+            renderDiff(cand.candidate);
+            renderPreviewMsgs(range);
+            if (CS.state) renderNote({ candidate: { exists: true, candidate: cand.candidate }, seed_from_legacy: false });
+            msg('算好了（已存在服务器上，刷新不会丢），确认无误再并入');
+            finishCsPreview();
+            return;
+          }
+          // 没出候选：查本轮日志是否翻 error / interrupted（按 logId 精确匹配，避免命中历史日志）
+          if (!logId) return;
+          req(ccApi('/context-compaction/logs'), { method: 'GET' })
+            .then(function (lg) {
+              var sl = ((lg && lg.logs) || []).find(function (l) { return l && l.id === logId && l.status !== 'pending'; });
+              if (sl && (sl.status === 'error' || sl.status === 'interrupted')) {
+                stopCsPolling();
+                msg(sl.message || (sl.status === 'error' ? '生成失败' : '生成被中断，可重新生成'), 'err');
+                finishCsPreview();
+              }
+            }).catch(function () {});
+        })
+        .catch(function () { /* 网络抖动，下轮再试 */ });
+    }, 4000);
+  }
+  function stopCsPolling() { if (_csPollTimer) { clearInterval(_csPollTimer); _csPollTimer = null; } }
+  function finishCsPreview() {
+    CS.busy = false;
+    var btn = $('cs-preview-btn');
+    if (btn) { btn.disabled = false; btn.textContent = '▸ 并入状态'; }
+    stopCsPolling();
+  }
+
+  function renderPreviewMsgs(r) {
+    var sid = currentSession();
+    // 不限条数：预览区间 = 分块建议区间（≤ chunkMax，默认 200），有多少显示多少。
+    // 手填超大区间时由上面的 guard 拦，这里不设 50/200 之类的暗上限。
+    req(ccApi('/context-compaction/range-preview?session_id=' + encodeURIComponent(sid) +
+      '&start=' + r.start + '&end=' + r.end))
+      .then(function (j) {
+        var h = [];
+        (j.items || []).forEach(function (it) {
+          var her = it.role === 'user';
+          h.push('<div class="cs-pm ' + (her ? 'her' : 'me') + '"><div class="who">' + (her ? '她' : '我') +
+            '<em>#' + it.num + ' · ' + esc(it.time || '') + '</em></div><div class="bd">' + esc(it.content) + '</div></div>');
+        });
+        var el = $('cs-preview-msgs');
+        el.innerHTML = h.join('');
+        el.scrollTop = 0;
+        // 标题随内容走：默认是建议区间的原文，填了区间就显示所选区间
+        var tt = $('cs-preview-title');
+        if (tt) {
+          tt.textContent = '原文预览 · 第 ' + r.start + '~' + r.end + ' 条（' + (j.items || []).length + ' 条）';
+          tt.classList.remove('hide');
+        }
+      }).catch(function () { });
+  }
+
+  function renderDiff(j) {
+    var head = $('cs-diff-head');
+    var list = $('cs-diff-list');
+    var r = j.range || {};
+    head.textContent = '并入第 ' + r.start_num + '~' + r.end_num + ' 条（' + r.count + ' 条）→ 状态会变成 v' + ((j.prev_version || 0) + 1) +
+      (j.search_rounds ? '　·　模型中途检索了 ' + j.search_rounds + ' 轮' : '');
+
+    var by = { add: 0, update: 0, remove: 0 };
+    (j.ops || []).forEach(function (o) { by[o.type] = (by[o.type] || 0) + 1; });
+    var sum = [];
+    if (by.add) sum.push('✚ 新增 ' + by.add);
+    if (by.update) sum.push('↻ 改写 ' + by.update);
+    if (by.remove) sum.push('✖ 删除 ' + by.remove);
+
+    var h = '';
+    if (sum.length) h += '<div class="cs-op" style="background:#faf7f6"><span class="ico" style="background:#6b625e">≡</span><span class="txt"><b>' +
+      sum.join('　') + '</b>' + (by.remove ? '<span class="why">删除项可拦截——不同意就点「阻止删除」，那一处会保留原样</span>' : '') + '</span></div>';
+    (j.ops || []).forEach(function (o, i) {
+      h += '<div class="cs-op ' + o.type + '" id="csop' + i + '"><span class="ico">' +
+        (o.type === 'add' ? '＋' : o.type === 'update' ? '↻' : '✖') + '</span>' +
+        '<span class="txt">' + esc(o.desc) + (o.reason ? '<span class="why">' + esc(o.reason) + '</span>' : '') + '</span>' +
+        (o.type === 'remove' ? '<button type="button" class="blk" onclick="csBlockOp(this,\'csop' + i + '\')">阻止删除</button>' : '') +
+        '</div>';
+    });
+    if (!(j.ops || []).length) h += '<div class="cs-op"><span class="txt" style="color:#9c938f">模型没有报告任何变更（这一段原文没带来状态变化）</span></div>';
+    list.innerHTML = h;
+
+    $('cs-commit-btn').textContent = '确认并入（' + String(j.state || '').length + ' 字）';
+    show($('cs-diff'), true);
+    setTimeout(function () { $('cs-diff').scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60);
+  }
+
+  window.csBlockOp = function (btn, opId) {
+    var op = $(opId);
+    var blocked = btn.classList.toggle('on');
+    btn.textContent = blocked ? '已阻止' : '阻止删除';
+    if (op) op.classList.toggle('blocked', blocked);
+  };
+
+  // 2026-10-04：候选状态已落盘，所以「取消」必须是**真的丢弃盘上那份**，
+  // 否则下次进页面 loadCsState 又把它读回来，用户点了取消却还在。
+  window.csCancelPreview = function () {
+    var sid = currentSession();
+    if (!sid) return;
+    if (!confirm('丢弃这份候选状态？\n\n它已经算好并存在服务器上了（约 1~5 分钟的模型调用）。丢弃后不能恢复，想再看只能重新算一次。\n\n原文保留在「还没并入」区，不受影响。')) return;
+    var btn = $('cs-commit-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '丢弃中…'; }
+    req(CS_API + '/candidate/discard?session=' + encodeURIComponent(sid), { method: 'POST' })
+      .then(function () {
+        CS.preview = null;
+        show($('cs-diff'), false);
+        $('cs-preview-msgs').innerHTML = '';
+        show($('cs-preview-title'), false);
+        msg('已丢弃这份候选，原文保留在未覆盖区', 'ok');
+        return loadCsState();
+      })
+      .catch(function (e) {
+        if (btn) { btn.disabled = false; btn.textContent = '确认并入'; }
+        msg('丢弃失败：' + e.message, 'err');
+      });
+  };
+
+  window.csCommit = function () {
+    var sid = currentSession();
+    var j = CS.preview;
+    if (!sid || !j) { msg('没有待并入的预览', 'err'); return; }
+    var blocked = [];
+    var nodes = $('cs-diff-list').querySelectorAll('.cs-op.remove.blocked .txt');
+    for (var i = 0; i < nodes.length; i++) blocked.push(nodes[i].childNodes[0].nodeValue.trim());
+
+    var btn = $('cs-commit-btn');
+    btn.disabled = true; btn.textContent = '并入中…';
+    msg('并入中…');
+    req(CS_API + '/commit?session=' + encodeURIComponent(sid), {
+      method: 'POST',
+      body: {
+        state: j.state, ops: j.ops, blocked: blocked,
+        start_msg: j.range.start_msg, end_msg: j.range.end_msg,
+        label_start: j.range.label_start, label_end: j.range.label_end,
+        count: j.range.count, range_label: j.range.range_label, source: 'merge',
+      },
+    }).then(function (r) {
+      CS.preview = null;
+      show($('cs-diff'), false);
+      $('cs-preview-msgs').innerHTML = '';
+      show($('cs-preview-title'), false);
+      $('cs-range-input').value = '';
+      btn.disabled = false; btn.textContent = '确认并入';
+      msg('已并入，状态 → v' + r.version, 'ok');
+      return loadCsState();
+    }).catch(function (e) {
+      btn.disabled = false; btn.textContent = '确认并入';
+      msg(e.message, 'err');
+    });
+  };
+
+  /* ── 挂到现有的会话切换上 ── */
+  var origChange = window.onAdminSessionChange;
+  window.onAdminSessionChange = function () {
+    CS.preview = null; CS.previewVersion = null;
+    show($('cs-diff'), false);
+    if (typeof origChange === 'function') { try { origChange(); } catch (e) { } }
+    loadCsState();
+  };
+  var origLoad = window.loadCompactionPreview;
+  window.loadCompactionPreview = function () {
+    if (typeof origLoad === 'function') { try { origLoad(); } catch (e) { } }
+    loadCsState();
+  };
+
+  // ── 填区间后自动看原文（不调模型）──
+  // 点「并入状态」才会调模型；这里只是把选中范围的原文拉出来看，
+  // 免得「想看看这段是什么」也得烧一次调用。
+  var csRangeTimer = null;
+  $('cs-range-input').addEventListener('input', function () {
+    clearTimeout(csRangeTimer);
+    csRangeTimer = setTimeout(function () {
+      var r = parseRange();
+      if (!r) return;
+      renderPreviewMsgs(r);
+    }, 600);
+  });
+
+  // 进压缩页直接进状态机视图（2026-10-04 起唯一的视图）。
+  // 旧块视图已撤：存量旧块在聊天页会话菜单的压缩弹窗里看。
+  document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(function () {
+      window.csSetMode();   // 内部已会 loadCsState
+    }, 300);
+  });
+})();
+</script>
+
+ <div class="cloud-drawer" id="cloudDrawer">
+   <div class="cloud-drawer-head">
+     <button class="cloud-drawer-btn" onclick="closeCloudDrawer()">← 返回词云</button>
+     <div class="cloud-drawer-title" id="cloudDrawerTitle">相关对话</div>
+     <button class="cloud-drawer-btn" onclick="closeCloudDrawer()">✕</button>
+   </div>
+   <div id="cloud-results" class="cloud-results"></div>
+ </div>
+
+<style id="admin-modal-polish-20261012">
+/* 管理台弹窗统一：保留现有配色与交互，仅整理尺寸、留白、滚动和移动端操作区 */
+.modal-overlay{padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));overscroll-behavior:contain}
+.modal-overlay>.modal{
+  box-sizing:border-box;width:100%;max-width:min(560px,94vw);max-height:min(84dvh,820px);
+  padding:20px;border-radius:18px;overflow-x:hidden;overscroll-behavior:contain;
+  box-shadow:0 20px 64px rgba(35,25,25,.16),0 2px 10px rgba(35,25,25,.04);
+}
+.modal-overlay>.modal h3{line-height:1.45;letter-spacing:.01em}
+.modal-overlay>.modal input:not([type="checkbox"]):not([type="radio"]),
+.modal-overlay>.modal select,.modal-overlay>.modal textarea{
+  box-sizing:border-box;max-width:100%;min-width:0;border-radius:10px;
+  transition:border-color .16s ease,box-shadow .16s ease;
+}
+.modal-overlay>.modal input:focus-visible,.modal-overlay>.modal select:focus-visible,.modal-overlay>.modal textarea:focus-visible{
+  outline:none;border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(200,144,152,.13)
+}
+.modal-overlay .modal-actions,.modal-overlay .mp-modal-actions{gap:8px;flex-wrap:wrap}
+.modal-overlay .modal-actions .btn,.modal-overlay .mp-modal-actions .mp-btn{min-height:42px;border-radius:11px}
+.modal-overlay .mp-modal-head{position:sticky;top:-20px;z-index:3;margin:-2px 0 14px;padding:2px 0 10px;background:var(--card);border-bottom:1px solid var(--border)}
+.modal-overlay .mp-modal-fields{gap:10px}
+.modal-overlay .mp-modal-fields label{min-width:0;flex-wrap:wrap;line-height:1.5}
+.modal-overlay .mp-modal-fields input,.modal-overlay .mp-modal-fields select{min-height:38px;font-size:14px}
+.modal-overlay .mp-modal-x{flex:0 0 auto;min-width:36px;min-height:36px;display:inline-flex;align-items:center;justify-content:center}
+.modal-overlay .modal-edit-mem{min-height:0}
+.modal-overlay .modal-edit-mem textarea{max-width:100%;min-height:180px;max-height:48dvh;line-height:1.7}
+@media(max-width:600px){
+  .modal-overlay{align-items:center;padding:10px 10px max(10px,env(safe-area-inset-bottom))}
+  .modal-overlay>.modal{max-width:100%;max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 20px);padding:17px 15px;border-radius:16px}
+  .modal-overlay .mp-modal-head{top:-17px;margin-top:-1px}
+  .modal-overlay .modal-actions .btn,.modal-overlay .mp-modal-actions .mp-btn{flex:1;min-width:0;padding:10px 9px}
+  .modal-overlay .modal-edit-mem textarea{max-height:42dvh}
+}
+/* 管理台弹窗：轻触反馈、清晰焦点与更克制的悬停态 */
+.modal-overlay>.modal{overscroll-behavior:contain;-webkit-tap-highlight-color:transparent}
+.modal-overlay>.modal button,.modal-overlay .mp-btn,.modal-overlay .btn,.modal-overlay .mp-modal-x{transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .12s ease}
+.modal-overlay>.modal button:focus-visible,.modal-overlay .mp-btn:focus-visible,.modal-overlay .btn:focus-visible,.modal-overlay .mp-modal-x:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.modal-overlay>.modal button:active,.modal-overlay .mp-btn:active,.modal-overlay .btn:active,.modal-overlay .mp-modal-x:active{transform:scale(.985)}
+.modal-overlay>.modal input:hover,.modal-overlay>.modal select:hover,.modal-overlay>.modal textarea:hover{border-color:rgba(200,144,152,.34)}
+.modal-overlay>.modal input[type="checkbox"],.modal-overlay>.modal input[type="radio"]{accent-color:var(--accent);cursor:pointer}
+.modal-overlay>.modal textarea{scrollbar-gutter:stable}
+.modal-overlay>.modal::-webkit-scrollbar,.modal-overlay textarea::-webkit-scrollbar{width:5px}
+.modal-overlay>.modal::-webkit-scrollbar-thumb,.modal-overlay textarea::-webkit-scrollbar-thumb{background:rgba(80,60,60,.18);border-radius:99px}
+@media(hover:none){.modal-overlay>.modal button:hover,.modal-overlay .mp-btn:hover,.modal-overlay .btn:hover{filter:none}}
+@media(prefers-reduced-motion:reduce){.modal-overlay>.modal,.modal-overlay input,.modal-overlay select,.modal-overlay textarea,.modal-overlay button,.modal-overlay .mp-btn,.modal-overlay .btn{transition:none!important}}
+</style>
+
+<style id="admin-ds-20261016">
+/* 极简设计语言：聊天页主题为 极简/黑夜 时生效（data-ds）；自动生成的颜色映射 + 手写组件 */
+html[data-ds] body{font-family:var(--ds-sans)!important}
+html[data-ds] .header h1{font-family:var(--ds-sans)!important}
+html[data-ds] .icon-btn{background:var(--card)!important}
+html[data-ds] .form-group input,html[data-ds] .form-group select{background:rgba(var(--ds-card-rgb),0.7)!important;font-family:var(--ds-sans)!important}
+html[data-ds] .switch .slider{background:var(--ds-fill-solid)!important}
+html[data-ds] .switch .slider::before{background:var(--card)!important}
+html[data-ds] .cfg-num{background:rgba(var(--ds-card-rgb),0.7)!important}
+html[data-ds] .cfg-text{background:rgba(var(--ds-card-rgb),0.7)!important}
+html[data-ds] .btn{font-family:var(--ds-sans)!important}
+html[data-ds] .btn-primary{color:var(--ds-on-accent)!important}
+html[data-ds] .btn-danger{background:var(--ds-fill-solid)!important;color:var(--text)!important}
+html[data-ds] .btn-edit{background:var(--ds-fill-solid)!important;color:var(--text)!important}
+html[data-ds] .btn-delete{background:var(--ds-fill-solid)!important;color:var(--text)!important}
+html[data-ds] .tab-bar{background:rgba(var(--ds-card-rgb),0.92)!important}
+html[data-ds] .tab-item{font-family:var(--ds-sans)!important}
+html[data-ds] .swipe-sink-btn{background:linear-gradient(180deg,var(--accent),var(--ds-red))!important;color:var(--ds-on-accent)!important;font-family:var(--ds-sans)!important;box-shadow:0 2px 8px rgba(var(--ds-red-rgb),.35)!important}
+html[data-ds] .mem-tag.active{background:var(--ds-green)!important;color:var(--ds-green)!important}
+html[data-ds] .mem-tag.inactive{background:var(--ds-fill-solid)!important;color:var(--text2)!important}
+html[data-ds] .mem-tag.kw{background:var(--ds-fill-solid)!important;color:var(--text2)!important;border:1px solid var(--ds-fill-solid)!important}
+html[data-ds] .mem-tag.kw:hover{background:var(--ds-fill-solid)!important;color:var(--text2)!important}
+html[data-ds] .mem-dot{background:var(--ds-green)!important;box-shadow:0 0 0 2px rgba(var(--ds-green-rgb),.18)!important}
+html[data-ds] .mem-actions input[type=range]{background:var(--ds-fill-solid)!important}
+html[data-ds] .mem-actions input[type=range]::-webkit-slider-thumb{border:2px solid var(--card)!important}
+html[data-ds] .mem-actions input[type=range]::-moz-range-thumb{border:2px solid var(--card)!important}
+html[data-ds] .mem-imp-row input[type=range]{background:var(--ds-fill-solid)!important}
+html[data-ds] .mem-imp-row input[type=range]::-webkit-slider-thumb{border:2px solid var(--card)!important}
+html[data-ds] .mem-act-btn.edit{background:var(--card)!important;border:1px solid rgba(var(--ds-ink-rgb),0.3)!important;color:var(--text2)!important}
+html[data-ds] .mem-act-btn.del{background:var(--card)!important;border:1px solid rgba(var(--ds-red-rgb),.4)!important;color:var(--ds-red)!important}
+html[data-ds] .similar-cluster-member{background:var(--card)!important}
+html[data-ds] .inactive-item.selected{background:var(--ds-fill-solid)!important;border-color:rgba(var(--ds-ink-rgb),0.3)!important}
+html[data-ds] .btn-danger-outline{background:var(--card)!important;border:1px solid rgba(var(--ds-red-rgb),.4)!important;color:var(--ds-red)!important}
+html[data-ds] .btn-danger-outline:active{background:rgba(var(--ds-red-rgb),.06)!important}
+html[data-ds] .similar-member-del:hover{color:var(--ds-red)!important;background:rgba(var(--ds-red-rgb),0.08)!important}
+html[data-ds] .cloud-card{background:var(--card)!important}
+html[data-ds] .cloud-res-item{background:var(--card)!important}
+html[data-ds] .cloud-res-imp{background:rgba(var(--ds-ink-rgb),0.072)!important}
+html[data-ds] .cc-res-toggle{background:rgba(var(--ds-ink-rgb),0.06)!important;color:var(--text2)!important}
+html[data-ds] .cc-res-toggle:hover{background:rgba(var(--ds-ink-rgb),0.108)!important}
+html[data-ds] #pool-results::-webkit-scrollbar-thumb{background:rgba(var(--ds-ink-rgb),0.27)!important}
+html[data-ds] #pool-results::-webkit-scrollbar-thumb:hover{background:rgba(var(--ds-ink-rgb),0.48)!important}
+html[data-ds] #pool-results{scrollbar-color:rgba(var(--ds-ink-rgb),0.27) transparent!important}
+html[data-ds] .cloud-res-btn.edit{color:var(--ds-on-accent)!important;box-shadow:0 2px 6px rgba(var(--ds-ink-rgb),0.168)!important}
+html[data-ds] .cloud-res-btn.sink{background:var(--card)!important}
+html[data-ds] .mem-import-btn{color:var(--ds-on-accent)!important;box-shadow:0 2px 8px rgba(var(--ds-ink-rgb),0.18)!important}
+html[data-ds] .mem-export-btn:hover{background:rgba(var(--ds-ink-rgb),0.06)!important}
+html[data-ds] .stat-card .num{font-family:var(--ds-sans)!important}
+html[data-ds] .search-bar input{background:rgba(var(--ds-card-rgb),0.7)!important;font-family:var(--ds-sans)!important}
+html[data-ds] .search-bar input::placeholder{color:var(--text2)!important}
+html[data-ds] .search-bar select{background:rgba(var(--ds-card-rgb),0.7)!important;font-family:var(--ds-sans)!important}
+html[data-ds] .mem-tab{background:var(--card)!important}
+html[data-ds] .mem-tab.active{color:var(--ds-on-accent)!important}
+@media(hover:hover){html[data-ds] .config-group .group-title:hover{background:rgba(var(--ds-ink-rgb),0.03)!important}}
+html[data-ds] .config-item{border-bottom:1px solid rgba(var(--ds-ink-rgb),0.03)!important}
+html[data-ds] .switch-row{border-bottom:1px solid rgba(var(--ds-ink-rgb),0.03)!important}
+html[data-ds] .multi-chip{background:rgba(var(--ds-card-rgb),0.6)!important}
+html[data-ds] .multi-chip:has(input:checked){color:var(--ds-on-accent)!important}
+html[data-ds] .summary-msg{background:rgba(var(--ds-card-rgb),0.55)!important}
+html[data-ds] .psum-think{background:rgba(var(--ds-ink-rgb),0.042)!important;border-left:2px solid rgba(var(--ds-ink-rgb),0.21)!important;color:var(--text2)!important}
+html[data-ds] .diary-edit-btn{background:rgba(var(--ds-card-rgb),0.6)!important}
+html[data-ds] .diary-edit-btn:hover{background:rgba(var(--ds-card-rgb),0.95)!important}
+html[data-ds] .diary-hide-btn{background:rgba(var(--ds-card-rgb),0.6)!important}
+html[data-ds] .diary-hide-btn:hover{background:rgba(var(--ds-card-rgb),0.95)!important}
+html[data-ds] .diary-hidden-tag{color:var(--text2)!important;background:rgba(var(--ds-ink-rgb),0.072)!important;border:1px solid rgba(var(--ds-ink-rgb),0.21)!important}
+html[data-ds] #env-list::-webkit-scrollbar-thumb,html[data-ds] #diary-list::-webkit-scrollbar-thumb{background:rgba(var(--ds-ink-rgb),0.27)!important}
+html[data-ds] #env-list::-webkit-scrollbar-thumb:hover,html[data-ds] #diary-list::-webkit-scrollbar-thumb:hover{background:rgba(var(--ds-ink-rgb),0.48)!important}
+html[data-ds] #env-list,html[data-ds] #diary-list{scrollbar-color:rgba(var(--ds-ink-rgb),0.27) transparent!important}
+html[data-ds] .toast{background:rgba(var(--ds-ink-rgb),0.552)!important;color:var(--ds-on-accent)!important;font-family:var(--ds-sans)!important}
+html[data-ds] .global-loading{background:linear-gradient(90deg,var(--accent),var(--accent))!important}
+html[data-ds] .log-fab{background:rgba(var(--ds-ink-rgb),0.54)!important;border:1px solid rgba(var(--ds-ink-rgb),0.36)!important;box-shadow:0 4px 16px rgba(var(--ds-ink-rgb),0.15)!important}
+html[data-ds] .log-fab:active{box-shadow:0 2px 8px rgba(var(--ds-ink-rgb),0.12)!important}
+html[data-ds] .log-fab-badge{background:var(--accent)!important;color:var(--ds-on-accent)!important}
+html[data-ds] .log-panel{background:rgba(var(--ds-ink-rgb),0.57)!important;border:1px solid rgba(var(--ds-ink-rgb),0.36)!important;box-shadow:0 12px 40px rgba(var(--ds-ink-rgb),0.12)!important;font-family:var(--ds-sans)!important}
+html[data-ds] .log-panel-head{border-bottom:1px solid rgba(var(--ds-ink-rgb),0.24)!important}
+html[data-ds] .log-panel-title{color:var(--text2)!important}
+html[data-ds] .log-panel-clear-btn{color:var(--text2)!important;background:rgba(var(--ds-card-rgb),0.6)!important}
+html[data-ds] .log-panel-close-btn{color:var(--text2)!important;background:rgba(var(--ds-card-rgb),0.6)!important}
+html[data-ds] .log-item{background:rgba(var(--ds-card-rgb),0.75)!important;border-left:3px solid var(--ds-fill-solid)!important}
+html[data-ds] .log-item.success{border-left-color:var(--ds-green)!important}
+html[data-ds] .log-item.error{border-left-color:var(--accent)!important;background:rgba(var(--ds-ink-rgb),0.48)!important}
+html[data-ds] .log-item.pending{border-left-color:var(--accent)!important}
+html[data-ds] .log-item-label{color:var(--text)!important}
+html[data-ds] .log-item.success .log-item-status{background:var(--ds-green)!important;color:var(--ds-green)!important}
+html[data-ds] .log-item.error .log-item-status{background:var(--ds-fill-solid)!important;color:var(--ds-red)!important}
+html[data-ds] .log-item.pending .log-item-status{background:var(--ds-fill-solid)!important;color:var(--text2)!important}
+html[data-ds] .log-item.skipped{border-left-color:var(--accent)!important;background:rgba(var(--ds-ink-rgb),0.36)!important}
+html[data-ds] .log-item.skipped .log-item-status{background:var(--ds-fill-solid)!important;color:var(--text2)!important}
+html[data-ds] .log-item-msg{color:var(--text)!important}
+html[data-ds] .log-item-time{color:var(--text2)!important}
+html[data-ds] .log-panel-empty{color:var(--text2)!important}
+html[data-ds] #editMemModal input[type=range]{background:var(--ds-fill-solid)!important}
+html[data-ds] #editMemModal input[type=range]::-webkit-slider-thumb{border:2px solid var(--card)!important}
+html[data-ds] #editMemModal input[type=range]::-moz-range-thumb{border:2px solid var(--card)!important}
+html[data-ds] #editMemModal input[type=range]::-moz-range-track{background:var(--ds-fill-solid)!important}
+html[data-ds] .modal h3{font-family:var(--ds-sans)!important}
+html[data-ds] .cfg-search-wrap input{background:rgba(var(--ds-card-rgb),0.7)!important}
+html[data-ds] .cfg-mini-btn{background:rgba(var(--ds-card-rgb),0.7)!important}
+html[data-ds] .cc-hidden-tip{color:var(--text2)!important;background:rgba(var(--ds-ink-rgb),0.084)!important;border:1px dashed rgba(var(--ds-ink-rgb),0.21)!important}
+html[data-ds] .cc-badge.todo{background:rgba(var(--ds-ink-rgb),0.072)!important}
+html[data-ds] .cc-badge.gen{background:rgba(var(--ds-ink-rgb),0.084)!important}
+html[data-ds] .cc-badge.warn{background:rgba(var(--ds-ink-rgb),0.072)!important;color:var(--text2)!important}
+html[data-ds] .cc-badge.done{background:rgba(var(--ds-green-rgb),.12)!important;color:var(--ds-green)!important}
+html[data-ds] .cc-badge.parsed{background:rgba(var(--ds-ink-rgb),0.084)!important;color:var(--text2)!important}
+html[data-ds] .cc-badge.off{background:rgba(var(--ds-ink-rgb),0.072)!important;color:var(--text2)!important}
+html[data-ds] .cc-spin{border:2px solid rgba(var(--ds-ink-rgb),0.18)!important}
+html[data-ds] .cc-num:focus{box-shadow:0 0 0 3px rgba(var(--ds-ink-rgb),0.108)!important}
+html[data-ds] .cc-import-btn{border:1px solid rgba(var(--ds-ink-rgb),0.21)!important;background:rgba(var(--ds-ink-rgb),0.048)!important;color:var(--text2)!important}
+html[data-ds] .cc-import-btn:hover{background:rgba(var(--ds-ink-rgb),0.108)!important;border-color:rgba(var(--ds-ink-rgb),0.33)!important}
+html[data-ds] .mp-import-pair{border:1px solid rgba(var(--ds-ink-rgb),0.168)!important;background:rgba(var(--ds-ink-rgb),0.036)!important;color:var(--text2)!important}
+html[data-ds] .mp-import-pair:hover{background:rgba(var(--ds-ink-rgb),0.096)!important;border-color:rgba(var(--ds-ink-rgb),0.3)!important}
+html[data-ds] .mp-btn.primary.mp-add-ghost{background:rgba(var(--ds-ink-rgb),0.084)!important;border-color:rgba(var(--ds-ink-rgb),0.228)!important}
+html[data-ds] .mp-btn.primary.mp-add-ghost:hover{background:rgba(var(--ds-ink-rgb),0.144)!important;border-color:rgba(var(--ds-ink-rgb),0.33)!important;box-shadow:0 4px 14px rgba(var(--ds-ink-rgb),0.108)!important}
+html[data-ds] .cc-import-item{background:rgba(var(--ds-card-rgb),.6)!important}
+html[data-ds] .cc-import-item.ok{border-color:rgba(var(--ds-green-rgb),.4)!important;background:rgba(var(--ds-green-rgb),.06)!important}
+html[data-ds] .cc-import-item.fail{border-color:rgba(var(--ds-red-rgb),.35)!important;background:rgba(var(--ds-red-rgb),.05)!important}
+html[data-ds] .cc-import-item .cc-import-err{color:var(--ds-red)!important}
+html[data-ds] .cc-head-h2{font-family:var(--ds-sans)!important}
+html[data-ds] .cc-head-underline{box-shadow:0 2px 8px rgba(var(--ds-ink-rgb),0.18)!important}
+html[data-ds] .cc-session-sel select{background:rgba(var(--ds-card-rgb),0.8)!important}
+html[data-ds] .cc-btn{background:var(--card)!important}
+html[data-ds] .cc-dd{background:var(--card)!important}
+html[data-ds] .cc-btn.secondary{background:var(--card)!important}
+html[data-ds] .cc-btn.primary{color:var(--ds-on-accent)!important;box-shadow:0 2px 8px rgba(var(--ds-ink-rgb),0.18)!important}
+html[data-ds] .cc-btn.on{background:rgba(var(--ds-green-rgb),.12)!important;color:var(--ds-green)!important;border-color:rgba(var(--ds-green-rgb),.4)!important}
+html[data-ds] .cc-btn.danger{color:var(--ds-red)!important;border-color:rgba(var(--ds-red-rgb),.3)!important;background:var(--card)!important}
+html[data-ds] .cc-stat-main{background:linear-gradient(135deg,rgba(var(--ds-ink-rgb),0.096),rgba(var(--ds-card-rgb),.75))!important;border:1px solid rgba(var(--ds-ink-rgb),0.24)!important;box-shadow:0 2px 12px rgba(var(--ds-ink-rgb),0.06)!important}
+html[data-ds] .cc-stat-main .v{font-family:var(--ds-sans)!important}
+html[data-ds] .cc-stat-line .cs{background:var(--card)!important}
+html[data-ds] .cc-stat-line b{font-family:var(--ds-sans)!important}
+html[data-ds] .cc-swipe-del-btn{background:linear-gradient(180deg,var(--accent),var(--ds-red))!important;color:var(--ds-on-accent)!important;font-family:var(--ds-sans)!important;box-shadow:0 2px 8px rgba(var(--ds-red-rgb),.35)!important}
+html[data-ds] .cc-swipe-del-btn.cc-swipe-del-btn-parse{background:linear-gradient(180deg,var(--accent),var(--accent))!important;box-shadow:0 2px 8px rgba(var(--ds-ink-rgb),0.21)!important}
+html[data-ds] .cc-swipe-del-btn.cc-swipe-del-btn-hide{background:linear-gradient(180deg,var(--accent),var(--accent))!important;box-shadow:0 2px 8px rgba(var(--ds-ink-rgb),0.21)!important}
+html[data-ds] .cc-head-toggle{border:1px solid rgba(var(--ds-ink-rgb),0.24)!important;background:rgba(var(--ds-ink-rgb),0.048)!important}
+html[data-ds] .cc-head-toggle:active{background:rgba(var(--ds-ink-rgb),0.108)!important}
+html[data-ds] .cc-head-toggle.on{border-color:rgba(var(--ds-green-rgb),.4)!important;color:var(--ds-green)!important;background:rgba(var(--ds-green-rgb),.1)!important}
+html[data-ds] .cc-head-toggle.on:active{background:rgba(var(--ds-green-rgb),.2)!important}
+html[data-ds] .cc-sum-toggle-btn{background:var(--card)!important}
+html[data-ds] .cc-sum-toggle-btn:hover{background:rgba(var(--ds-green-rgb),.1)!important;color:var(--ds-green)!important;border-color:rgba(var(--ds-green-rgb),.4)!important}
+html[data-ds] .cc-uncovered{background:rgba(var(--ds-ink-rgb),0.03)!important;border:1px solid rgba(var(--ds-ink-rgb),0.108)!important}
+html[data-ds] .cc-uncovered-actions input{background:var(--card)!important}
+html[data-ds] .cc-uncovered-actions input:focus{box-shadow:0 0 0 3px rgba(var(--ds-ink-rgb),0.108)!important}
+html[data-ds] .cc-uncovered-actions input.warn{border-color:rgba(var(--ds-ink-rgb),0.42)!important;background:rgba(var(--ds-ink-rgb),0.048)!important}
+html[data-ds] .cc-cfg-hint.warn{color:var(--text2)!important;border-color:rgba(var(--ds-ink-rgb),0.3)!important;background:rgba(var(--ds-ink-rgb),0.036)!important}
+html[data-ds] .cc-gap-toolbar{background:rgba(var(--ds-card-rgb),.94)!important}
+html[data-ds] .cc-gap-cut-chip{background:rgba(var(--ds-ink-rgb),0.06)!important;border:1px solid rgba(var(--ds-ink-rgb),0.18)!important}
+html[data-ds] .cc-gap-cut-chip:hover{background:rgba(var(--ds-ink-rgb),0.12)!important}
+html[data-ds] .cc-gap-cut-input{background:var(--card)!important}
+html[data-ds] .cc-gap-cut-marker::before,html[data-ds] .cc-gap-cut-marker::after{background:repeating-linear-gradient(90deg,rgba(var(--ds-ink-rgb),0.3) 0 6px,transparent 6px 12px)!important}
+html[data-ds] .cc-gap-cut-marker button{border:1px solid rgba(var(--ds-ink-rgb),0.21)!important}
+html[data-ds] .cc-gap-cut-marker button:hover{background:rgba(var(--ds-ink-rgb),0.072)!important}
+html[data-ds] .cc-gap-cut-dot{color:var(--text2)!important}
+html[data-ds] .cc-gap-cut-dot:hover i{background:var(--ds-red)!important;box-shadow:0 0 0 3px rgba(var(--ds-ink-rgb),0.096)!important}
+html[data-ds] .cc-gap-cut-dot::before,html[data-ds] .cc-gap-cut-dot::after{background:rgba(var(--ds-ink-rgb),0.084)!important}
+html[data-ds] .cc-gap-cut-dot i{background:var(--accent)!important;box-shadow:0 0 0 2px rgba(var(--ds-ink-rgb),0.06)!important}
+html[data-ds] .cc-gap-scroll::-webkit-scrollbar-thumb{background:rgba(var(--ds-ink-rgb),0.27)!important}
+html[data-ds] .cc-gap-scroll::-webkit-scrollbar-thumb:hover{background:rgba(var(--ds-ink-rgb),0.48)!important}
+html[data-ds] .cc-gap-item{border-bottom:1px solid rgba(var(--ds-ink-rgb),0.03)!important}
+html[data-ds] .cc-gap-item.marked{background:rgba(var(--ds-ink-rgb),0.03)!important}
+html[data-ds] .cc-gap-num{background:rgba(var(--ds-ink-rgb),0.03)!important}
+html[data-ds] .cc-gap-mark.on{color:var(--text2)!important;background:rgba(var(--ds-ink-rgb),0.048)!important}
+html[data-ds] .cc-config-tip{background:rgba(var(--ds-ink-rgb),0.048)!important;border:1px solid rgba(var(--ds-ink-rgb),0.15)!important}
+html[data-ds] .cc-msg-list::-webkit-scrollbar-thumb{background:rgba(var(--ds-ink-rgb),0.27)!important}
+html[data-ds] .cc-msg-list::-webkit-scrollbar-thumb:hover{background:rgba(var(--ds-ink-rgb),0.48)!important}
+html[data-ds] .cc-msg-item{border-bottom:1px solid rgba(var(--ds-ink-rgb),0.03)!important}
+html[data-ds] .cc-msg-item.marked{background:rgba(var(--ds-ink-rgb),0.03)!important}
+html[data-ds] .cc-msg-num{background:rgba(var(--ds-ink-rgb),0.03)!important}
+html[data-ds] .cc-msg-mark.on{color:var(--text2)!important;background:rgba(var(--ds-ink-rgb),0.048)!important}
+html[data-ds] .cc-num.warn{border-color:rgba(var(--ds-ink-rgb),0.42)!important;background:rgba(var(--ds-ink-rgb),0.06)!important}
+html[data-ds] .cc-role-she{color:var(--text2)!important;background:rgba(var(--ds-ink-rgb),0.084)!important}
+html[data-ds] .cc-role-me{color:var(--text2)!important;background:rgba(var(--ds-ink-rgb),0.06)!important}
+html[data-ds] .cc-act-edit{border-color:rgba(var(--ds-ink-rgb),0.27)!important}
+html[data-ds] .cc-act-add{border-color:rgba(var(--ds-ink-rgb),0.27)!important}
+html[data-ds] .cc-act-toggle{border-color:rgba(var(--ds-green-rgb),.35)!important;color:var(--ds-green)!important}
+html[data-ds] .cc-act-toggle.off{border-color:rgba(var(--ds-ink-rgb),0.21)!important}
+html[data-ds] .cc-act-del{border-color:rgba(var(--ds-red-rgb),.3)!important;color:var(--ds-red)!important}
+html[data-ds] .cc-sum-gen{color:var(--ds-on-accent)!important;box-shadow:0 2px 6px rgba(var(--ds-ink-rgb),0.168)!important}
+html[data-ds] .cc-sum-add{border-color:rgba(var(--ds-ink-rgb),0.27)!important;background:var(--card)!important}
+html[data-ds] .cc-sum-reg{border-color:rgba(var(--ds-ink-rgb),0.27)!important;background:var(--card)!important}
+html[data-ds] .cc-hist-item{border-bottom:1px solid rgba(var(--ds-ink-rgb),0.03)!important}
+html[data-ds] .cc-hist-del{color:var(--text2)!important}
+html[data-ds] .cc-hist-del:active{color:var(--ds-red)!important}
+html[data-ds] .cc-sum-zoom{background:rgba(var(--ds-card-rgb),.92)!important;box-shadow:0 1px 4px rgba(var(--ds-ink-rgb),0.048)!important}
+html[data-ds] .cc-sum-ta{background:rgba(var(--ds-card-rgb),.8)!important}
+html[data-ds] .cc-sum-ta:focus{box-shadow:0 0 0 3px rgba(var(--ds-ink-rgb),0.108)!important}
+html[data-ds] .cc-cfg-field input[type=number]{background:var(--card)!important}
+html[data-ds] .cc-cfg-field input[type=number]:focus{box-shadow:0 0 0 3px rgba(var(--ds-ink-rgb),0.108)!important}
+html[data-ds] .cc-sw .sw-track{background:rgba(var(--ds-ink-rgb),0.18)!important}
+html[data-ds] .cc-sw .sw-thumb{background:var(--card)!important}
+html[data-ds] .cc-chip{background:var(--card)!important}
+html[data-ds] .cc-status-chips .cc-chip[data-filter]{box-shadow:0 0 0 2px rgba(var(--ds-ink-rgb),0.15)!important}
+html[data-ds] .cc-chip .cc-dot{background:var(--accent)!important}
+html[data-ds] .cc-chip.active{border-color:rgba(var(--ds-ink-rgb),0.3)!important;background:rgba(var(--ds-ink-rgb),0.096)!important}
+html[data-ds] .cc-chip.active .cc-dot{box-shadow:0 0 0 3px rgba(var(--ds-ink-rgb),0.084)!important}
+html[data-ds] .cc-chip.done{color:var(--ds-green)!important;border-color:rgba(var(--ds-green-rgb),.35)!important;background:rgba(var(--ds-green-rgb),.08)!important}
+html[data-ds] .cc-chip.done .cc-dot{background:var(--ds-green)!important}
+html[data-ds] .cc-chip.warn{color:var(--text2)!important;border-color:rgba(var(--ds-ink-rgb),0.24)!important;background:rgba(var(--ds-ink-rgb),0.048)!important}
+html[data-ds] .cc-chip.warn .cc-dot{background:var(--accent)!important}
+html[data-ds] .cc-btn.soft{background:var(--card)!important;border-color:rgba(var(--ds-ink-rgb),0.24)!important}
+html[data-ds] .cc-loading .cc-spin{border:2px solid rgba(var(--ds-ink-rgb),0.18)!important}
+html[data-ds] .cc-notice{border:1px solid rgba(var(--ds-ink-rgb),0.15)!important;background:rgba(var(--ds-ink-rgb),0.03)!important}
+html[data-ds] .cc-notice-icon{color:var(--text2)!important}
+html[data-ds] .cc-gap-body::after{background:linear-gradient(90deg,transparent,rgba(var(--ds-card-rgb),.92))!important}
+html[data-ds] .cc-multi-select .cc-chunk-swipe.selected .cc-chunk{box-shadow:0 0 0 2px rgba(var(--ds-ink-rgb),0.12)!important}
+html[data-ds] .cc-multi-select .cc-uncovered.selected{box-shadow:0 0 0 2px rgba(var(--ds-ink-rgb),0.12)!important}
+html[data-ds] .cc-multi-bar{box-shadow:0 -4px 24px rgba(var(--ds-ink-rgb),0.09)!important}
+html[data-ds] .cc-multi-bar-actions .cc-btn.danger{color:var(--ds-red)!important;border-color:rgba(var(--ds-red-rgb),.35)!important}
+html[data-ds] .tool-dot.on{background:var(--ds-green)!important}
+html[data-ds] .tool-dot.off{background:var(--accent)!important}
+html[data-ds] .tool-ta{background:var(--card)!important}
+html[data-ds] .tool-ta:focus{box-shadow:0 0 0 3px rgba(var(--ds-ink-rgb),0.108)!important}
+html[data-ds] .tool-schema-ta::-webkit-scrollbar-thumb{background:rgba(var(--ds-ink-rgb),0.27)!important}
+html[data-ds] .tool-schema-ta::-webkit-scrollbar-thumb:hover{background:rgba(var(--ds-ink-rgb),0.48)!important}
+html[data-ds] .tool-copy-btn{border:1px solid rgba(var(--ds-ink-rgb),0.24)!important;background:var(--card)!important}
+html[data-ds] .tool-copy-btn:active{background:rgba(var(--ds-ink-rgb),0.06)!important}
+html[data-ds] .svc-dot.green{background:var(--ds-green)!important}
+html[data-ds] .svc-dot.red{background:var(--ds-red)!important}
+html[data-ds] .svc-dot.yellow{background:var(--accent)!important}
+html[data-ds] .svc-status.green{color:var(--ds-green)!important}
+html[data-ds] .svc-status.red{color:var(--ds-red)!important}
+html[data-ds] .svc-status.yellow{color:var(--text2)!important}
+html[data-ds] .svc-btn{background:var(--card)!important}
+html[data-ds] .svc-btn.start{border-color:rgba(var(--ds-green-rgb),.4)!important;color:var(--ds-green)!important}
+html[data-ds] .svc-btn.stop{border-color:rgba(var(--ds-red-rgb),.35)!important;color:var(--ds-red)!important}
+html[data-ds] .cfg-save-bar .btn.dirty{background:var(--accent)!important}
+@media(hover:hover){html[data-ds] .cc-btn:hover,html[data-ds] .cloud-res-btn:hover{border-color:rgba(var(--ds-ink-rgb),0.27)!important}
+html[data-ds] .cc-btn.primary:hover,html[data-ds] .cloud-res-btn.edit:hover{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--ds-on-accent)!important}
+html[data-ds] .mem-act-btn.edit:hover{background:rgba(var(--ds-ink-rgb),0.06)!important;border-color:rgba(var(--ds-ink-rgb),0.39)!important;color:var(--text2)!important}
+html[data-ds] .mem-act-btn.del:hover{background:rgba(var(--ds-red-rgb),.06)!important;border-color:rgba(var(--ds-red-rgb),.6)!important;color:var(--ds-red)!important}
+html[data-ds] .mem-tab:not(.active):hover{border-color:rgba(var(--ds-ink-rgb),0.27)!important}}
+html[data-ds] .cc-btn.primary:active,html[data-ds] .cloud-res-btn.edit:active{background:var(--accent)!important}
+html[data-ds] .mem-act-btn.edit:active{background:rgba(var(--ds-ink-rgb),0.09)!important}
+html[data-ds] .cc-btn.secondary:active,html[data-ds] .cloud-res-btn.sink:active,html[data-ds] .mem-act-btn.del:active{background:rgba(var(--ds-red-rgb),.08)!important}
+html[data-ds] .back-top{background:rgba(var(--ds-card-rgb),0.86)!important}
+html[data-ds] .sk-line{background:linear-gradient(90deg,var(--ds-fill-solid) 25%,var(--ds-fill-solid) 50%,var(--ds-fill-solid) 75%)!important}
+html[data-ds] .cloud-drawer{background:var(--card)!important;box-shadow:0 -8px 30px rgba(var(--ds-ink-rgb),0.072)!important}
+html[data-ds] .cloud-drawer-btn{background:var(--card)!important}
+html[data-ds] #edit-mem-importance{background:linear-gradient(to right,var(--accent) 0%,var(--accent) 50%,var(--ds-fill-solid) 50%,var(--ds-fill-solid) 100%)!important}
+html[data-ds] #edit-mem-importance::-webkit-slider-thumb{border:2px solid var(--card)!important}
+html[data-ds] #edit-mem-importance::-moz-range-thumb{border:2px solid var(--card)!important}
+html[data-ds] input:focus,html[data-ds] textarea:focus,html[data-ds] select:focus{outline:2px solid rgba(var(--ds-ink-rgb),0.33)!important}
+html[data-ds] .cc-version{background:rgba(var(--ds-card-rgb),0.55)!important}
+html[data-ds] .cc-mini-btn{background:var(--card)!important}
+html[data-ds] .cc-mini-btn.danger{color:var(--ds-red)!important;border-color:rgba(var(--ds-red-rgb),0.35)!important}
+html[data-ds] .vm-item{background:rgba(var(--ds-card-rgb),0.6)!important}
+html[data-ds] .vm-body{border-top:1px solid rgba(var(--ds-ink-rgb),0.036)!important}
+html[data-ds] .vm-row{border-bottom:1px solid rgba(var(--ds-ink-rgb),0.03)!important}
+html[data-ds] .mp-btn{background:rgba(var(--ds-card-rgb),0.75)!important}
+html[data-ds] .mp-btn:hover{background:var(--card)!important;box-shadow:0 4px 14px rgba(var(--ds-ink-rgb),0.084)!important}
+html[data-ds] .mp-btn.primary{color:var(--ds-on-accent)!important}
+html[data-ds] .mp-btn.primary:hover{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--ds-on-accent)!important;box-shadow:0 5px 16px rgba(var(--ds-ink-rgb),0.18)!important}
+html[data-ds] .mp-btn.ghost:hover{background:rgba(var(--ds-ink-rgb),0.048)!important}
+html[data-ds] .mp-btn.danger{color:var(--ds-red)!important;border-color:rgba(var(--ds-red-rgb),0.22)!important}
+html[data-ds] .mp-btn.danger:hover{background:rgba(var(--ds-red-rgb),0.06)!important;border-color:rgba(var(--ds-red-rgb),0.36)!important;color:var(--ds-red)!important}
+html[data-ds] .cl-diff.add .cl-tag{background:rgba(var(--ds-green-rgb),0.14)!important;color:var(--ds-green)!important}
+html[data-ds] .cl-diff.sink .cl-tag{background:rgba(var(--ds-ink-rgb),0.096)!important;color:var(--text2)!important}
+html[data-ds] .cl-diff.recat .cl-tag{background:rgba(var(--ds-ink-rgb),0.084)!important;color:var(--text2)!important}
+html[data-ds] .cl-diff.rescore .cl-tag{background:rgba(var(--ds-ink-rgb),0.096)!important;color:var(--text2)!important}
+html[data-ds] .cl-diff.edit .cl-tag{background:rgba(var(--ds-ink-rgb),0.084)!important;color:var(--text2)!important}
+html[data-ds] .cl-old{background:rgba(var(--ds-ink-rgb),0.03)!important}
+html[data-ds] .mp-stat-card{background:linear-gradient(160deg,rgba(var(--ds-card-rgb),.92),rgba(var(--ds-card-rgb),.72))!important;border:1px solid rgba(var(--ds-ink-rgb),0.096)!important;box-shadow:0 2px 10px rgba(var(--ds-ink-rgb),0.036)!important}
+html[data-ds] .mp-stat-card::after{background:linear-gradient(90deg,rgba(var(--ds-ink-rgb),0.03),rgba(var(--ds-ink-rgb),0.33),rgba(var(--ds-ink-rgb),0.03))!important}
+html[data-ds] .mp-stat-card-num{font-family:var(--ds-sans)!important}
+html[data-ds] .mp-stat-card.on{background:linear-gradient(160deg,rgba(var(--ds-ink-rgb),0.096),rgba(var(--ds-card-rgb),.9))!important;border-color:rgba(var(--ds-ink-rgb),0.27)!important;box-shadow:0 3px 14px rgba(var(--ds-ink-rgb),0.084)!important}
+html[data-ds] .mp-controls input,html[data-ds] .mp-controls select{background:rgba(var(--ds-card-rgb),0.78)!important}
+html[data-ds] .mp-controls input:focus,html[data-ds] .mp-controls select:focus{box-shadow:0 0 0 3px rgba(var(--ds-ink-rgb),0.084)!important}
+html[data-ds] .mp-card:hover{box-shadow:0 10px 26px rgba(var(--ds-ink-rgb),0.054)!important}
+html[data-ds] .mp-card.pin{box-shadow:0 6px 22px rgba(var(--ds-ink-rgb),0.06)!important}
+html[data-ds] .mp-js{background:var(--card)!important}
+html[data-ds] .mp-js-val.high{color:var(--ds-green)!important}
+html[data-ds] .mp-js-val.mid{color:var(--text)!important}
+html[data-ds] .mp-js-val.low{color:var(--ds-red)!important}
+html[data-ds] .mp-js-bar{background:var(--ds-fill-solid)!important}
+html[data-ds] .mp-js-bar>i.high{background:var(--ds-green)!important}
+html[data-ds] .mp-js-bar>i.mid{background:var(--accent)!important}
+html[data-ds] .mp-js-bar>i.low{background:var(--accent)!important}
+html[data-ds] .mp-js-vol.stable{color:var(--ds-green)!important}
+html[data-ds] .mp-js-vol.volatile{color:var(--text)!important}
+html[data-ds] .mp-js-vol.situational{color:var(--ds-red)!important}
+html[data-ds] .mp-sugg{background:var(--ds-fill-solid)!important}
+html[data-ds] .mp-sugg-badge{color:var(--ds-on-accent)!important}
+html[data-ds] .mp-sugg-btn{background:var(--card)!important}
+html[data-ds] .mp-sugg-btn:hover{color:var(--ds-on-accent)!important}
+html[data-ds] .mp-sim{background:var(--card)!important}
+html[data-ds] .mp-sim-h{background:var(--ds-fill-solid)!important}
+html[data-ds] .mp-sim-i{background:var(--card)!important}
+html[data-ds] .mp-rel.dup{background:var(--ds-fill-solid)!important;color:var(--ds-red)!important}
+html[data-ds] .mp-rel.upd{background:var(--ds-fill-solid)!important;color:var(--text)!important}
+html[data-ds] .mp-rel.con{background:var(--ds-fill-solid)!important;color:var(--text)!important}
+html[data-ds] .mp-rel.coex{background:var(--ds-green)!important;color:var(--ds-green)!important}
+html[data-ds] .mp-rel.nrv{background:var(--ds-fill-solid)!important;color:var(--text2)!important}
+html[data-ds] .mp-sim-more{background:var(--card)!important}
+html[data-ds] .mp-sink-btn{border:1px solid var(--ds-fill-solid)!important;background:var(--ds-fill-solid)!important;color:var(--ds-red)!important}
+html[data-ds] .mp-sink-btn:hover{background:var(--ds-fill-solid)!important}
+html[data-ds] .mp-sink-btn.sunk{background:var(--ds-fill-solid)!important}
+html[data-ds] .mp-sink-btn.sunk:hover{background:var(--ds-fill-solid)!important}
+html[data-ds] .mp-nosim{background:var(--card)!important;border:1px dashed var(--ds-fill-solid)!important;color:var(--text2)!important}
+html[data-ds] .mp-similar-group{background:rgba(var(--ds-ink-rgb),0.03)!important}
+html[data-ds] .mp-similar-th{background:rgba(var(--ds-card-rgb),0.85)!important}
+html[data-ds] .mp-badge.pin{background:rgba(var(--ds-ink-rgb),0.072)!important;color:var(--text2)!important}
+html[data-ds] .mp-badge.sunk{background:rgba(var(--ds-ink-rgb),0.096)!important;color:var(--text2)!important}
+html[data-ds] .mp-imp-bar{background:rgba(var(--ds-ink-rgb),0.048)!important}
+html[data-ds] .mp-modal-fields select,html[data-ds] .mp-modal-fields input{background:rgba(var(--ds-card-rgb),0.88)!important}
+html[data-ds] .mp-modal-fields select:focus,html[data-ds] .mp-modal-fields input:focus{box-shadow:0 0 0 3px rgba(var(--ds-ink-rgb),0.072)!important}
+html[data-ds] #mempool-edit-content{background:rgba(var(--ds-card-rgb),0.92)!important}
+html[data-ds] #mempool-edit-content:focus{box-shadow:0 0 0 3px rgba(var(--ds-ink-rgb),0.084)!important}
+html[data-ds] #mempool-edit-content::-webkit-scrollbar-thumb{background:rgba(var(--ds-ink-rgb),0.27)!important}
+html[data-ds] #mempool-edit-content::-webkit-scrollbar-thumb:hover{background:rgba(var(--ds-ink-rgb),0.48)!important}
+html[data-ds] .cc-status-actions .cc-btn.primary{color:var(--ds-on-accent)!important}
+html[data-ds] .cc-status-actions .cc-btn.soft{background:rgba(var(--ds-ink-rgb),0.06)!important;color:var(--text2)!important;border-color:rgba(var(--ds-ink-rgb),0.18)!important}
+html[data-ds] .cc-status-actions .cc-btn.ghost{background:var(--card)!important}
+html[data-ds] .cc-stats{background:var(--card)!important}
+html[data-ds] .cc-stats .cc-mini-main b{font-family:var(--ds-sans)!important}
+html[data-ds] .cc-stats .cc-mini-item b{font-family:var(--ds-sans)!important}
+html[data-ds] .cc-orig-search-wrap .search-bar input{background:var(--card)!important}
+html[data-ds] .cc-uncovered{background:var(--card)!important;border:1px solid rgba(var(--ds-ink-rgb),0.132)!important}
+html[data-ds] .chat-embed-wrap{background:var(--ds-fill-solid)!important}
+html[data-ds] .chat-iframe{background:var(--ds-fill-solid)!important}
+html[data-ds] #chatLoadError{color:var(--text2)!important}
+html[data-ds] .modal,html[data-ds] .log-panel-body,html[data-ds] .psum-think,html[data-ds] .diary-item pre,html[data-ds] .cloud-res-content.expanded,html[data-ds] #cloud-results,html[data-ds] .cc-hist-body.expanded,html[data-ds] #mempool-clean-body,html[data-ds] .cc-ai-mem,html[data-ds] #wake-log,html[data-ds] #cc-marked-list,html[data-ds] #cc-replacelog-list,html[data-ds] #pinned-list,html[data-ds] #cross-inject-view,html[data-ds] #push-log-list{scrollbar-color:rgba(var(--ds-ink-rgb),0.27) transparent!important}
+html[data-ds] .modal::-webkit-scrollbar-thumb,html[data-ds] .log-panel-body::-webkit-scrollbar-thumb,html[data-ds] .psum-think::-webkit-scrollbar-thumb,html[data-ds] .diary-item pre::-webkit-scrollbar-thumb,html[data-ds] .cloud-res-content.expanded::-webkit-scrollbar-thumb,html[data-ds] #cloud-results::-webkit-scrollbar-thumb,html[data-ds] .cc-hist-body.expanded::-webkit-scrollbar-thumb,html[data-ds] #mempool-clean-body::-webkit-scrollbar-thumb,html[data-ds] .cc-ai-mem::-webkit-scrollbar-thumb,html[data-ds] #wake-log::-webkit-scrollbar-thumb,html[data-ds] #cc-marked-list::-webkit-scrollbar-thumb,html[data-ds] #cc-replacelog-list::-webkit-scrollbar-thumb,html[data-ds] #pinned-list::-webkit-scrollbar-thumb,html[data-ds] #cross-inject-view::-webkit-scrollbar-thumb,html[data-ds] #push-log-list::-webkit-scrollbar-thumb{background:rgba(var(--ds-ink-rgb),0.27)!important}
+html[data-ds] .modal::-webkit-scrollbar-thumb:hover,html[data-ds] .log-panel-body::-webkit-scrollbar-thumb:hover,html[data-ds] .psum-think::-webkit-scrollbar-thumb:hover,html[data-ds] .diary-item pre::-webkit-scrollbar-thumb:hover,html[data-ds] .cloud-res-content.expanded::-webkit-scrollbar-thumb:hover,html[data-ds] #cloud-results::-webkit-scrollbar-thumb:hover,html[data-ds] .cc-hist-body.expanded::-webkit-scrollbar-thumb:hover,html[data-ds] #mempool-clean-body::-webkit-scrollbar-thumb:hover,html[data-ds] .cc-ai-mem::-webkit-scrollbar-thumb:hover,html[data-ds] #wake-log::-webkit-scrollbar-thumb:hover,html[data-ds] #cc-marked-list::-webkit-scrollbar-thumb:hover,html[data-ds] #cc-replacelog-list::-webkit-scrollbar-thumb:hover,html[data-ds] #pinned-list::-webkit-scrollbar-thumb:hover,html[data-ds] #cross-inject-view::-webkit-scrollbar-thumb:hover,html[data-ds] #push-log-list::-webkit-scrollbar-thumb:hover{background:rgba(var(--ds-ink-rgb),0.48)!important}
+html[data-ds] .hint-i{font-family:var(--ds-sans)!important}
+html[data-ds] .hint-i:active{color:var(--ds-on-accent)!important}
+html[data-ds] .push-item{background:var(--card,var(--card))!important}
+html[data-ds] .log-group{border:1px solid rgba(var(--ds-ink-rgb),0.21)!important;background:rgba(var(--ds-card-rgb),0.35)!important}
+html[data-ds] .log-group summary{color:var(--text2)!important;background:rgba(var(--ds-ink-rgb),0.15)!important}
+html[data-ds] .mp-wb.high,html[data-ds] .mp-vb.stable{background:rgba(var(--ds-green-rgb),.12)!important;color:var(--ds-green)!important;border-color:rgba(var(--ds-green-rgb),.35)!important}
+html[data-ds] .mp-wb.mid,html[data-ds] .mp-vb.volatile{background:rgba(var(--ds-ink-rgb),0.072)!important;color:var(--text)!important;border-color:rgba(var(--ds-ink-rgb),0.21)!important}
+html[data-ds] .mp-wb.low,html[data-ds] .mp-vb.situational{background:rgba(var(--ds-red-rgb),.10)!important;color:var(--ds-red)!important;border-color:rgba(var(--ds-red-rgb),.30)!important}
+html[data-ds] .mp-wb.off,html[data-ds] .mp-vb.off{color:var(--text2)!important;border-color:rgba(var(--ds-ink-rgb),0.18)!important}
+html[data-ds] .mp-reason-banner{background:rgba(var(--ds-ink-rgb),0.3)!important;border:0.5px solid rgba(var(--ds-ink-rgb),0.33)!important}
+html[data-ds] .mp-tag{background:rgba(var(--ds-ink-rgb),0.06)!important;color:var(--text)!important;border:1px solid rgba(var(--ds-ink-rgb),0.15)!important}
+html[data-ds] .mp-tag-empty{background:rgba(var(--ds-ink-rgb),0.036)!important;border:1px dashed rgba(var(--ds-ink-rgb),0.18)!important}
+html[data-ds] .rel-row{border:1px solid rgba(var(--ds-ink-rgb),0.12)!important;background:rgba(var(--ds-card-rgb),.35)!important}
+html[data-ds] .rel-hit-score{color:var(--text)!important;background:rgba(var(--ds-ink-rgb),0.06)!important}
+html[data-ds] .rel-hit-id{color:var(--text2)!important}
+html[data-ds] .log-item.interrupted{border-left-color:var(--accent)!important;background:rgba(var(--ds-ink-rgb),0.48)!important}
+html[data-ds] .log-item.interrupted .log-item-status{background:var(--ds-fill-solid)!important;color:var(--text2)!important}
+html[data-ds] #summary-history-box .sh-block{background:var(--card-bg,var(--card))!important}
+html[data-ds] #summary-history-box .sh-block:hover{border-color:rgba(var(--ds-ink-rgb),0.27)!important}
+html[data-ds] #summary-history-box .sh-ver{background:var(--accent-soft,rgba(var(--ds-ink-rgb),0.072))!important}
+html[data-ds] #summary-history-box .sh-act[data-shact="use"]{color:var(--ds-on-accent)!important}
+html[data-ds] #summary-history-box .sh-act[data-shact="use"]:hover{color:var(--ds-on-accent)!important}
+html[data-ds] #summary-history-search:focus{box-shadow:0 0 0 3px rgba(var(--ds-ink-rgb),0.072)!important}
+html[data-ds] .cs-card{background:var(--card,var(--card))!important;border:1px solid var(--line,var(--ds-fill-solid))!important}
+html[data-ds] .cs-state-card{border-color:var(--accent-line,var(--ds-fill-solid))!important;box-shadow:inset 0 1px 0 var(--accent-soft,var(--ds-fill-solid)),0 6px 18px -14px rgba(var(--ds-ink-rgb),0.24)!important}
+html[data-ds] .cs-ver{background:var(--accent,var(--accent))!important;color:var(--ds-on-accent)!important}
+html[data-ds] .cs-tag-seed{background:var(--ds-fill-solid)!important;color:var(--text)!important;border:1px solid var(--ds-fill-solid)!important}
+html[data-ds] .cs-state-meta{color:var(--text3,var(--text2))!important}
+html[data-ds] .cs-cover{color:var(--text2,var(--text))!important}
+html[data-ds] .cs-cover b{color:var(--ink,var(--text,var(--text)))!important}
+html[data-ds] .cs-state-body{background:var(--card)!important;border:1px solid var(--line,var(--ds-fill-solid))!important;color:var(--text)!important}
+html[data-ds] .cs-btn{border:1px solid var(--line2,var(--ds-fill-solid))!important;background:var(--card,var(--card))!important;color:var(--text2,var(--text))!important}
+html[data-ds] .cs-btn.primary{background:var(--accent,var(--accent))!important;border-color:var(--accent,var(--accent))!important;color:var(--ds-on-accent)!important}
+html[data-ds] .cs-btn.danger{border-color:var(--ds-fill-solid)!important;color:var(--ds-red)!important}
+html[data-ds] .cs-chain .v{border:1px solid var(--line2,var(--ds-fill-solid))!important;background:var(--card,var(--card))!important;color:var(--text2,var(--text))!important}
+html[data-ds] .cs-chain .v.cur{background:var(--accent,var(--accent))!important;border-color:var(--accent,var(--accent))!important;color:var(--ds-on-accent)!important}
+html[data-ds] .cs-chain .v.pv{background:var(--ds-fill-solid)!important;border-color:var(--ds-fill-solid)!important;color:var(--text)!important}
+html[data-ds] .cs-chain .v.un{color:var(--text2)!important}
+html[data-ds] .cs-chain .sep{color:var(--text3,var(--text2))!important}
+html[data-ds] .cs-hist .st.current{background:var(--accent,var(--accent))!important;color:var(--ds-on-accent)!important}
+html[data-ds] .cs-hist .st.undone{background:var(--ds-fill-solid)!important;color:var(--text2)!important;border:1px dashed var(--ds-fill-solid)!important}
+html[data-ds] .cs-chain-hint{color:var(--text3,var(--text2))!important}
+html[data-ds] .cs-note{background:var(--ds-fill-solid)!important;border:1px solid var(--ds-fill-solid)!important;color:var(--text)!important}
+html[data-ds] .cs-note.gap{background:var(--ds-fill-solid)!important;border-color:var(--ds-fill-solid)!important;color:var(--text)!important}
+html[data-ds] .cs-diff{border:1px solid var(--line,var(--ds-fill-solid))!important}
+html[data-ds] .cs-diff-head{background:var(--card)!important;color:var(--text2,var(--text))!important;border-bottom:1px solid var(--line,var(--ds-fill-solid))!important}
+html[data-ds] .cs-op{border-bottom:1px solid var(--line,var(--ds-fill-solid))!important}
+html[data-ds] .cs-op .ico{color:var(--ds-on-accent)!important}
+html[data-ds] .cs-op.add .ico{background:var(--ds-green)!important}
+html[data-ds] .cs-op.update .ico{background:var(--text)!important}
+html[data-ds] .cs-op.remove .ico{background:var(--ds-red)!important}
+html[data-ds] .cs-op.remove{background:var(--ds-fill-solid)!important}
+html[data-ds] .cs-op .why{color:var(--text3,var(--text2))!important}
+html[data-ds] .cs-op .blk{border:1px solid var(--ds-fill-solid)!important;background:var(--card)!important;color:var(--ds-red)!important}
+html[data-ds] .cs-op .blk.on{background:var(--ds-red)!important;color:var(--ds-on-accent)!important;border-color:var(--ds-red)!important}
+html[data-ds] .cs-diff-foot{background:var(--card)!important;border-top:1px solid var(--line,var(--ds-fill-solid))!important}
+html[data-ds] .cs-sec-title{color:var(--text3,var(--text2))!important}
+html[data-ds] .cs-sec-title::after{background:var(--line2,var(--ds-fill-solid))!important}
+html[data-ds] .cs-uncov-meta{color:var(--text2,var(--text))!important}
+html[data-ds] .cs-range-row input{border:1px solid var(--line2,var(--ds-fill-solid))!important;background:var(--card,var(--card))!important;color:var(--text,var(--text))!important}
+html[data-ds] .cs-msg{color:var(--accent,var(--text2))!important}
+html[data-ds] .cs-msg.err{color:var(--ds-red)!important}
+html[data-ds] .cs-msg.ok{color:var(--ds-green)!important}
+html[data-ds] .cs-preview-msgs{border:1px solid var(--line,var(--ds-fill-solid))!important;background:var(--card,var(--card))!important}
+html[data-ds] .cs-pm{border-top:1px solid var(--line,var(--ds-fill-solid))!important}
+html[data-ds] .cs-pm.her .who{color:var(--accent,var(--text2))!important}
+html[data-ds] .cs-pm.me .who{color:var(--text)!important}
+html[data-ds] .cs-pm .who em{color:var(--text3,var(--text2))!important}
+html[data-ds] .cs-arch{border:1px dashed var(--line2,var(--ds-fill-solid))!important;background:var(--card)!important}
+html[data-ds] .cs-arch summary{color:var(--text2,var(--text))!important}
+html[data-ds] .cs-arch summary::before{color:var(--text3,var(--text2))!important}
+html[data-ds] .cs-mini{border-top:1px solid var(--line,var(--ds-fill-solid))!important}
+html[data-ds] .cs-mini .n{color:var(--text3,var(--text2))!important}
+html[data-ds] .cs-mini .r{color:var(--text2,var(--text))!important}
+html[data-ds] .cs-mini .z{color:var(--text3,var(--text2))!important}
+html[data-ds] .cs-hist{border-top:1px solid var(--line,var(--ds-fill-solid))!important}
+html[data-ds] .cs-hist .v{color:var(--accent,var(--text2))!important}
+html[data-ds] .cs-hist .c{color:var(--text3,var(--text2))!important}
+html[data-ds] .modal-overlay>.modal{box-shadow:0 20px 64px rgba(var(--ds-ink-rgb),0.096),0 2px 10px rgba(var(--ds-ink-rgb),0.03)!important}
+html[data-ds] .modal-overlay>.modal input:focus-visible,html[data-ds] .modal-overlay>.modal select:focus-visible,html[data-ds] .modal-overlay>.modal textarea:focus-visible{box-shadow:0 0 0 3px rgba(var(--ds-ink-rgb),0.078)!important}
+html[data-ds] .modal-overlay>.modal input:hover,html[data-ds] .modal-overlay>.modal select:hover,html[data-ds] .modal-overlay>.modal textarea:hover{border-color:rgba(var(--ds-ink-rgb),0.204)!important}
+html[data-ds] .modal-overlay>.modal::-webkit-scrollbar-thumb,html[data-ds] .modal-overlay textarea::-webkit-scrollbar-thumb{background:rgba(var(--ds-ink-rgb),0.108)!important}
+
+html[data-ds="light"]{--bg:#f2f2f7;--card:#ffffff;--text:#171717;--text2:#6e6e74;--text3:#8e8e93;--border:rgba(60,60,67,.14);--accent:#171717;--accent2:#55555b;--tab-active:#171717;--tab-inactive:#8e8e93;--shadow:none;--shadow-card:none;--radius:14px;--radius-sm:10px;
+ --ds-ink-rgb:23,23,26;--ds-card-rgb:255,255,255;--ds-on-accent:#ffffff;--ds-fill:rgba(118,118,128,.12);--ds-fill-solid:#ececf0;--ds-sep:rgba(60,60,67,.16);--ds-red:#ff3b30;--ds-red-rgb:255,59,48;--ds-green:#34c759;--ds-green-rgb:52,199,89;color-scheme:light}
+html[data-ds="dark"]{--bg:#000000;--card:#1c1c1e;--text:#ececee;--text2:#a8a8ae;--text3:#8e8e93;--border:rgba(84,84,88,.5);--accent:#ececee;--accent2:#a8a8ae;--tab-active:#ececee;--tab-inactive:#8e8e93;--shadow:none;--shadow-card:none;--radius:14px;--radius-sm:10px;
+ --ds-ink-rgb:236,236,238;--ds-card-rgb:28,28,30;--ds-on-accent:#141414;--ds-fill:rgba(118,118,128,.24);--ds-fill-solid:#2c2c2e;--ds-sep:rgba(84,84,88,.55);--ds-red:#ff453a;--ds-red-rgb:255,69,58;--ds-green:#30d158;--ds-green-rgb:48,209,88;color-scheme:dark}
+html[data-ds]{--ds-sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Noto Sans SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+html[data-ds] body{font-family:var(--ds-sans)!important;background:var(--bg)!important;color:var(--text)!important;-webkit-font-smoothing:antialiased}
+html[data-ds] body *{font-family:var(--ds-sans)!important}
+html[data-ds] :is(pre,code,.mono,textarea.mono){font-family:ui-monospace,"SF Mono",Menlo,monospace!important}
+html[data-ds] .header h1{font-size:28px!important;font-weight:700!important;letter-spacing:-.01em!important;color:var(--text)!important}
+html[data-ds] .header p{color:var(--text3)!important;letter-spacing:0!important}
+html[data-ds] .card{background:var(--card)!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-radius:14px!important}
+html[data-ds] .card-title{font-size:13px!important;font-weight:600!important;letter-spacing:0!important;text-transform:none!important;color:var(--text2)!important;border-bottom-color:var(--ds-sep)!important}
+html[data-ds] :is(.stat-row,.mem-item){border-bottom-color:var(--ds-sep)!important}
+html[data-ds] :is(input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea,.cfg-num,.cfg-text){background:var(--ds-fill)!important;border:0!important;border-radius:10px!important;color:var(--text)!important;box-shadow:none!important}
+html[data-ds] :is(input,select,textarea):focus{outline:2px solid var(--text3)!important;outline-offset:0}
+html[data-ds] input[type=checkbox],html[data-ds] input[type=radio],html[data-ds] input[type=range]{accent-color:var(--text)!important}
+html[data-ds] .btn{border-radius:12px!important;font-weight:600!important;letter-spacing:0!important;box-shadow:none!important}
+html[data-ds] .btn-primary{background:var(--text)!important;color:var(--ds-on-accent)!important}
+html[data-ds] .btn-outline{background:var(--ds-fill)!important;border:0!important;color:var(--text)!important}
+html[data-ds] :is(.btn-danger,.btn-delete){background:var(--ds-fill)!important;color:var(--ds-red)!important}
+html[data-ds] .btn-edit{background:var(--ds-fill)!important;color:var(--text)!important}
+html[data-ds] .icon-btn{background:var(--ds-fill)!important;border:0!important;color:var(--text2)!important}
+html[data-ds] .switch{width:51px!important;height:31px!important}
+html[data-ds] .switch .slider{background:rgba(118,118,128,.32)!important;border-radius:999px!important}
+html[data-ds] .switch .slider::before{width:27px!important;height:27px!important;left:2px!important;bottom:2px!important;background:#fff!important;box-shadow:0 3px 8px rgba(0,0,0,.15)!important}
+html[data-ds] .switch input:checked+.slider{background:var(--ds-green)!important}
+html[data-ds] .switch input:checked+.slider::before{transform:translateX(20px)!important}
+html[data-ds] .tab-bar{background:color-mix(in srgb,var(--bg) 80%,transparent)!important;-webkit-backdrop-filter:blur(20px) saturate(160%)!important;backdrop-filter:blur(20px) saturate(160%)!important;border-top:.5px solid var(--ds-sep)!important;box-shadow:none!important}
+html[data-ds] .tab-item .tab-icon,html[data-ds] .tab-item .tab-label{color:var(--tab-inactive)!important}
+html[data-ds] .tab-item.active .tab-icon,html[data-ds] .tab-item.active .tab-label{color:var(--text)!important}
+html[data-ds] .tab-item.active .tab-icon svg{transform:none!important}
+html[data-ds] .tab-item .tab-label{font-size:10px!important;letter-spacing:0!important}
+
+</style>
+</body>
+ </html>

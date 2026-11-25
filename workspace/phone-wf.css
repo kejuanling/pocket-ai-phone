@@ -1,0 +1,49 @@
+/* [位置:phone-wf.css] [小手机工作流管理页样式] [10-27：列表行、编辑器、头部按钮组；颜色全用中性 rgba + inherit，日夜两版都成立] [注释时间 2026-10-27] */
+/* [位置:phone-wf.css·wf-crumbs] [文件夹式导航栏样式] [10-29：顶部面包屑，点任意级跳回；横向可滚、隐藏滚动条；反馈用底色不用线] [注释时间 2026-10-29] */
+.wf-crumbs{display:flex;align-items:center;gap:2px;margin:0 4px 8px;font-size:13px;color:var(--ink3);overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.wf-crumbs::-webkit-scrollbar{display:none}
+.wf-cb{flex:none;padding:3px 6px;border-radius:8px;background:none;border:0;color:inherit;font:inherit;text-align:left}
+.wf-cb:not(.cur):active{background:rgba(127,140,180,.16)}
+.wf-crumbs i{flex:none;font-style:normal;opacity:.4}
+.wf-crumbs .cur{color:var(--ink);font-weight:600;pointer-events:none}
+.wf-l{padding:6px 0 90px}
+.wf-l .pg-g{margin:0 12px}
+.wf-l .pg-empty{padding:34px 20px;text-align:center;opacity:.55;font-size:13px}
+.wf-l .pg-btn{display:block;margin:14px auto 0;max-width:200px}
+.wf-hd{display:inline-flex;gap:6px;align-items:center}
+.wf-ed{display:block;width:100%;height:calc(100% - 6px);min-height:240px;padding:12px;margin:0;box-sizing:border-box;border:0;border-radius:14px;background:rgba(127,140,180,.09);color:inherit;font:13px/1.65 ui-monospace,SFMono-Regular,Menlo,Consolas,"PingFang SC",monospace;resize:none;outline:0;-webkit-appearance:none;appearance:none}
+
+/* [位置:phone-wf.css·.wf-md Markdown 渲染样式] [渲染态：标题 / 列表 / 引用 / 代码 / 表格（可横滑）/ 分割线；颜色全用 inherit + 中性 rgba，日夜两版都成立] [10-27] [注释时间 2026-10-27] */
+.wf-md{display:none;padding:4px 18px 96px;font-size:15px;line-height:1.75;overflow-wrap:anywhere;word-break:break-word}
+.wf-vw .wf-ed{display:none}
+.wf-vw .wf-md{display:block}
+.wf-vw .wf-eo{display:none}
+.wf-md>:first-child{margin-top:.4em}
+.wf-md h1,.wf-md h2,.wf-md h3,.wf-md h4,.wf-md h5,.wf-md h6{line-height:1.4;margin:1.3em 0 .5em;font-weight:600}
+.wf-md h1{font-size:1.45em}.wf-md h2{font-size:1.25em}.wf-md h3{font-size:1.1em}.wf-md h4,.wf-md h5,.wf-md h6{font-size:1em}
+.wf-md h1,.wf-md h2{padding-bottom:.3em;border-bottom:.5px solid rgba(127,140,180,.3)}
+.wf-md p{margin:.6em 0}
+.wf-md ul,.wf-md ol{padding-left:1.5em;margin:.5em 0}
+.wf-md li{margin:.2em 0}
+.wf-md li>ul,.wf-md li>ol{margin:.2em 0}
+.wf-md blockquote{margin:.8em 0;padding:.05em 1em;border-left:3px solid rgba(127,140,180,.5);opacity:.85}
+.wf-md code{font:.88em ui-monospace,SFMono-Regular,Menlo,Consolas,"PingFang SC",monospace;padding:.12em .4em;border-radius:6px;background:rgba(127,140,180,.16)}
+.wf-md pre{margin:.8em 0;padding:12px 14px;border-radius:12px;background:rgba(127,140,180,.12);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.wf-md pre code{padding:0;background:none;font-size:12.5px;line-height:1.6;white-space:pre}
+.wf-md hr{border:0;border-top:.5px solid rgba(127,140,180,.4);margin:1.2em 0}
+.wf-md a{color:#6f93d1;text-decoration:underline;text-underline-offset:2px}
+.wf-md img{max-width:100%;border-radius:8px}
+.wf-md .wf-tw{overflow-x:auto;margin:.8em 0;-webkit-overflow-scrolling:touch}
+.wf-md table{border-collapse:collapse;font-size:13.5px;line-height:1.55;min-width:100%}
+.wf-md th,.wf-md td{padding:6px 10px;border:.5px solid rgba(127,140,180,.4);text-align:left;vertical-align:top}
+.wf-md th{background:rgba(127,140,180,.14);font-weight:600;white-space:nowrap}
+.wf-md input[type=checkbox]{margin-right:.4em}
+
+/* [位置:phone-wf.css·.wf-mp 移动目标路径行] [长按「移动到」选文件夹页顶部：显示要移的名字和当前选中的目标目录] [10-28] [注释时间 2026-10-28] */
+.wf-mp{padding:0 18px 10px;font-size:12.5px;line-height:1.55;color:inherit;opacity:.6;overflow-wrap:anywhere}
+.wf-mp b{font-weight:600}
+
+/* [位置:phone-wf.css·.wf-html html 渲染容器] [工作流页 .html/.htm 预览：iframe 撑满编辑区，渲染态才显示；编辑态隐藏（.wf-vw 切换同 .wf-md）；容器背景同输入框底色，iframe 内容自管背景] [11-01] [注释时间 2026-11-01] */
+.wf-html{display:none;position:relative;height:calc(100% - 6px);min-height:240px;border-radius:14px;overflow:hidden;background:rgba(127,140,180,.09)}
+.wf-vw .wf-html{display:block}
+.wf-fr{display:block;width:100%;height:100%;border:0;background:#fff}

@@ -1,0 +1,43 @@
+/* [位置:phone-wide.css·文件头] [宽屏（iPad/电脑）双栏样式；全部挂在 .wide 下，手机不受影响] [10-28：左栏会话/我的/配置/应用，右栏聊天或页面，参考微信 iPad；左栏宽 --lw，右栏是剩下的] [注释时间 2026-10-28] */
+:root.wide{--lw:clamp(300px,34vw,400px)}
+.wide .homebar{display:none}
+/* 右栏：除了工作台以外的窗口（聊天层、应用）都从 --lw 起 */
+.wide .win:not(.wd-ws){left:var(--lw)}
+/* [位置:phone-wide.css·工作台叠层] [聊天工作台压在右栏上面，右栏点击穿透] [10-28：会话页右上「⋯」菜单、长按会话菜单在宽屏下看不到——它们和配置里的底板/确认框都挂在聊天 app 窗口里，窗口原来比聊天层/应用窗口低一层，右栏开着聊天时整个盖在聊天下面（菜单正好摆在右边）。改成：工作台高一层、整窗不挡鼠标（只有左栏、弹层、右栏子页收事件），右栏的聊天层/应用窗口放在它下面；工作台自己的底色只铺左栏（右栏透出下面的聊天）；左栏发出的菜单/弹窗收在左栏宽度里] [注释时间 2026-10-28] */
+.wide .win.wd-ws{z-index:25;background:none!important;pointer-events:none}
+.wide .win:not(.wd-ws){z-index:24!important}
+.wide .wd-ws>.content{pointer-events:none}
+.wide .wd-ws>.content>*{pointer-events:auto}
+.wide .wd-ws>.content>.cs-ov:not(.show),.wide .wd-ws>.content>.ses-pop:not(.show),.wide .wd-ws>.content>.pg-sheet:not(.show),.wide .wd-ws>.content>.cs-dw:not(.show),.wide .wd-ws>.content>.sheetw:not(.show),.wide .wd-ws>.content>.wd-empty{pointer-events:none}
+.wide .wd-ws>.content::before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--lw);background:rgba(238,244,251,var(--winA,.9));pointer-events:none;z-index:-1}
+.wide #device[data-theme="dark"] .wd-ws>.content::before{background:linear-gradient(180deg,rgba(15,18,27,.99) 0%,rgba(19,23,34,.99) 55%,rgba(22,26,38,.99) 100%)}
+.wide .wd-ws .cs-menu{right:auto;left:calc(var(--lw) - 22px - 214px)}
+.wide .wd-ws .ses-pop .box{right:auto;width:calc(var(--lw) - 28px)}
+.wide .wd-ws .cs-dw .pane{width:calc(var(--lw) * .84)}
+/* 左栏：聊天 app 里的这几块限宽，tabs 贴在左栏底部 */
+.wide .wd-ws .cs-bar,.wide .wd-ws .cs-sc,.wide .wd-ws .cs-pane{width:var(--lw);align-self:flex-start}
+.wide .wd-ws .cs-tabs,.wide .wd-ws .cs-mbar{left:0;right:auto;width:var(--lw)}
+.wide .wd-ws>.content::after{content:"";position:absolute;top:0;bottom:0;left:var(--lw);width:.5px;background:rgba(120,135,165,.32);pointer-events:none;z-index:3}
+.cs-wideonly{display:none!important}
+.wide .cs-tabs .cs-wideonly{display:flex!important}
+/* 右栏占位 */
+.wide .wd-empty{position:absolute;left:var(--lw);right:0;top:0;bottom:0;display:grid;place-items:center;text-align:center;color:var(--ink3);font-size:14px;letter-spacing:.06em;background:rgba(var(--sh),.55)}
+.wide .wd-ws.wd-has .wd-empty{display:none}
+.wide .wd-mk{width:76px;height:76px;margin:0 auto 14px;border-radius:24px;display:grid;place-items:center;background:var(--glass);border:.5px solid var(--line)}
+.wide .wd-mk svg{width:32px;height:32px;stroke:var(--ink3);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+/* [位置:phone-wide.css·wf-sub 加宽（11-09 已取消，见下一行）] [工作流子页向左借宽] [10-29：工作流列表/编辑器在宽屏下往左借 110px，读长行舒服些；左栏至少留 300px 不被吃掉] [注释时间 2026-10-29] */
+/* 11-09：全屏时工作流页比别的右栏子页宽、盖住了左栏——借宽取消，和其它子页一样从 --lw 起（原规则：.wide .wd-ws .content>.pg-sub.wf-sub{left:max(300px,calc(var(--lw) - 110px))}） */
+/* 「我的/配置」的子页开在右栏 */
+.wide .wd-ws .content>.pg-sub{left:var(--lw);transform:translateX(26px);opacity:0;transition:transform .35s var(--spring),opacity .25s;box-shadow:none}
+.wide .wd-ws .content>.pg-sub.show{transform:none;opacity:1}
+/* 左栏选中的会话 */
+.wide .cs-it.cs-sel{background:rgba(125,156,207,.18)}
+/* 「应用」页：桌面图标网格 */
+.cs-ag{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:20px 4px;justify-items:center;padding:18px 2px}
+.cs-ag .app-ic{width:76px}
+/* 底板在宽屏别拉满整个窗口，居中 580px */
+.wide .pg-sheet .pane{left:max(0px,calc(50% - 290px));right:max(0px,calc(50% - 290px))}
+.wide .sheetw .sheet{left:max(8px,calc(50% - 290px));right:max(8px,calc(50% - 290px))}
+/* 聊天栏在大屏上别铺满：消息和输入栏居中，最宽 880px（左右留白，滚动条仍贴屏幕右沿） */
+.wide .win.tk-layer .tk-msgs{padding-left:max(18px,calc((100% - 880px)/2));padding-right:max(18px,calc((100% - 880px)/2))}
+.wide .win.tk-layer .composer.tk-cp{padding-left:max(10px,calc((100% - 880px)/2 + 10px));padding-right:max(10px,calc((100% - 880px)/2 + 10px))}

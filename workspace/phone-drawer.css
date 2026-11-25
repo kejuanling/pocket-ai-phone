@@ -1,0 +1,615 @@
+/* [位置:phone-drawer.css·整个文件] [极简主题全局布局样式] [聊天为根 + 左侧栏抽屉（我的/会话列表/设置）+ 极简设置页吸顶分类条；仅在 html.min-layout 下生效，不影响月夜玻璃与宽屏] [注释时间 2026-11-19] */
+
+/* 极简布局下隐藏桌面与锁屏后的主屏 */
+html.min-layout #home{visibility:hidden!important;pointer-events:none!important}
+
+/* 根聊天页：铺满设备，无返回退场 */
+html.min-layout .win.tk-layer{z-index:20!important}
+html.min-layout .win.tk-layer>.homebar{display:none}
+html.min-layout .win:not(.tk-layer):not(.mn-cs-host):not(.mn-me-host){z-index:30}
+
+/* 侧栏抽屉：在聊天层下面（z 19 < 聊天层 20），聊天层右移=露出侧栏；位置全由 phone-drawer.js·place() 写 inline transform */
+.mn-drawer{position:absolute;inset:0;z-index:19;background:#f7f7f7;pointer-events:none;visibility:hidden;transition:visibility 0s .36s}
+.mn-drawer.open,.mn-drawer.dragging{pointer-events:auto;visibility:visible;transition:none}
+.mn-drawer .mn-pane{position:absolute;left:0;top:0;bottom:0;width:min(84%,336px);display:flex;flex-direction:column;background:#f7f7f7;color:#111111;transform:translateX(-28%);transition:transform .36s cubic-bezier(.2,.9,.25,1);will-change:transform;overflow:hidden}
+.mn-drawer.dragging .mn-pane{transition:none}
+html.min-layout .win.tk-layer{transition:transform .36s cubic-bezier(.2,.9,.25,1)}
+html.min-layout .win.tk-layer.mn-pushed{box-shadow:-10px 0 30px rgba(0,0,0,.10);border-radius:18px 0 0 18px}
+html.mn-dragging .win.tk-layer{transition:none!important}
+#device[data-theme="dark"] .mn-drawer{background:#191919}
+#device[data-theme="dark"] .mn-drawer .mn-pane{background:#191919;color:#e9e9e9}
+#device[data-theme="dark"] .win.tk-layer.mn-pushed{box-shadow:-10px 0 30px rgba(0,0,0,.4)}
+
+/* 极简主题除聊天页外统一使用思源宋体 */
+html.min-layout .mn-drawer,
+html.min-layout .win:not(.tk-layer),
+html.min-layout #device>.ses-pop,
+html.min-layout #device>.cs-ov,
+html.min-layout #device>.cs-dw,
+html.min-layout #toast,
+html.min-layout #nc{
+  --sans:"CF Noto Serif","Songti SC","Noto Serif CJK SC",serif;
+  --display:"CF Noto Serif","Songti SC","Noto Serif CJK SC",serif;
+  --hfont:"CF Noto Serif","Songti SC","Noto Serif CJK SC",serif;
+  font-family:"CF Noto Serif","Songti SC","Noto Serif CJK SC",serif;
+}
+
+/* 顶部栏：Love 手写英文 + 搜索 + 更多 */
+.mn-top{flex:none;display:flex;align-items:center;gap:4px;padding:calc(var(--sat,0px) + 12px) 12px 8px 20px}
+.mn-top .mn-brand{font:400 29px/1.05 "PH Hand",Georgia,serif;letter-spacing:.02em;color:inherit;margin-right:auto}
+.mn-top .mn-ib{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:inherit;opacity:.72;transition:background .15s,opacity .15s}
+.mn-top .mn-ib:active{background:rgba(0,0,0,.07);opacity:1}
+#device[data-theme="dark"] .mn-top .mn-ib:active{background:rgba(255,255,255,.09)}
+.mn-top .mn-ib svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* 抽屉滚动策略：未展开「更多」时顶部固定、仅下方会话列表独立滚动；展开「更多」后整页一起上下滚动 */
+.mn-scroll{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.mn-scroll::-webkit-scrollbar{display:none}
+.mn-drawer.me-open .mn-scroll{display:block;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:88px}
+
+/* 抽屉列表项去掉全局 .tap.pressed 缩小弹动，只留背景高亮 */
+.mn-drawer .tap.pressed{transform:none!important;opacity:1!important}
+
+/* 顶部「我的」区：默认露 3 项 + ⋯ 更多平滑展开；进会话组时隐藏让列表铺满抽屉 */
+.mn-me{flex:none;padding:4px 10px 10px;border-bottom:.5px solid rgba(0,0,0,.08)}
+.mn-drawer.in-grp .mn-me{display:none}
+#device[data-theme="dark"] .mn-me{border-bottom-color:rgba(255,255,255,.10)}
+.mn-me-list{display:flex;flex-direction:column;gap:2px}
+.mn-me-more[hidden]{display:none}
+.mn-me-extra{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .32s cubic-bezier(.2,.9,.25,1),opacity .24s ease}
+.mn-me-extra.open{grid-template-rows:1fr;opacity:1}
+/* [位置:phone-drawer.css·mn-me-extra-in] [展开应用整行列表] [11-20 晚试过两列灰底小按钮栅格，用户看后说丑拍板回退整行；菜单锚点与滚动条豁免保留] [注释时间 2026-11-20] */
+.mn-me-extra-in{min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:2px}
+.mn-me-row{width:100%;display:flex;align-items:center;gap:13px;padding:10px 12px;border-radius:12px;font-size:16px;font-weight:400;color:inherit;text-align:left;transition:background .15s}
+.mn-me-row:active,.mn-me-row.pressed{background:rgba(0,0,0,.06)}
+#device[data-theme="dark"] .mn-me-row:active,#device[data-theme="dark"] .mn-me-row.pressed{background:rgba(255,255,255,.08)}
+.mn-me-row svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.72;flex:none}
+.mn-me-row span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mn-me-fold{color:var(--ink2)}
+.mn-me-fold svg{opacity:.58}
+
+/* 中间会话列表区：未展开「更多」时独立滚动，展开后随整页一起滚 */
+.mn-chats{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+.mn-chats .win.mn-cs-host{position:relative;inset:auto;flex:1;min-height:0;height:auto;background:transparent!important;z-index:1}
+.mn-chats .win.mn-cs-host>.content{position:static;height:100%;display:flex;flex-direction:column}
+.mn-chats .win.mn-cs-host .cs-sc{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:6px 10px 88px}
+.mn-chats .win.mn-cs-host .cs-sc::-webkit-scrollbar{display:none}
+.mn-drawer.me-open .mn-chats{flex:none}
+.mn-drawer.me-open .mn-chats .win.mn-cs-host,
+.mn-drawer.me-open .mn-chats .win.mn-cs-host>.content,
+.mn-drawer.me-open .mn-chats .win.mn-cs-host .cs-sc{height:auto;overflow:visible;padding-bottom:12px}
+.mn-chats .win.mn-cs-host>.homebar,
+.mn-chats .win.mn-cs-host .cs-tabs,
+.mn-chats .win.mn-cs-host .cs-bar{display:none!important}
+.mn-chats .win.mn-cs-host .cs-ls{border-top:0!important}
+.mn-chats .win.mn-cs-host .cs-mbar{padding-bottom:10px}
+
+/* 固定在顶部的「会话组」折叠行 + 组内返回行 */
+.mn-grp-fold{width:100%;display:flex;align-items:center;gap:8px;padding:11px 12px;margin:0 0 2px;border-radius:12px;font-size:16.5px;font-weight:500;color:var(--ink2);text-align:left;transition:background .15s}
+.mn-grp-fold:active,.mn-grp-fold.pressed{background:rgba(0,0,0,.06)}
+#device[data-theme="dark"] .mn-grp-fold:active,#device[data-theme="dark"] .mn-grp-fold.pressed{background:rgba(255,255,255,.08)}
+.mn-grp-fold .mn-gf-t{flex:1;min-width:0}
+.mn-grp-fold .mn-gf-n{font-size:13.5px;color:var(--ink3)}
+.mn-grp-fold .mn-gf-ch{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;opacity:.6;transition:transform .2s}
+.mn-grp-fold.open .mn-gf-ch{transform:rotate(90deg)}
+.mn-grp-box{padding-left:8px;margin-bottom:4px;border-left:1px solid rgba(0,0,0,.08)}
+#device[data-theme="dark"] .mn-grp-box{border-left-color:rgba(255,255,255,.10)}
+/* [位置:phone-drawer.css·mn-grp-back/mn-grphead] [组内返回行去底色加下划线] [11-21：去掉默认灰底（像选中态），改为透明底 + 底部细分隔线，仅保留按压反馈] [注释时间 2026-11-21] */
+.mn-grp-back{width:100%;display:flex;align-items:center;gap:8px;padding:10px 12px;margin:0 0 4px;border-radius:12px;font-size:15.5px;font-weight:500;color:var(--ink);background:transparent;text-align:left;transition:background .15s}
+.mn-grp-back:active{background:rgba(0,0,0,.06)}
+#device[data-theme="dark"] .mn-grp-back{background:transparent}
+#device[data-theme="dark"] .mn-grp-back:active{background:rgba(255,255,255,.08)}
+.mn-grp-back svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.mn-grp-back span{flex:1;min-width:0}
+.mn-grp-back small{font-size:12.5px;color:var(--ink3);max-width:42%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 组内「返回全部会话」固定头：钉在会话列表上方，不随列表滚（phone-chats.js·render 写入） */
+.mn-grphead{flex:none;padding:2px 10px 6px;border-bottom:.5px solid rgba(0,0,0,.08)}
+#device[data-theme="dark"] .mn-grphead{border-bottom-color:rgba(255,255,255,.10)}
+.mn-grphead[hidden]{display:none}
+.mn-grphead .mn-grp-back{margin:0}
+
+/* 会话行极简改造：保留标题、置顶/唤醒标记与上次聊天时间；会话组图标带圆角底色且个数靠右 */
+.mn-chats .cs-it,html.min-layout #device>.cs-ov .lift{border-radius:12px;margin:2px 0}
+.mn-chats .cs-it::after,html.min-layout #device>.cs-ov .lift::after{display:none!important}
+.mn-chats .cs-it.pin{background:rgba(0,0,0,.045)}
+#device[data-theme="dark"] .mn-chats .cs-it.pin{background:rgba(255,255,255,.06)}
+.mn-chats .cs-it.cs-sel{background:rgba(0,0,0,.08)}
+#device[data-theme="dark"] .mn-chats .cs-it.cs-sel{background:rgba(255,255,255,.10)}
+.mn-chats .cs-it.pressed{background:rgba(0,0,0,.06)}
+#device[data-theme="dark"] .mn-chats .cs-it.pressed{background:rgba(255,255,255,.08)}
+.mn-chats .cs-fg,html.min-layout #device>.cs-ov .lift .cs-fg{padding:11px 12px;gap:10px}
+.mn-chats .cs-it .av,html.min-layout #device>.cs-ov .lift .av{display:none!important}
+.mn-chats .cs-it.cs-grp .av.gi{display:grid!important;width:28px;height:28px;border-radius:8px;background:rgba(0,0,0,.07)!important}
+#device[data-theme="dark"] .mn-chats .cs-it.cs-grp .av.gi{background:rgba(255,255,255,.10)!important}
+.mn-chats .cs-it.cs-grp .av.gi svg{width:16px;height:16px;opacity:.82}
+.mn-chats .cs-it .m,html.min-layout #device>.cs-ov .lift .m{display:none!important}
+.mn-chats .cs-it .t,html.min-layout #device>.cs-ov .lift .t{align-items:center;gap:6px}
+.mn-chats .cs-it .t b,html.min-layout #device>.cs-ov .lift .t b{font:400 15px/1.4 var(--hfont,var(--sans));letter-spacing:.01em;color:#111111}
+#device[data-theme="dark"] .mn-chats .cs-it .t b,html.min-layout #device[data-theme="dark"]>.cs-ov .lift .t b{color:#e9e9e9}
+.mn-chats .cs-it.cs-grp .t .gn{margin-left:auto;font-size:12.5px;color:var(--ink3)}
+.mn-chats .cs-it.cs-grp .t time{display:none!important}
+.mn-chats .cs-it .t time,html.min-layout #device>.cs-ov .lift .t time{display:inline-block!important;margin-left:auto;font-size:11.5px;color:var(--ink3);white-space:nowrap}
+.mn-chats .cs-it .t .lk,html.min-layout #device>.cs-ov .lift .t .lk{background:rgba(0,0,0,.08);color:var(--ink2)}
+.mn-chats .cs-it .t .lk svg,html.min-layout #device>.cs-ov .lift .t .lk svg{stroke:var(--ink2)}
+#device[data-theme="dark"] .mn-chats .cs-it .t .lk,#device[data-theme="dark"] #device>.cs-ov .lift .t .lk{background:rgba(255,255,255,.12);color:var(--ink2)}
+.mn-chats .cs-it.cs-sel .t b{color:#111111;font-weight:600}
+#device[data-theme="dark"] .mn-chats .cs-it.cs-sel .t b{color:#fff}
+.mn-chats .cs-hint{margin-top:8px;font-size:13px;opacity:.6}
+
+/* 底部悬浮栏：左头像（设置入口） + 右侧「新聊天」胶囊，加强悬浮阴影与按压弹动 */
+.mn-foot{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 14px calc(var(--sab,0px) + 14px);background:linear-gradient(180deg,rgba(247,247,247,0) 0%,#f7f7f7 36%);pointer-events:none}
+#device[data-theme="dark"] .mn-foot{background:linear-gradient(180deg,rgba(25,25,25,0) 0%,#191919 36%)}
+.mn-foot>*{pointer-events:auto}
+.mn-new-pill{height:40px;padding:0 19px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#111111;color:#ffffff;font-size:15px;font-weight:500;letter-spacing:.02em;box-shadow:0 8px 22px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.12);transition:transform .3s cubic-bezier(.22,1.5,.36,1),box-shadow .2s}
+.mn-drawer .mn-new-pill:active,.mn-drawer .mn-new-pill.pressed{transform:scale(1.07)!important;box-shadow:0 12px 28px rgba(0,0,0,.26),0 3px 10px rgba(0,0,0,.16);transition-duration:.13s;opacity:1}
+#device[data-theme="dark"] .mn-new-pill{background:#e9e9e9;color:#191919;box-shadow:0 8px 24px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.35)}
+.mn-new-pill svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mn-foot-av{width:44px;height:44px;flex:none;border-radius:50%;padding:0;overflow:hidden;border:.5px solid rgba(0,0,0,.12);box-shadow:0 8px 22px rgba(0,0,0,.20),0 2px 6px rgba(0,0,0,.10);transition:transform .3s cubic-bezier(.22,1.5,.36,1),box-shadow .2s}
+.mn-drawer .mn-foot-av:active,.mn-drawer .mn-foot-av.pressed{transform:scale(1.10)!important;box-shadow:0 12px 28px rgba(0,0,0,.26),0 3px 10px rgba(0,0,0,.18);transition-duration:.13s}
+#device[data-theme="dark"] .mn-foot-av{border-color:rgba(255,255,255,.18);box-shadow:0 8px 24px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.35)}
+.mn-foot-av .av{width:100%;height:100%;border-radius:50%}
+#device[data-theme="dark"] .mn-foot-av .av:not(.hasimg){background-color:#2c2c2c;color:#e9e9e9}
+
+/* 极简布局下全屏弹层（新会话/搜索/长按菜单/归档抽屉）挂在 #device 上，纯黑白灰 */
+html.min-layout #device>.ses-pop,
+html.min-layout #device>.cs-ov,
+html.min-layout #device>.cs-dw{z-index:35}
+html.min-layout #device>.ses-pop .box{background:#f7f7f7;color:#111111;border:.5px solid rgba(0,0,0,.10);box-shadow:0 16px 40px rgba(0,0,0,.14);-webkit-backdrop-filter:none;backdrop-filter:none}
+html.min-layout #device[data-theme="dark"]>.ses-pop .box{background:#222222;color:#e9e9e9;border-color:rgba(255,255,255,.10)}
+html.min-layout #device>.ses-pop .nw{background:#111111;color:#ffffff}
+html.min-layout #device[data-theme="dark"]>.ses-pop .nw{background:#e9e9e9;color:#191919}
+html.min-layout #device>.ses-pop .nw.ghost{background:rgba(0,0,0,.07);color:#111111}
+html.min-layout #device[data-theme="dark"]>.ses-pop .nw.ghost{background:rgba(255,255,255,.10);color:#e9e9e9}
+html.min-layout #device>.ses-pop .btn.pri,
+html.min-layout #device>.ses-pop .pg-btn.pri{background:#111111;color:#ffffff;box-shadow:none}
+html.min-layout #device[data-theme="dark"]>.ses-pop .btn.pri,
+html.min-layout #device[data-theme="dark"]>.ses-pop .pg-btn.pri{background:#e9e9e9;color:#191919}
+html.min-layout #device>.ses-pop .sp-card.on{border-color:#111111;background:rgba(0,0,0,.06)}
+html.min-layout #device[data-theme="dark"]>.ses-pop .sp-card.on{border-color:#e9e9e9;background:rgba(255,255,255,.09)}
+
+/* 极简设置页：纯黑白灰纸面 + 扁平细线分组 */
+html.min-layout .win[data-win="set"]{background:#f7f7f7!important;color:#111111}
+html.min-layout #device[data-theme="dark"] .win[data-win="set"]{background:#191919!important;color:#e9e9e9}
+html.min-layout .win[data-win="set"] .pg-hd{padding-bottom:4px}
+html.min-layout .win[data-win="set"] .pg-cb{background:transparent;border-color:rgba(0,0,0,.12);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.min-layout #device[data-theme="dark"] .win[data-win="set"] .pg-cb{border-color:rgba(255,255,255,.14)}
+html.min-layout .win[data-win="set"] .pg-g{border-radius:18px;background:#ffffff;-webkit-backdrop-filter:none;backdrop-filter:none;border:.5px solid rgba(0,0,0,.09);box-shadow:none;overflow:hidden}
+html.min-layout #device[data-theme="dark"] .win[data-win="set"] .pg-g{background:#222222;border-color:rgba(255,255,255,.10)}
+html.min-layout .win[data-win="set"] .pg-r+.pg-r::before{background:rgba(0,0,0,.08)}
+html.min-layout #device[data-theme="dark"] .win[data-win="set"] .pg-r+.pg-r::before{background:rgba(255,255,255,.08)}
+html.min-layout .win[data-win="set"] .pg-search input{background:rgba(0,0,0,.05);border:.5px solid rgba(0,0,0,.08);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.min-layout #device[data-theme="dark"] .win[data-win="set"] .pg-search input{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.10)}
+html.min-layout .win[data-win="set"] .pg-r.tg.on .pg-sw{background:#111111}
+html.min-layout #device[data-theme="dark"] .win[data-win="set"] .pg-r.tg.on .pg-sw{background:#e9e9e9}
+html.min-layout .win[data-win="set"] .pg-btn.pri{background:#111111;color:#ffffff;box-shadow:none}
+html.min-layout #device[data-theme="dark"] .win[data-win="set"] .pg-btn.pri{background:#e9e9e9;color:#191919}
+
+/* 设置页行：圆角卡片分组 + 中性线性图标 + 统一行高 52px */
+html.min-layout .win[data-win="set"] .pg-sc{padding:6px 16px calc(var(--sab,0px) + 48px)}
+html.min-layout .win[data-win="set"] .mn-set-card{margin:10px 0 4px;padding:14px 16px;border-radius:18px}
+html.min-layout .win[data-win="set"] .mn-set-card .av{width:52px;height:52px;border-radius:15px;box-shadow:none}
+html.min-layout .win[data-win="set"] .mn-set-card b{font-size:17px;letter-spacing:.04em}
+html.min-layout .win[data-win="set"] .mn-set-card small{font-style:normal;font-size:13px;margin-top:3px}
+html.min-layout .win[data-win="set"] .pg-gt{padding:20px 6px 8px;font-size:12.5px;font-weight:600;letter-spacing:.04em;color:var(--ink3)}
+html.min-layout .win[data-win="set"] .pg-sc>.pg-gt:first-child{padding-top:12px}
+html.min-layout .win[data-win="set"] .pg-r{min-height:52px;padding:12px 16px;gap:14px;transition:background .15s}
+html.min-layout .win[data-win="set"] .pg-r+.pg-r::before{left:16px;right:0}
+html.min-layout .win[data-win="set"] .pg-r.ic+.pg-r::before,
+html.min-layout .win[data-win="set"] .pg-r.ic+.pg-r.ic::before{left:54px}
+html.min-layout .win[data-win="set"] button.pg-r:active,
+html.min-layout .win[data-win="set"] .pg-r.go:active{background:rgba(0,0,0,.05)}
+html.min-layout #device[data-theme="dark"] .win[data-win="set"] button.pg-r:active,
+html.min-layout #device[data-theme="dark"] .win[data-win="set"] .pg-r.go:active{background:rgba(255,255,255,.07)}
+html.min-layout .win[data-win="set"] .pg-r .ri{width:24px;height:24px;border-radius:0;background:transparent!important}
+html.min-layout .win[data-win="set"] .pg-r .ri svg{width:20px;height:20px;stroke:var(--ink);stroke-width:1.6;opacity:.78}
+html.min-layout .win[data-win="set"] .pg-r .rt b{font-size:15px;letter-spacing:.01em}
+html.min-layout .win[data-win="set"] .pg-r.red .ri svg,
+html.min-layout .win[data-win="set"] .pg-r.red .rt b{stroke:#c0463c;color:#c0463c}
+html.min-layout .win[data-win="set"] .pg-r>svg.ch{width:16px;height:16px;opacity:.55}
+html.min-layout .win[data-win="set"] .pg-r .rv{font-size:14px}
+
+/* ==========================================================================
+   极简主题全局纯黑白灰配色（第二期：仅 html.min-layout 下生效，月夜玻璃零影响）
+   日间：纯中性浅灰白 #f7f7f7 + 纯白卡片 #ffffff + 纯黑 #111111（无暖棕偏色）
+   夜间：中性深灰 #191919 + #222222 卡片 + 柔白 #e9e9e9
+   聊天页（.tkmin）保留自己的暖白/赤陶重点色，其余页面/弹层/通知条统一纯黑白灰
+   ========================================================================== */
+
+/* 1. 全局变量覆盖（日间：纯中性黑白灰；不覆盖 --wall，锁屏沿用气泡主题海蓝壁纸 [2026-11-21]） */
+html.min-layout #device{
+  --ink:#111111;--ink2:rgba(17,17,17,.64);--ink3:rgba(17,17,17,.42);
+  --acc:#111111;--acc2:#555555;
+  --sel-bg:rgba(0,0,0,.07);--sel-ring:#111111;--sel-dim:rgba(0,0,0,.45);
+  --glass:#ffffff;--glass2:#efefef;--line:rgba(0,0,0,.09);
+  --shadow:0 8px 24px rgba(0,0,0,.08);
+  --sh:247,247,247;--ring:rgba(0,0,0,.11);--pill:#ffffff;--face:#ffffff;
+  --tkbg:#faf9f5;
+  --k-2a3042:#111111;--k-344263:#222222;--k-3b4766:#333333;--k-3d5a92:#111111;
+  --k-4d6fa8:#222222;--k-4e5a78:#222222;--k-4f6ea8:#222222;--k-566079:#333333;
+  --k-5a6f9c:#444444;--k-5a74a8:#333333;--k-5a76ab:#333333;--k-5a78b0:#333333;
+  --k-5f80c0:#222222;--k-6b7fa8:#555555;--k-6b87bd:#444444;--k-6d8ccb:#333333;
+  --k-7480b4:#555555;--k-7f95c4:#666666;--k-8a90a6:#777777;
+}
+
+/* 2. 全局变量覆盖（夜间：#191919 中性灰 + 柔白，覆盖 .win / #toast / 挂在 #device 下的弹层） */
+html.min-layout #device[data-theme="dark"],
+html.min-layout #device[data-theme="dark"] .win,
+html.min-layout #device[data-theme="dark"] #toast,
+html.min-layout #device[data-theme="dark"] .crop,
+html.min-layout #device[data-theme="dark"] .ses-pop,
+html.min-layout #device[data-theme="dark"] .cs-ov,
+html.min-layout #device[data-theme="dark"] .cs-dw,
+html.min-layout #device[data-theme="dark"] .pg-sheet,
+html.min-layout #device[data-theme="dark"] .pg-cf{
+  --ink:#e9e9e9;--ink2:rgba(233,233,233,.66);--ink3:rgba(233,233,233,.44);
+  --acc:#e9e9e9;--acc2:#a8a8a8;
+  --sel-bg:rgba(255,255,255,.10);--sel-ring:#e9e9e9;--sel-dim:rgba(255,255,255,.45);
+  --glass:#222222;--glass2:#2a2a2a;--line:rgba(255,255,255,.10);
+  --shadow:none;
+  --wk:.16;--sh:34,34,34;--ring:rgba(255,255,255,.12);--pill:rgba(255,255,255,.14);--face:#222222;
+  --tkbg:#191919;
+  --k-2a3042:#e9e9e9;--k-344263:#d4d4d4;--k-3b4766:#c4c4c4;--k-3d5a92:#e9e9e9;
+  --k-4d6fa8:#d4d4d4;--k-4e5a78:#e9e9e9;--k-4f6ea8:#d4d4d4;--k-566079:#e9e9e9;
+  --k-5a6f9c:#b8b8b8;--k-5a74a8:#c4c4c4;--k-5a76ab:#c4c4c4;--k-5a78b0:#c4c4c4;
+  --k-5f80c0:#d4d4d4;--k-6b7fa8:#a8a8a8;--k-6b87bd:#b8b8b8;--k-6d8ccb:#c4c4c4;
+  --k-7480b4:#a8a8a8;--k-7f95c4:#9a9a9a;--k-8a90a6:#8e8e8e;
+}
+
+/* 3. 窗口底色：实色纸面，去掉蓝底与毛玻璃 */
+html.min-layout .win:not(.mn-cs-host):not(.mn-me-host){background:#f7f7f7!important}
+html.min-layout #device[data-theme="dark"] .win:not(.mn-cs-host):not(.mn-me-host){background:#191919!important}
+html.min-layout .win.tk-layer{background:var(--tkbg,#faf9f5)!important}
+html.min-layout #device[data-theme="dark"] .win.tk-layer{background:#191919!important}
+
+/* 锁屏整体沿用气泡主题（毛玻璃卡片、蓝心、文字与日夜天空变量），不吃极简黑白灰覆盖 [2026-11-21] */
+html.min-layout #lock{
+  --ink:#2a3042;--ink2:rgba(42,48,66,.62);--ink3:rgba(42,48,66,.38);
+  --acc:#7d9ccf;--acc2:#a9bfe6;
+  --glass:rgba(255,255,255,.24);--glass2:rgba(255,255,255,.55);--line:rgba(255,255,255,.75);
+  --shadow:0 10px 30px rgba(96,120,160,.16);
+}
+html.min-layout #device[data-night="1"] #lock{
+  --ink:#eef1ff;--ink2:rgba(238,241,255,.76);--ink3:rgba(238,241,255,.5);
+  --glass:rgba(255,255,255,.09);--glass2:rgba(255,255,255,.16);--line:rgba(255,255,255,.22);
+}
+
+/* 4. 通用卡片、子页、底板、确认框、返回按钮：实色纸面 + 0.5px 细线，去毛玻璃与蓝光晕 */
+html.min-layout .win:not(.tk-layer) :is(.pg-g,.nt-card,.th-card,.me-card,.mc-card,.mm-hero,.mm-rv,.wk2-day,.wl-run,.st2-sum,.mm-stats button,.ps-sum,.pm-sum,.tl-sum,.th-ct-row,.pm2-c,.wd-c,.ic-sq,.tc-card){
+  background:#ffffff;
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  border:.5px solid rgba(0,0,0,.09);
+  box-shadow:none;
+}
+html.min-layout #device[data-theme="dark"] .win:not(.tk-layer) :is(.pg-g,.nt-card,.th-card,.me-card,.mc-card,.mm-hero,.mm-rv,.wk2-day,.wl-run,.st2-sum,.mm-stats button,.ps-sum,.pm-sum,.tl-sum,.th-ct-row,.pm2-c,.wd-c,.ic-sq,.tc-card){
+  background:#222222;
+  border-color:rgba(255,255,255,.10);
+  box-shadow:none;
+}
+html.min-layout .pg-cb{background:transparent;border:.5px solid rgba(0,0,0,.12);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.min-layout #device[data-theme="dark"] .pg-cb{background:transparent;border-color:rgba(255,255,255,.14)}
+html.min-layout .pg-sub{background:#f7f7f7;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:-12px 0 32px rgba(0,0,0,.08)}
+html.min-layout #device[data-theme="dark"] .pg-sub{background:#191919;box-shadow:-12px 0 32px rgba(0,0,0,.4)}
+html.min-layout .pg-sheet .pane{background:#f7f7f7;-webkit-backdrop-filter:none;backdrop-filter:none;border-top:.5px solid rgba(0,0,0,.09);box-shadow:0 -12px 32px rgba(0,0,0,.10)}
+html.min-layout #device[data-theme="dark"] .pg-sheet .pane{background:#222222;border-top-color:rgba(255,255,255,.10);box-shadow:0 -12px 32px rgba(0,0,0,.45)}
+html.min-layout .pg-cf .box{background:#f7f7f7;-webkit-backdrop-filter:none;backdrop-filter:none;border:.5px solid rgba(0,0,0,.09);box-shadow:0 16px 40px rgba(0,0,0,.14)}
+html.min-layout #device[data-theme="dark"] .pg-cf .box{background:#222222;border-color:rgba(255,255,255,.10);box-shadow:0 16px 40px rgba(0,0,0,.5)}
+
+/* 5. 菜单与弹层（顶部「⋯」菜单、长按会话菜单、归档抽屉、新会话等）：实色纸面 + 0.5px 细线 */
+html.min-layout .cs-menu,
+html.min-layout .tk-menu,
+html.min-layout .mm-menu,
+html.min-layout .ps-menu,
+html.min-layout .st3-pop,
+html.min-layout .sp-bub{
+  background:#ffffff!important;
+  color:var(--ink);
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  border:.5px solid rgba(0,0,0,.10)!important;
+  box-shadow:0 14px 36px rgba(0,0,0,.14)!important;
+}
+html.min-layout #device[data-theme="dark"] .cs-menu,
+html.min-layout #device[data-theme="dark"] .tk-menu,
+html.min-layout #device[data-theme="dark"] .mm-menu,
+html.min-layout #device[data-theme="dark"] .ps-menu,
+html.min-layout #device[data-theme="dark"] .st3-pop,
+html.min-layout #device[data-theme="dark"] .sp-bub{
+  background:#262626!important;
+  color:#e9e9e9;
+  border-color:rgba(255,255,255,.12)!important;
+  box-shadow:0 14px 36px rgba(0,0,0,.5)!important;
+}
+html.min-layout .cs-menu{border-radius:18px!important;padding:6px!important;width:210px!important}
+html.min-layout .cs-menu button{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:11px!important;color:var(--ink);border-radius:12px!important;padding:10px 12px!important;font-size:14.5px!important;letter-spacing:.01em!important;border-top:0!important}
+html.min-layout .cs-menu button .cm-ic{width:18px;height:18px;display:grid;place-items:center;flex:none;opacity:.78}
+html.min-layout .cs-menu button .cm-ic svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+html.min-layout .cs-menu button span{flex:1;min-width:0}
+html.min-layout .cs-menu button .snap-dot{flex:none}
+html.min-layout .cs-menu button.red{color:#d9534f!important}
+html.min-layout .cs-menu button.red .cm-ic{opacity:1}
+html.min-layout .cs-menu button:active{background:rgba(0,0,0,.06)}
+html.min-layout #device[data-theme="dark"] .cs-menu button:active{background:rgba(255,255,255,.08)}
+html.min-layout .cs-menu button i{color:var(--ink);font-weight:600}
+html.min-layout .cs-menu.ic button svg{stroke:var(--ink2)!important}
+html.min-layout #device[data-theme="dark"] .cs-menu.ic button svg{stroke:var(--ink2)!important}
+/* 聊天页右上角「⋯」菜单图标改黑白灰（百搭）[2026-11-23] */
+html.min-layout .tk-mo .tk-sec .ic{background:rgba(0,0,0,.06)!important}
+html.min-layout .tk-mo .tk-sec .ic svg{stroke:#2a2a2a!important}
+html.min-layout #device[data-theme="dark"] .tk-mo .tk-sec .ic{background:rgba(255,255,255,.09)!important}
+html.min-layout #device[data-theme="dark"] .tk-mo .tk-sec .ic svg{stroke:#d4d4d4!important}
+/* [位置:phone-drawer.css·极简布局×气泡聊天顶栏与菜单磨砂适配] [2026-11-23：极简夜间+气泡聊天+浅色壁纸时，--glass2=#2a2a2a 把顶栏三颗钮变成三个黑坨且字黑底黑看不清；气泡聊天页（.tk:not(.tkmin)）的顶栏三颗钮、「⋯」弹层和头像菜单按实际背景明暗（cbgdark）走半透明磨砂，不吃极简实黑纸面] [注释时间 2026-11-23] */
+html.min-layout #device:not(.cbgdark) .tk:not(.tkmin) .tk-top .tk-cb,
+html.min-layout #device:not(.cbgdark) .tk:not(.tkmin) .tk-top .tk-nm{
+  background:rgba(255,255,255,.58)!important;
+  -webkit-backdrop-filter:blur(20px) saturate(160%)!important;
+  backdrop-filter:blur(20px) saturate(160%)!important;
+  border:.5px solid rgba(255,255,255,.82)!important;
+  box-shadow:0 4px 14px rgba(96,120,160,.12)!important;
+  color:var(--tk-ai-ink,#2a3042)!important;
+}
+html.min-layout #device:not(.cbgdark) .tk:not(.tkmin) .tk-top .tk-cb svg{stroke:var(--tk-ai-ink,#2a3042)!important}
+html.min-layout #device:not(.cbgdark) .tk:not(.tkmin) .tk-top .tk-nm svg{stroke:rgba(42,48,66,.55)!important}
+html.min-layout #device.cbgdark .tk:not(.tkmin) .tk-top .tk-cb,
+html.min-layout #device.cbgdark .tk:not(.tkmin) .tk-top .tk-nm{
+  background:rgba(30,34,46,.52)!important;
+  -webkit-backdrop-filter:blur(20px) saturate(160%)!important;
+  backdrop-filter:blur(20px) saturate(160%)!important;
+  border:.5px solid rgba(255,255,255,.16)!important;
+  color:rgba(255,255,255,.92)!important;
+}
+html.min-layout #device.cbgdark .tk:not(.tkmin) .tk-top .tk-cb svg{stroke:rgba(255,255,255,.92)!important}
+html.min-layout #device.cbgdark .tk:not(.tkmin) .tk-top .tk-nm svg{stroke:rgba(255,255,255,.6)!important}
+html.min-layout #device[data-theme="dark"]:not(.cbgdark) .tk:not(.tkmin) .tk-menu,
+html.min-layout #device[data-theme="dark"]:not(.cbgdark) .tk:not(.tkmin) .tk-mo .tk-pan,
+html.min-layout #device[data-theme="dark"]:not(.cbgdark) .tk:not(.tkmin) .ses-pop .box{
+  background:rgba(255,255,255,.82)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(170%)!important;
+  backdrop-filter:blur(24px) saturate(170%)!important;
+  border:.5px solid rgba(255,255,255,.9)!important;
+  box-shadow:0 14px 36px rgba(60,72,100,.18)!important;
+  --ink:#222630;--ink2:rgba(34,38,48,.68);--ink3:rgba(34,38,48,.46);
+  --acc:#222630;--sel-ring:#222630;--sel-bg:rgba(0,0,0,.07);
+  --line:rgba(0,0,0,.10);--ring:rgba(0,0,0,.10);--pill:rgba(0,0,0,.06);--wk:1;
+  color:#222630!important;
+}
+html.min-layout #device[data-theme="dark"]:not(.cbgdark) .tk:not(.tkmin) .ses-pop .box select,
+html.min-layout #device[data-theme="dark"]:not(.cbgdark) .tk:not(.tkmin) .ses-pop .box .sv{
+  background:rgba(0,0,0,.06)!important;
+  border-color:rgba(0,0,0,.10)!important;
+  color:#222630!important;
+}
+html.min-layout #device[data-theme="dark"]:not(.cbgdark) .tk:not(.tkmin) .ses-pop .box .ro,
+html.min-layout #device[data-theme="dark"]:not(.cbgdark) .tk:not(.tkmin) .ses-pop .box .tk-avrow,
+html.min-layout #device[data-theme="dark"]:not(.cbgdark) .tk:not(.tkmin) .ses-pop .box .av-more{
+  border-color:rgba(0,0,0,.08)!important;
+}
+html.min-layout #device[data-theme="dark"]:not(.cbgdark) .tk:not(.tkmin) .tk-mo .tk-sec .ic{background:rgba(0,0,0,.06)!important}
+html.min-layout #device[data-theme="dark"]:not(.cbgdark) .tk:not(.tkmin) .tk-mo .tk-sec .ic svg{stroke:#2a2a2a!important}
+/* 长按会话浮起卡片与关闭回落过渡 */
+html.min-layout .cs-ov{transition:visibility 0s .24s}
+html.min-layout .cs-ov .lift{background:#ffffff;box-shadow:0 12px 32px rgba(0,0,0,.14);transition:transform .22s cubic-bezier(.4,0,.2,1),opacity .2s ease}
+html.min-layout .cs-ov.closing .lift{animation:none!important;transform:none!important;opacity:0}
+html.min-layout .cs-ov.closing .cs-menu{transform:scale(.88)!important;opacity:0;transition:transform .2s ease,opacity .18s ease}
+html.min-layout #device[data-theme="dark"] .cs-ov .lift,
+html.min-layout #device[data-theme="dark"] .cs-ov .lift.pin{background:#262626;box-shadow:0 14px 36px rgba(0,0,0,.5)}
+html.min-layout .cs-dw .pane{background:#f7f7f7!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-right:.5px solid rgba(0,0,0,.09);box-shadow:0 16px 40px rgba(0,0,0,.14)}
+html.min-layout #device[data-theme="dark"] .cs-dw .pane{background:#191919!important;border-right-color:rgba(255,255,255,.10);box-shadow:0 16px 40px rgba(0,0,0,.5)}
+html.min-layout .ses-pop.dwg .box{background:#f7f7f7;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.min-layout #device[data-theme="dark"] .ses-pop.dwg .box{background:#222222}
+
+/* 6. 顶部提示条 #toast 与通知中心 #nc：实色纸面，纯黑白灰 */
+html.min-layout #toast{
+  background:#111111!important;color:#ffffff!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  border:.5px solid rgba(0,0,0,.12)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.14)!important;
+}
+html.min-layout #device[data-theme="dark"] #toast{
+  background:#2a2a2a!important;color:#e9e9e9!important;
+  border-color:rgba(255,255,255,.14)!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.45)!important;
+}
+html.min-layout #nc{background:rgba(247,247,247,.96);-webkit-backdrop-filter:none;backdrop-filter:none}
+html.min-layout #device[data-theme="dark"] #nc{background:rgba(25,25,25,.96)}
+html.min-layout #nc .noti{background:#ffffff;border:.5px solid rgba(0,0,0,.09);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.min-layout #device[data-theme="dark"] #nc .noti{background:#222222;border-color:rgba(255,255,255,.10)}
+
+/* 7. 控件细节：开关、按钮、输入框、分段条、标签、按下态（纯黑白灰；行图标去掉方形底框） */
+html.min-layout .win:not(.tk-layer) .pg-r .ri{width:24px;height:24px;border-radius:0;background:transparent!important}
+html.min-layout #device[data-theme="dark"] .win:not(.tk-layer) .pg-r .ri{background:transparent!important}
+html.min-layout .win:not(.tk-layer) .pg-r .ri svg{width:20px;height:20px;stroke:var(--ink)!important;stroke-width:1.6;opacity:.78}
+html.min-layout .win:not(.tk-layer) .pg-r.red .ri svg,
+html.min-layout .win:not(.tk-layer) .pg-r.red .rt b{stroke:#c0463c!important;color:#c0463c!important}
+html.min-layout .pg-r+.pg-r::before{background:rgba(0,0,0,.08)}
+html.min-layout #device[data-theme="dark"] .pg-r+.pg-r::before{background:rgba(255,255,255,.08)}
+html.min-layout button.pg-r:active,html.min-layout .pg-r.go:active{background:rgba(0,0,0,.05)}
+html.min-layout #device[data-theme="dark"] button.pg-r:active,html.min-layout #device[data-theme="dark"] .pg-r.go:active{background:rgba(255,255,255,.07)}
+html.min-layout .pg-sw{background:rgba(0,0,0,.18)}
+html.min-layout #device[data-theme="dark"] .pg-sw{background:rgba(255,255,255,.22)}
+html.min-layout .on>.pg-sw,html.min-layout .pg-sw.on,html.min-layout .pg-r.tg.on .pg-sw{background:#111111!important}
+html.min-layout #device[data-theme="dark"] .on>.pg-sw,html.min-layout #device[data-theme="dark"] .pg-sw.on,html.min-layout #device[data-theme="dark"] .pg-r.tg.on .pg-sw{background:#e9e9e9!important}
+html.min-layout #device[data-theme="dark"] .on>.pg-sw::after,html.min-layout #device[data-theme="dark"] .pg-sw.on::after,html.min-layout #device[data-theme="dark"] .pg-r.tg.on .pg-sw::after{background:#191919}
+html.min-layout .pg-btn{background:rgba(0,0,0,.07);color:var(--ink)}
+html.min-layout #device[data-theme="dark"] .pg-btn{background:rgba(255,255,255,.10);color:#e9e9e9}
+html.min-layout .pg-btn.pri{background:#111111;color:#ffffff;box-shadow:none}
+html.min-layout #device[data-theme="dark"] .pg-btn.pri{background:#e9e9e9;color:#191919}
+html.min-layout .pg-seg{background:rgba(0,0,0,.07)}
+html.min-layout #device[data-theme="dark"] .pg-seg{background:rgba(255,255,255,.08)}
+html.min-layout .pg-seg i{background:#ffffff;box-shadow:0 1px 3px rgba(0,0,0,.10)}
+html.min-layout #device[data-theme="dark"] .pg-seg i{background:#3a3a3a;box-shadow:none}
+html.min-layout .pv-tab i{background:rgba(0,0,0,.09)}
+html.min-layout #device[data-theme="dark"] .pv-tab i{background:rgba(255,255,255,.14)}
+html.min-layout .pv-tab button.on{color:var(--ink)}
+html.min-layout .tk-plus i{background:rgba(0,0,0,.05);-webkit-backdrop-filter:none;backdrop-filter:none;border:.5px solid rgba(0,0,0,.10);box-shadow:none}
+html.min-layout #device[data-theme="dark"] .tk-plus i{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.10);box-shadow:none}
+html.min-layout .tk-plus svg{stroke:var(--ink2)}
+html.min-layout .ses-pop .scrim,html.min-layout .cs-ov .scrim,html.min-layout .pg-sheet .scrim,html.min-layout .pg-cf .scrim{background:rgba(0,0,0,.36);-webkit-backdrop-filter:none;backdrop-filter:none}
+html.min-layout #device[data-theme="dark"] .ses-pop .scrim,html.min-layout #device[data-theme="dark"] .cs-ov .scrim,html.min-layout #device[data-theme="dark"] .pg-sheet .scrim,html.min-layout #device[data-theme="dark"] .pg-cf .scrim{background:rgba(0,0,0,.56)}
+html.min-layout .pg-in{border-color:rgba(0,0,0,.14);background:rgba(0,0,0,.04)}
+html.min-layout #device[data-theme="dark"] .pg-in{border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.06)}
+html.min-layout .pg-in:focus{box-shadow:0 0 0 2px rgba(0,0,0,.16)}
+html.min-layout #device[data-theme="dark"] .pg-in:focus{box-shadow:0 0 0 2px rgba(255,255,255,.20)}
+html.min-layout .pg-tag{background:rgba(0,0,0,.08);color:var(--ink2)}
+html.min-layout #device[data-theme="dark"] .pg-tag{background:rgba(255,255,255,.10);color:var(--ink2)}
+html.min-layout .pg-st{background:rgba(0,0,0,.07)}
+html.min-layout #device[data-theme="dark"] .pg-st{background:rgba(255,255,255,.09)}
+html.min-layout .pg-chips button{background:transparent;border-color:rgba(0,0,0,.14)}
+html.min-layout #device[data-theme="dark"] .pg-chips button{border-color:rgba(255,255,255,.14)}
+html.min-layout .pg-chips button.on{background:#111111;color:#ffffff;border-color:#111111}
+html.min-layout #device[data-theme="dark"] .pg-chips button.on{background:#e9e9e9;color:#191919;border-color:#e9e9e9}
+html.min-layout .cf-pick .pg-r .ck{border-color:rgba(0,0,0,.28)}
+html.min-layout #device[data-theme="dark"] .cf-pick .pg-r .ck{border-color:rgba(255,255,255,.28)}
+html.min-layout #device[data-theme="dark"] .cf-pick .pg-r.on .ck svg{stroke:#191919}
+html.min-layout .ses-pop .cs-pick{border-color:rgba(0,0,0,.12);background:rgba(0,0,0,.03)}
+html.min-layout #device[data-theme="dark"] .ses-pop .cs-pick{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04)}
+html.min-layout .ses-pop .cs-pick.on{border-color:#111111;background:rgba(0,0,0,.07);box-shadow:inset 0 0 0 1px #111111}
+html.min-layout #device[data-theme="dark"] .ses-pop .cs-pick.on{border-color:#e9e9e9;background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px #e9e9e9}
+html.min-layout .ses-pop .cs-xb button{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.12);color:var(--ink2)}
+html.min-layout #device[data-theme="dark"] .ses-pop .cs-xb button{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+html.min-layout .ses-pop .cs-xb button.on{background:#111111;color:#ffffff;border-color:#111111}
+html.min-layout #device[data-theme="dark"] .ses-pop .cs-xb button.on{background:#e9e9e9;color:#191919;border-color:#e9e9e9}
+html.min-layout .pv-tab,html.min-layout .pv-mb,html.min-layout .st2-bar,html.min-layout .mm-mbar,html.min-layout .mm-fab{
+  background:#ffffff;-webkit-backdrop-filter:none;backdrop-filter:none;border:.5px solid rgba(0,0,0,.12);box-shadow:0 6px 20px rgba(0,0,0,.08);
+}
+html.min-layout #device[data-theme="dark"] .pv-tab,html.min-layout #device[data-theme="dark"] .pv-mb,html.min-layout #device[data-theme="dark"] .st2-bar,html.min-layout #device[data-theme="dark"] .mm-mbar,html.min-layout #device[data-theme="dark"] .mm-fab{
+  background:#262626;border-color:rgba(255,255,255,.12);box-shadow:0 6px 20px rgba(0,0,0,.4);
+}
+html.min-layout .lk-tabbar{background:linear-gradient(180deg,transparent 0%,rgba(247,247,247,.94) 42%);-webkit-backdrop-filter:none;backdrop-filter:none;border-top:0}
+html.min-layout #device[data-theme="dark"] .lk-tabbar{background:linear-gradient(180deg,transparent 0%,rgba(25,25,25,.94) 42%);border-top:0}
+html.min-layout #device .lk-tabbar .pg-seg{background:#ffffff;-webkit-backdrop-filter:none;backdrop-filter:none;border:.5px solid rgba(0,0,0,.10);box-shadow:0 6px 20px rgba(0,0,0,.08)}
+html.min-layout #device[data-theme="dark"] .lk-tabbar .pg-seg{background:#262626;border:.5px solid rgba(255,255,255,.12);box-shadow:0 8px 24px rgba(0,0,0,.46)}
+html.min-layout #device .lk-tabbar .pg-seg button.on{color:#111111;background:rgba(0,0,0,.08)}
+html.min-layout #device[data-theme="dark"] .lk-tabbar .pg-seg button.on{color:#ffffff;background:rgba(255,255,255,.14)}
+/* 聊天外观极简模式细节优化：色块环、自动按钮、色轮、恢复默认 */
+html.min-layout #device[data-theme="dark"] .th-sw button:not(.aut):not(.cus){box-shadow:0 0 0 1.5px rgba(255,255,255,.22),0 2px 6px rgba(0,0,0,.35)}
+html.min-layout #device[data-theme="dark"] .th-sw button.on:not(.aut):not(.cus){box-shadow:0 0 0 2px #191919,0 0 0 4px #e9e9e9}
+html.min-layout .th-sw .aut,html.min-layout .lk-auto,html.min-layout .lk-def{color:var(--ink2);background:rgba(0,0,0,.05);border:.5px solid rgba(0,0,0,.12)}
+html.min-layout #device[data-theme="dark"] .th-sw .aut,html.min-layout #device[data-theme="dark"] .lk-auto,html.min-layout #device[data-theme="dark"] .lk-def{color:var(--ink2);background:rgba(255,255,255,.07);border:.5px solid rgba(255,255,255,.14)}
+html.min-layout .th-sw .aut.on,html.min-layout .lk-auto.on{color:#ffffff;background:#111111;border-color:#111111}
+html.min-layout #device[data-theme="dark"] .th-sw .aut.on,html.min-layout #device[data-theme="dark"] .lk-auto.on{color:#191919;background:#e9e9e9;border-color:#e9e9e9}
+html.min-layout .th-sw .cus{background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.22);color:var(--ink2)}
+html.min-layout #device[data-theme="dark"] .th-sw .cus{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.24);color:var(--ink2)}
+html.min-layout #device[data-theme="dark"] .lk-pick{box-shadow:0 0 0 1.5px rgba(255,255,255,.26),0 2px 8px rgba(0,0,0,.4)}
+html.min-layout #device[data-theme="dark"] .lk-pick.on{box-shadow:0 0 0 2px #191919,0 0 0 4px #e9e9e9}
+/* 极简抽屉长按排序态 */
+.mn-me-row{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.mn-me-row.mn-dr-lift{position:relative;z-index:10;background:rgba(255,255,255,.92)!important;box-shadow:0 10px 26px rgba(0,0,0,.16);transition:none!important}
+#device[data-theme="dark"] .mn-me-row.mn-dr-lift{background:#2d2d2d!important;box-shadow:0 10px 28px rgba(0,0,0,.55)}
+.mn-me-row.mn-dr-over{box-shadow:inset 0 2px 0 var(--ink)}
+html.min-layout .pv-picking .pv-mh{background:#f7f7f7;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.min-layout #device[data-theme="dark"] .pv-picking .pv-mh{background:#191919}
+html.min-layout .win[data-win="set"] .pg-r .ri{background:transparent!important}
+
+/* 8. 补漏：重试按钮、月历今天圆环、笔记本搜索框、痕迹页、工具集/提示词里的浅蓝底与蓝光晕 */
+html.min-layout .pd-retry{background:rgba(0,0,0,.08);border-color:rgba(0,0,0,.16);color:var(--ink)}
+html.min-layout #device[data-theme="dark"] .pd-retry{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.16);color:#e9e9e9}
+html.min-layout .cl-d.today b{background:#111111;color:#ffffff;box-shadow:none}
+html.min-layout #device[data-theme="dark"] .cl-d.today b{background:#e9e9e9;color:#191919;box-shadow:none}
+html.min-layout .tc .topbar{background:rgba(247,247,247,.94);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 .5px 0 rgba(0,0,0,.08)}
+html.min-layout #device[data-theme="dark"] .tc .topbar{background:rgba(25,25,25,.94);box-shadow:0 .5px 0 rgba(255,255,255,.08)}
+html.min-layout .tc .topbar .back{background:transparent;border:.5px solid rgba(0,0,0,.12);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.min-layout #device[data-theme="dark"] .tc .topbar .back{border-color:rgba(255,255,255,.14)}
+html.min-layout .tc-seg{background:rgba(0,0,0,.06);-webkit-backdrop-filter:none;backdrop-filter:none;border-color:rgba(0,0,0,.08)}
+html.min-layout #device[data-theme="dark"] .tc-seg{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.10)}
+html.min-layout .tc-seg button.on{background:#ffffff;color:#111111;box-shadow:0 1px 3px rgba(0,0,0,.10)}
+html.min-layout #device[data-theme="dark"] .tc-seg button.on{background:#333333;color:#e9e9e9;box-shadow:none}
+html.min-layout .tc-grams i,html.min-layout .tc-badge,html.min-layout .tc-hit .src{background:rgba(0,0,0,.07)!important;border-color:rgba(0,0,0,.10)!important;color:var(--ink2)!important}
+html.min-layout #device[data-theme="dark"] .tc-grams i,html.min-layout #device[data-theme="dark"] .tc-badge,html.min-layout #device[data-theme="dark"] .tc-hit .src{background:rgba(255,255,255,.10)!important;border-color:rgba(255,255,255,.12)!important;color:var(--ink2)!important}
+html.min-layout .tc-m.hit{background:rgba(0,0,0,.06);box-shadow:inset 2px 0 0 #111111}
+html.min-layout #device[data-theme="dark"] .tc-m.hit{background:rgba(255,255,255,.08);box-shadow:inset 2px 0 0 #e9e9e9}
+html.min-layout .cl-row .ic,
+html.min-layout .td-tag,
+html.min-layout .cp-r .ic,
+html.min-layout .tl-c em,
+html.min-layout .pl-q .cat,
+html.min-layout .pl-q .op button,
+html.min-layout .pl-sv .rs,
+html.min-layout .pl-tl .ic,
+html.min-layout .pl-tl .di,
+html.min-layout .pl-bt.ghost,
+html.min-layout .st-alert .bt button,
+html.min-layout .st-sp,
+html.min-layout .st-seg,
+html.min-layout .mp .dots,
+html.min-layout .mp .cm,
+html.min-layout .cf-models span,
+html.min-layout .pm-it .mv button{background:rgba(0,0,0,.07);color:var(--ink2)}
+html.min-layout #device[data-theme="dark"] .cl-row .ic,
+html.min-layout #device[data-theme="dark"] .td-tag,
+html.min-layout #device[data-theme="dark"] .cp-r .ic,
+html.min-layout #device[data-theme="dark"] .tl-c em,
+html.min-layout #device[data-theme="dark"] .pl-q .cat,
+html.min-layout #device[data-theme="dark"] .pl-q .op button,
+html.min-layout #device[data-theme="dark"] .pl-sv .rs,
+html.min-layout #device[data-theme="dark"] .pl-tl .ic,
+html.min-layout #device[data-theme="dark"] .pl-tl .di,
+html.min-layout #device[data-theme="dark"] .pl-bt.ghost,
+html.min-layout #device[data-theme="dark"] .st-alert .bt button,
+html.min-layout #device[data-theme="dark"] .st-sp,
+html.min-layout #device[data-theme="dark"] .st-seg,
+html.min-layout #device[data-theme="dark"] .mp .dots,
+html.min-layout #device[data-theme="dark"] .mp .cm,
+html.min-layout #device[data-theme="dark"] .cf-models span,
+html.min-layout #device[data-theme="dark"] .pm-it .mv button{background:rgba(255,255,255,.09);color:var(--ink2)}
+html.min-layout .pg-search input{background:rgba(0,0,0,.05);border:.5px solid rgba(0,0,0,.08);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html.min-layout #device[data-theme="dark"] .pg-search input{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.10)}
+html.min-layout .nb-search input,
+html.min-layout .mm-search input{background:rgba(0,0,0,.05);border:.5px solid rgba(0,0,0,.08);box-shadow:none}
+html.min-layout #device[data-theme="dark"] .nb-search input,
+html.min-layout #device[data-theme="dark"] .mm-search input{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.10)}
+
+/* 9. 人设页备忘录化 + 全站极简清蓝（按压/长按/聚焦/选字，月夜玻璃零影响） */
+html.min-layout .ps-row,
+html.min-layout .ps-list .pg-grp{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html.min-layout .ps-row.def{background:transparent}
+html.min-layout .ps-dt{background:#111111;color:#ffffff;font-weight:500;letter-spacing:.04em}
+html.min-layout #device[data-theme="dark"] .ps-dt{background:#e9e9e9;color:#191919}
+html.min-layout .ps-row.lp{background:rgba(0,0,0,.05)}
+html.min-layout #device[data-theme="dark"] .ps-row.lp{background:rgba(255,255,255,.07)}
+html.min-layout .ps-menu{background:#ffffff;-webkit-backdrop-filter:none;backdrop-filter:none;border:.5px solid rgba(0,0,0,.10);box-shadow:0 10px 28px rgba(0,0,0,.12)}
+html.min-layout #device[data-theme="dark"] .ps-menu{background:#262626;border-color:rgba(255,255,255,.12);box-shadow:0 10px 28px rgba(0,0,0,.45)}
+html.min-layout .ps-menu button+button{border-top-color:rgba(0,0,0,.08)}
+html.min-layout #device[data-theme="dark"] .ps-menu button+button{border-top-color:rgba(255,255,255,.08)}
+html.min-layout .ps-menu button:active{background:rgba(0,0,0,.05)}
+html.min-layout #device[data-theme="dark"] .ps-menu button:active{background:rgba(255,255,255,.07)}
+html.min-layout .ps-menu button.red{color:#c0463c}
+html.min-layout .ps-list .pg-grp+.pg-grp,
+html.min-layout .ps-list .ps-row+.pg-grp{border-top:.5px solid rgba(0,0,0,.07)}
+html.min-layout #device[data-theme="dark"] .ps-list .pg-grp+.pg-grp,
+html.min-layout #device[data-theme="dark"] .ps-list .ps-row+.pg-grp{border-top-color:rgba(255,255,255,.08)}
+html.min-layout .ps-grp-card .pg-grp.open{background:rgba(0,0,0,.03);border-bottom-color:rgba(0,0,0,.07)}
+html.min-layout #device[data-theme="dark"] .ps-grp-card .pg-grp.open{background:rgba(255,255,255,.04);border-bottom-color:rgba(255,255,255,.08)}
+html.min-layout .ps-gcnt{background:rgba(0,0,0,.06);color:var(--ink3)}
+html.min-layout #device[data-theme="dark"] .ps-gcnt{background:rgba(255,255,255,.09);color:var(--ink3)}
+html.min-layout .ses-pop .cs-xq-st{background:rgba(0,0,0,.06)}
+html.min-layout #device[data-theme="dark"] .ses-pop .cs-xq-st{background:rgba(255,255,255,.08)}
+html.min-layout .th-us{padding-top:14px}
+html.min-layout .ct-act{color:#111111;background:rgba(0,0,0,.08)}
+html.min-layout #device[data-theme="dark"] .ct-act{color:#e9e9e9;background:rgba(255,255,255,.12)}
+html.min-layout #device[data-theme="dark"] .ct-dots i{border-color:#262626}
+html.min-layout .ct-more:active{background:rgba(0,0,0,.06)}
+html.min-layout #device[data-theme="dark"] .ct-more:active{background:rgba(255,255,255,.10)}
+
+/* 全站极简按压/长按/聚焦清蓝（覆盖 phone-pages/apps/apps2/cards/chats/talk 里的 rgba(125,156,207,...)） */
+html.min-layout :is(.pg-grp,.ps-b,.ps-gdots,.ps-rdots,.pv-row,.pv-picking .pv-mhr button,.pv-ml .pv-m,.mm-it,.mm-menu button,.st-it,.pm-it,.mdg-it,.mdg-x,.sp-cm-btn,.sp-bub,.cl-tap [data-per],.cl-tap [data-exp],.cl-tap [data-sum],.cl-fp,.st-row.act,.mo-ln.her,#ctx .menu button,.cmenu button,.cs-menu button,.cs-it .m .bf[data-bf],.tk-menu button,.tk-dw .sh .dw-cp,.qk-r,.qk-e,.tk-ad .adb,.tk-ad .adi.mine,.tk-ad .adx,.tk-ver button,.ses-pop .ro.bfr .bfb):active{background:rgba(0,0,0,.06)}
+html.min-layout #device[data-theme="dark"] :is(.pg-grp,.ps-b,.ps-gdots,.ps-rdots,.pv-row,.pv-picking .pv-mhr button,.pv-ml .pv-m,.mm-it,.mm-menu button,.st-it,.pm-it,.mdg-it,.mdg-x,.sp-cm-btn,.sp-bub,.cl-tap [data-per],.cl-tap [data-exp],.cl-tap [data-sum],.cl-fp,.st-row.act,.mo-ln.her,#ctx .menu button,.cmenu button,.cs-menu button,.cs-it .m .bf[data-bf],.tk-menu button,.tk-dw .sh .dw-cp,.qk-r,.qk-e,.tk-ad .adb,.tk-ad .adi.mine,.tk-ad .adx,.tk-ver button,.ses-pop .ro.bfr .bfb):active{background:rgba(255,255,255,.08)}
+html.min-layout .pm2-c.lp{box-shadow:0 0 0 1.5px rgba(0,0,0,.28),0 10px 26px rgba(0,0,0,.10)}
+html.min-layout #device[data-theme="dark"] .pm2-c.lp{box-shadow:0 0 0 1.5px rgba(255,255,255,.32),0 10px 26px rgba(0,0,0,.40)}
+html.min-layout .pg-st .pg-st-v:focus{background:rgba(0,0,0,.08)}
+html.min-layout #device[data-theme="dark"] .pg-st .pg-st-v:focus{background:rgba(255,255,255,.10)}
+html.min-layout :is(.wk3-orb,.pg-sw):focus-visible{outline-color:rgba(0,0,0,.35)}
+html.min-layout #device[data-theme="dark"] :is(.wk3-orb,.pg-sw):focus-visible{outline-color:rgba(255,255,255,.40)}
+html.min-layout .st3-c:focus-visible{box-shadow:0 0 0 2px rgba(0,0,0,.30)}
+html.min-layout #device[data-theme="dark"] .st3-c:focus-visible{box-shadow:0 0 0 2px rgba(255,255,255,.35)}
+html.min-layout .qk-ta:focus{border-color:rgba(0,0,0,.35);background:rgba(0,0,0,.04)}
+html.min-layout #device[data-theme="dark"] .qk-ta:focus{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.06)}
+html.min-layout .tk-ad .adt:focus{background:rgba(0,0,0,.06);box-shadow:0 0 0 1.5px var(--acc)}
+html.min-layout #device[data-theme="dark"] .tk-ad .adt:focus{background:rgba(255,255,255,.08)}
+html.min-layout .tkmin .composer .field:focus-within{background:rgba(255,255,255,.95);box-shadow:0 2px 8px rgba(31,30,29,.08)}
+html.min-layout #device[data-theme="dark"] .tkmin .composer .field:focus-within{background:rgba(255,255,255,.09);box-shadow:none}
+
+/* 极简全局选字高亮去蓝 */
+html.min-layout ::selection{background:rgba(0,0,0,.14);color:inherit}
+html.min-layout #device[data-theme="dark"] ::selection{background:rgba(255,255,255,.20);color:inherit}
+html.min-layout .tkmin ::selection{background:rgba(201,100,66,.22);color:inherit}
+html.min-layout #device[data-theme="dark"] .tkmin ::selection{background:rgba(216,138,106,.26);color:inherit}
+

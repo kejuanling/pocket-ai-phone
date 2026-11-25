@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<!-- [位置:workspace/login.html] [锁内页面登录中转页] [2026-11-10 晚：日记/月历等锁从 basic auth
+     换成挂小手机登录态后，未登录访问锁内页面会被 nginx 302 到 /login?back=原地址。
+     本页调 /heartbeat/admin/chat-login（与聊天页/小手机同一账号体系），成功后跳回 back；
+     back 只接受站内路径（/ 开头、非 //、无协议）防开放跳转。样式对齐小手机暗色玻璃手感。] -->
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>登录</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI","Microsoft YaHei",sans-serif;
+  background:radial-gradient(120% 120% at 20% 0%,#2a3350 0%,#1b2138 55%,#141828 100%);
+  display:flex;align-items:center;justify-content:center;padding:24px;color:#e8ecf6}
+.card{width:100%;max-width:340px;background:rgba(38,46,74,.72);border:1px solid rgba(255,255,255,.09);
+  border-radius:24px;padding:30px 26px;backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);
+  box-shadow:0 18px 50px rgba(0,0,0,.35);transition:opacity .3s}
+h1{font-size:19px;font-weight:700;letter-spacing:.5px}
+p.sub{font-size:12.5px;color:#93a0bd;margin:7px 0 22px;line-height:1.6}
+label{display:block;font-size:12.5px;color:#93a0bd;margin:14px 0 6px}
+input{width:100%;padding:12px 14px;border:1px solid rgba(255,255,255,.12);border-radius:12px;
+  font-size:15px;background:rgba(255,255,255,.06);color:#e8ecf6;outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus{border-color:#7f9cf5;box-shadow:0 0 0 3px rgba(127,156,245,.22)}
+button{width:100%;margin-top:24px;padding:13px;border:none;border-radius:13px;font-size:15.5px;font-weight:600;
+  color:#fff;cursor:pointer;background:linear-gradient(135deg,#6d8df7,#8f6df0);
+  box-shadow:0 8px 20px rgba(109,141,247,.32);transition:transform .15s,opacity .2s}
+button:active{transform:scale(.97);opacity:.88}
+button[disabled]{opacity:.6}
+.msg{min-height:18px;font-size:12.5px;color:#f08a8a;margin-top:12px;text-align:center}
+.card.ok .msg{color:#7fd6a4}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <h1>先登录一下</h1>
+  <p class="sub">和聊天页用同一个账号，登录一次大约 30 天不用再登。</p>
+  <label for="u">账号</label>
+  <input id="u" type="text" autocomplete="username" autocapitalize="none" autocorrect="off">
+  <label for="p">密码</label>
+  <input id="p" type="password" autocomplete="current-password">
+  <div class="msg" id="m"></div>
+  <button id="go" type="button">登 录</button>
+</div>
+<script>
+(function(){
+"use strict";
+var back="/phone-new.html";
+try{
+  var q=new URLSearchParams(location.search);
+  var b=q.get("back")||"";
+  if(b && b.charAt(0)==="/" && b.charAt(1)!=="/" && !/:/.test(b)) back=b;
+}catch(e){}
+var u=document.getElementById("u"),p=document.getElementById("p"),m=document.getElementById("m"),
+    go=document.getElementById("go"),card=document.getElementById("card");
+function submit(){
+  var a=u.value.trim(),b=p.value.trim();
+  if(!a||!b){m.textContent="账号和密码都要填";return;}
+  go.disabled=true;go.textContent="验证中…";m.textContent="";
+  fetch("/heartbeat/admin/chat-login",{method:"POST",credentials:"include",
+    headers:{"Content-Type":"application/json","Accept":"application/json"},
+    body:JSON.stringify({user:a,password:b})})
+  .then(function(r){return r.json().catch(function(){return {};}).then(function(j){return {ok:r.ok,j:j};});})
+  .then(function(x){
+    var j=x.j||{};
+    /* [位置:login.html·submit] [非 2xx 不当成密码错] [11-14 审查 C 批：原来只看 body.ok，后端 502/500 回一页 HTML 时 json 解析失败得空对象，界面一律说「账号或密码不对」，人会反复重输密码；现在先看 HTTP 状态] [注释时间 2026-11-14] */
+    if(!x.ok){ m.textContent='服务没响应，稍后再试'; go.disabled=false; go.textContent="登 录"; return; }
+    if(j&&j.ok){
+      card.classList.add("ok");go.textContent="登好了";
+      m.textContent="登录成功，正在返回…";
+      try{localStorage.setItem("han_logged_in","1");}catch(e){}
+      setTimeout(function(){location.replace(back);},420);
+    }else{
+      m.textContent=(j&&j.error)||"账号或密码不对";
+      go.disabled=false;go.textContent="登 录";
+    }
+  })
+  .catch(function(){m.textContent="网络不通，稍后再试";go.disabled=false;go.textContent="登 录";});
+}
+go.addEventListener("click",submit);
+p.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();submit();}});
+u.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();p.focus();}});
+/* 已有有效登录态（如瞬时失联后重试）：直接回原页，不再要密码 */
+fetch("/heartbeat/admin/session-check",{credentials:"include"})
+  .then(function(r){if(r.status===204){location.replace(back);}}).catch(function(){});
+})();
+</script>
+</body>
+</html>

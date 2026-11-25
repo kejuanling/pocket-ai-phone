@@ -1,0 +1,454 @@
+// ============================================================
+// Context Assembly V2 Builder（C10 S3-C 校准批）—— 上下文块构建纯函数
+//
+// 设计契约：Context Assembly v1.1 + 0918 用户审查修订（质量优先原则）。
+// 纯函数：全部数据由参数传入，不读任何文件、不写任何文件、零副作用；
+// S2 shadow 层负责从生产读数组装输入，S4 正式接线时输出直接映射为 developer 块。
+//
+// 块顺序（0918 修订冻结；1002-14 删 meaningful_moments）：
+//   system_instructions → core_identity → long_term_understanding
+//   → conversation_continuity → relevant_memories
+//   （1102 增补：starred_dialog / notebook_index / pinned_notes / memory_keywords 见 BLOCK_DEFS 实序）
+//
+// 0918 修订要点（用户拍板）：
+//   1. header 一行式：`## 名称 — 一句英文解释`，换行直接是内容；
+//   2. 条目标题 [xxx] 格式；
+//   3. 新增 System Instructions：pinned 中的工具文档归此（不是「约定」）；
+//   4. Earlier Days 回归生产原逻辑：最近 N 篇日记全量（N=diaryCount，
+//      生产同源管理台 cross_inject_diary_count，用户自控），预算 16000 封顶——
+//      质量优先：日记是对抗压缩块劣化的原话保真通道，信息饥饿式预算作废；
+//   5. Current State 砍掉（AI 日记≠她的状态，数据源不成立）；
+//   6. Recent Experience 剔除（时间线原文本身，非注入块，防「两份」）。
+// 纪律：空块整块省略；V2 空仓自动降级；Relevant 排除固定块成员；所有输入只读。
+// token 估算与生产一致（context-compactor 口径）；检索复用 context-v2-adapter。
+// ============================================================
+
+const { tokenize, similarity } = require("./context-v2-adapter");
+const { searchEnabled } = require("../memory/memory-v2");   // 参与检索开关统一口径（1110 关键词不分类靠开关）
+
+// ---- 默认配置（0918 修订值；input.config 可浅覆盖）----
+// 2026-09-22 审查 R23：budgets 只保留**实际被读取**的两项（conversation_continuity / relevant_memories）。
+// 删掉的 system_instructions / core_identity / meaningful_moments 全代码零读取点——注释说"预算"
+// 但从不参与截断（代码明确「超限不截断，交管理」，见 230/281 之外的块构造），留着只会让人误以为存在限额。
+const DEFAULT_CONFIG = {
+  budgets: {
+    conversation_continuity: 40000, // Earlier Days 封顶仅防异常（篇数由用户配置 diaryCount 决定，不在此静默丢篇）
+    relevant_memories: 400,        // 超限从尾部减条
+  },
+  diaryCount: 3,                   // Earlier Days 篇数（生产接线时同源管理台 cross_inject_diary_count）
+  relevantTopK: 5,
+  relevantMinScore: 0.30,          // 0918 用户拍板调高：命中即写入时间线永久在场，高门槛防膨胀
+  // 相关记忆：triggers 词面硬门槛 + 词面主排序；vibe 向量只负责轻量重排。
+  relevantLitGate: 0.25,
+  relevantMinHybridScore: 0.20,    // 多词召回口径：词面权重 0.5 下，命中 1 个整词=0.25 刚好过，部分命中 <0.2 不过
+  relevantHybridTopK: 1,
+  relevantWordWeight: 0.5,
+  relevantSemWeight: 0.05,
+};
+
+// ---- 块定义（顺序=组装顺序冻结）----
+const BLOCK_DEFS = [
+  { key: "system_instructions", title: "System Instructions" },
+  /* [位置:context-v2-builder.js·BLOCK_DEFS 顺序] [Long-term Understanding 排在 Core Identity 前面] [11-03：用户画像（Long-term）在前、交互偏好（Core）在后；只影响新建/重建的快照，已冻结的会话重建前仍是旧顺序] [注释时间 2026-11-03] */
+  { key: "long_term_understanding", title: "Long-term Understanding" },
+  { key: "core_identity", title: "Core Identity" },
+  { key: "conversation_continuity", title: "Earlier Days" },
+  { key: "starred_dialog", title: "Starred Dialog" },
+  { key: "notebook_index", title: "Notebook Index" },
+  { key: "pinned_notes", title: "Pinned Notes" },   // 1102 笔记置顶：置顶笔记全文，不冻结、重建时按当前置顶重出
+  { key: "memory_keywords", title: "Memory Keywords" },  // 1102 记忆池关键词：active 记忆 triggers 去重汇总，重建时按当前记忆池重出
+  { key: "relevant_memories", title: "Possibly Relevant Memories" },
+];
+
+
+// ---- 各内容块标题（说明已上移顶层引导，块内只留一行标题）----
+const HEADERS = {
+  system_instructions: "## System Instructions",
+  core_identity: "## Core Identity",
+  long_term_understanding: "## Long-term Understanding",
+  conversation_continuity: "## Earlier Days",
+  starred_dialog: "## Starred Dialog",
+  notebook_index: "## Notebook Index",
+  pinned_notes: "## Pinned Notes",
+  memory_keywords: "## Memory Keywords",
+  relevant_memories: "## Possibly Relevant Memories",
+};
+
+// 1102 记忆池关键词块：说明行（已定文案，原样进上下文）
+const MEMORY_KEYWORDS_GUIDE = "Keyword map of event memories (format: memory id | keywords). When she mentions something that may be related, search with these words; a memory can also be opened directly by its id.";   // 11-03 二改：只说是 event 的关键词地图+怎么用；每行带记忆 id   // 11-03：汇总只收 event，说明行同步（原文案含 facts, rules）
+
+/* [位置:context-v2-builder.js·BLOCK_DESCS] [大标题下一句精简英文说明] [11-03：上下文分层说明去掉后，每个大标题下面补一句话说明这块是什么；只给没有自带说明的块加（Notebook Index / Pinned Notes / Memory Keywords 自带说明行，Possibly Relevant Memories 是逐轮动态内容，都不加）；块为空不加；Core Identity=交互偏好（rule 总结），Long-term Understanding=用户画像（fact 总结）] [注释时间 2026-11-03] */
+const BLOCK_DESCS = {
+  system_instructions: "Standing instructions and tool documentation for this conversation; follow them throughout.",
+  /* 11-03 二改：两块总结不解释「这是什么」，只说明来源与局限——由记忆池哪一类、模型总结而来，不实时更新，可能漏细节 */
+  long_term_understanding: "Summarized by a model from the fact memories in the memory pool. Not updated in real time; some details may be missing.",
+  core_identity: "Summarized by a model from the rule memories in the memory pool. Not updated in real time; some details may be missing.",
+  conversation_continuity: "Diary entries from recent days, for continuity across conversations.",
+  starred_dialog: "Dialog lines that were starred as meaningful; they stay with you across conversations.",
+};
+
+// Current State 状态线索词已随块砍除（0918）。
+
+// ---- token 估算（同款口径复制自 context-compactor.js estimateTokens）----
+function estimateTokens(text) {
+  const s = String(text || "");
+  let cjk = 0, other = 0;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if ((c >= 0x4e00 && c <= 0x9fff) || (c >= 0x3400 && c <= 0x4dbf) || (c >= 0xf900 && c <= 0xfaff) || (c >= 0x3000 && c <= 0x303f)) cjk++;
+    else other++;
+  }
+  return cjk + Math.ceil(other / 4);
+}
+
+// ---- 小工具 ----
+function strSafe(v) { return v == null ? "" : String(v).trim(); }
+
+// ISO 时间串 → "YYYY-MM-DD"（抽不出返回 null，不猜）
+function datePart(iso) {
+  const s = strSafe(iso);
+  if (!/^\d{4}-\d{2}-\d{2}/.test(s)) return null;
+  return s.slice(0, 10);
+}
+
+// 条目行（正文＋可选轻量时间后缀）
+function entryLine(text, iso) {
+  const d = datePart(iso);
+  return d ? `${strSafe(text)}（${d}）` : strSafe(text);
+}
+
+// 按准入时间（created_at）升序排（注入排列口径：append-only 语义）
+function byCreatedAt(a, b) {
+  const da = strSafe(a.created_at) || "9999";
+  const db = strSafe(b.created_at) || "9999";
+  return da < db ? -1 : da > db ? 1 : 0;
+}
+
+// 条目标题（永久上下文每段）：### 标题 + 空行 + 正文。块头是 ##，条目用 ### 做下一级，层级不混。
+// 标题前的空行由 compose 的 "\n\n" 分隔提供；无标题则只返回正文。
+function entryWithTitle(title, content) {
+  const t = strSafe(title);
+  const c = strSafe(content);
+  return t ? `### ${t}\n\n${c}` : c;
+}
+
+// 拼块 content：header 行 + 换行直接接内容；无条目返回 null（空块）
+// 条目自带 ### 标题的块（system_instructions / core_identity）：条目之间、块头与首条之间空一行。
+function compose(headerText, lines, spaced) {
+  if (!lines.length) return null;
+  const sep = spaced ? "\n\n" : "\n";
+  return headerText ? headerText + sep + lines.join(sep) : lines.join(sep);
+}
+
+// ============================================================
+// 各块构建（每块返回 {lines, fixedIds}：条目行＋占用的记忆 id（供 Relevant 去重））
+// ============================================================
+
+// [1] System Instructions：pinned(instructions) 保序，[标题]格式。
+// 预算不截断（工具文档是功能必需，超限=管理问题报警）。
+function buildSystemInstructions(input, cfg) {
+  const lines = [];
+  const fixedIds = [];
+  const pinned = Array.isArray(input.pinnedEntries) ? input.pinnedEntries : [];
+  for (const p of pinned) {
+    if (p && p.target === "instructions") {
+      const title = strSafe(p.title);
+      lines.push(entryWithTitle(title, p.content));
+      if (p.id != null) fixedIds.push(String(p.id));
+    }
+  }
+  return { lines, fixedIds };
+}
+
+// [2] Core Identity：pinned(identity) 保序 ＋ V2 rule(active 且 anchor=true) 按准入时间正序。
+// 预算不截断（超限=管理问题报警，代码不自动删约定）。
+function buildCoreIdentity(input, cfg) {
+  const lines = [];
+  const fixedIds = [];
+  const pinned = Array.isArray(input.pinnedEntries) ? input.pinnedEntries : [];
+  for (const p of pinned) {
+    if (p && p.target === "identity") {
+      const title = strSafe(p.title);
+      lines.push(entryWithTitle(title, p.content));
+      if (p.id != null) fixedIds.push(String(p.id));
+    }
+  }
+  // 1002 §8 第 6 项：有 LLM 总结就用总结（选材 = 全部活跃 rule，不是置顶几条），
+  // 不再直注条目原文；无缓存（首次生成前 / 生成失败）回落原来的 anchor 直注。
+  const sum = (input.summaryBlocks && Array.isArray(input.summaryBlocks.core_identity))
+    ? input.summaryBlocks.core_identity : null;
+  if (sum && sum.length) {
+    for (const l of sum) lines.push(String(l));
+    return { lines, fixedIds };
+  }
+  const rules = (Array.isArray(input.memoriesV2) ? input.memoriesV2 : [])
+    .filter(m => m && m.status === "active" && m.kind === "rule" && m.anchor === true)
+    .sort(byCreatedAt);
+  for (const r of rules) {
+    lines.push(entryLine(r.text, r.created_at));
+    if (r.id != null) fixedIds.push(String(r.id));
+  }
+  return { lines, fixedIds };
+}
+
+// [3] Long-term Understanding 核心层：V2 fact(active 且 anchor=true)（0920 删重要级：原 anchor 且 priority≥0.8）；
+// 排列按准入时间正序。0920 用户拍板去掉注入上限（原 400 token 超限淘汰更旧、保底 1 条）——置顶记忆全量注入
+function buildUnderstanding(input, cfg) {
+  const fixedIds = [];
+  // 1002 §8 第 6 项：有 LLM 总结就用总结（选材 = 全部活跃 fact）；无缓存回落 anchor 直注。
+  const sum = (input.summaryBlocks && Array.isArray(input.summaryBlocks.understanding))
+    ? input.summaryBlocks.understanding : null;
+  if (sum && sum.length) return { lines: sum.map(String), fixedIds: [] };
+  const lines = (Array.isArray(input.memoriesV2) ? input.memoriesV2 : [])
+    .filter(m => m && m.status === "active" && m.kind === "fact" && m.anchor === true)
+    .sort(byCreatedAt)
+    .map(m => { if (m.id != null) fixedIds.push(String(m.id)); return entryLine(m.text, null); });
+  return { lines, fixedIds };
+}
+
+// [5] Earlier Days：最近 N 篇日记全量（N=diaryCount，
+// 生产同源管理台 cross_inject_diary_count），按时间升序；预算装不下的篇从最旧丢。
+// 质量优先（0918 拍板）：日记是对抗压缩块劣化的原话保真通道，全量注入。
+function buildContinuity(input, cfg) {
+  // 2026-10-03：日记改按 id（创建顺序）排序，取 id 最大的 n 篇（原按 date 字符串）
+  // 1010-13：置顶日记（pin=true）固定注入、占份数，排最前（按 id 升序=时间正序）；
+  // 其余名额从最近篇目补满；整体保持时间正序（旧在上、新在下）。
+  const diary = (Array.isArray(input.diaryEntries) ? input.diaryEntries : [])
+    .slice()
+    .sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
+  const n = Math.max(1, Number(cfg.diaryCount) || 3);
+  const pinned = diary.filter(d => d.pin === true);
+  const rest = diary.filter(d => d.pin !== true);
+  const recent = rest.slice(-Math.max(0, n - pinned.length));
+  const budget = cfg.budgets.conversation_continuity;
+  let used = estimateTokens(HEADERS.conversation_continuity);
+  /* [位置:context/context-v2-builder.js·buildContinuity] [历史日记展示附带唯一 id] [在 Earlier Days 注入的每篇日记标题行末尾附带 [id:N]，供 AI 识别具体日记并按 id 移出上下文固定展示] [注释时间 2026-11-24] */
+  const formatDiaryWithId = (d) => {
+    const raw = strSafe(d && d.content);
+    if (!raw || d == null || d.id == null) return raw;
+    if (/\[id:\s*\d+\]/i.test(raw.split('\n')[0] || '')) return raw;
+    if (/^##\s+/.test(raw)) return raw.replace(/^(##[^\n]*)/, '$1 [id:' + d.id + ']');
+    return '## [id:' + d.id + ']\n\n' + raw;
+  };
+  const pinnedLines = [], pinnedIds = [];
+  for (const d of pinned) { // 置顶在前，按时间正序
+    const line = formatDiaryWithId(d);
+    const cost = estimateTokens(line);
+    if (used + cost > budget) continue;
+    pinnedLines.push(line);
+    pinnedIds.push(d.id);
+    used += cost;
+  }
+  const restLines = [], restIds = [];
+  for (let i = recent.length - 1; i >= 0; i--) { // 从最新往最旧装，装不下跳过更旧的
+    const d = recent[i];
+    const line = formatDiaryWithId(d);
+    const cost = estimateTokens(line);
+    if (used + cost > budget) continue;
+    restLines.unshift(line); // 保持时间正序呈现
+    restIds.unshift(d.id);
+    used += cost;
+  }
+  // memberIds：实际注入的日记 id（1018「建好即固定」按篇冻结用）
+  return { lines: pinnedLines.concat(restLines), fixedIds: [], memberIds: pinnedIds.concat(restIds) };
+}
+
+// [5a] Starred Dialog（1010 需求3）：标星的消息原文（context_compaction_marks 命中 → 时间线取原文）。
+// 行由装配层（shadow/runtime）算好传入 input.starredLines——builder 保持纯函数（不读文件）。
+function buildStarredDialog(input, cfg) {
+  const lines = (Array.isArray(input.starredLines) ? input.starredLines : []).map(strSafe).filter(Boolean);
+  return { lines: lines, fixedIds: [] };
+}
+
+// [5b] Notebook Index（2026-10-16）：AI 笔记本目录（分类篇数 + 最近 N 篇标题）。
+// 行由装配层（shadow.assembleInput → papers.indexLines）算好传入 input.notebookLines——builder 保持纯函数。
+// 随会话快照固化；本子为空则不注入。
+function buildNotebookIndex(input, cfg) {
+  const lines = (Array.isArray(input.notebookLines) ? input.notebookLines : []).map(strSafe).filter(Boolean);
+  return { lines: lines, fixedIds: [] };
+}
+
+// [5c] Pinned Notes（2026-11-02）：置顶笔记全文。
+// 行由装配层（shadow.assembleInput → papers.pinnedNotesLines）算好传入 input.pinnedNotesLines——builder 保持纯函数。
+// 不冻结（同笔记本目录）：每次会话快照建立 / 重建时按当前置顶集合重出；没有置顶笔记则不注入。
+function buildPinnedNotes(input, cfg) {
+  const lines = (Array.isArray(input.pinnedNotesLines) ? input.pinnedNotesLines : []).map(strSafe).filter(Boolean);
+  return { lines: lines, fixedIds: [] };
+}
+
+// [5d] Memory Keywords（2026-11-02）：记忆池关键词目录块。
+// 收口=active（生效中）event 记忆的 triggers，一条记忆一行「id｜词、词」（superseded/archived 不列）；
+// 按记忆入库先后排，同一条记忆的关键词保持相邻（语义成串）。2026-11-03 起只收 event（产品确定：fact/rule 不编关键词，由常驻摘要承载；原来全类型收、存量迁移词也在内）。
+// 行由 builder 现算（输入就是 assembleInput 已读好的 memoriesV2，无需装配层加工）。
+// 不冻结（同笔记本目录策略）：每次会话快照建立 / 重建时按当前记忆池重出；没有任何关键词则不注入。
+/* [位置:context-v2-builder.js·buildMemoryKeywords] [记忆池关键词块] [11-02：跨窗口注入新增目录块，把记忆池所有关键词去重汇总，给模型当检索线索；重建才变化] [注释时间 2026-11-02] */
+function buildMemoryKeywords(input, cfg) {
+  /* [位置:context-v2-builder.js·buildMemoryKeywords 带 id] [每条 event 一行「记忆id｜词、词」] [11-03：关键词地图要带记忆 id，AI 看到词命中某条就能直接按 id 打开它；不再跨记忆去重成一串（去重后看不出词属于哪条）；同一条内的重复词去掉，没有关键词的记忆不列] [注释时间 2026-11-03] */
+  const rows = [];
+  /* [位置:context-v2-builder.js·buildMemoryKeywords 按开关] [11-10：关键词地图不再只收 event] [拍板「关键词不区分分类就都写，靠参与检索开关决定是否参与」——开关开着的三类都进地图；searchEnabled 对无字段存量按 kind 推默认（event 开/fact、rule 关），老数据行为不变] [注释时间 2026-11-10] */
+  const pool = (Array.isArray(input.memoriesV2) ? input.memoriesV2 : [])
+    .filter(m => m && m.status === "active" && searchEnabled(m) && m.id != null);
+  for (const m of pool) {
+    const seen = new Set();
+    const words = [];
+    for (const t of (Array.isArray(m.triggers) ? m.triggers : [])) {
+      const w = String(t || "").trim();
+      if (!w || seen.has(w)) continue;
+      seen.add(w); words.push(w);
+    }
+    if (words.length) rows.push(String(m.id) + "｜" + words.join("、"));
+  }
+  if (!rows.length) return { lines: [], fixedIds: [] };
+  return { lines: [MEMORY_KEYWORDS_GUIDE, rows.join("\n")], fixedIds: [] };
+}
+
+// [6] Possibly Relevant Memories：V2 event 检索（1005-17 重写）。
+// 范围只留 event（"记住的一件事/做出来的东西"）——fact/rule 是"对人"的稳定信息，
+// 由 Core Identity / Long-term Understanding 常驻块覆盖；Relevant 是"对事"的浮动补充。
+// 关键词是硬门槛、词面分主导排序；只有 event.vibe 向量可提供轻量重排，正文向量不参与。
+// vibe 缺失或向量服务失败时，完全按词面得分；语义最多贡献 0.05，不能抬高词面门槛。
+// 双重去重：fixedIdSet/excludeIds（已注入/浮现）+ source_session===当前会话（本会话发生的不重复注入）。
+// 每轮最多 1 条（topK 可调）；预算 relevant_memories 兜底。
+function buildRelevant(input, cfg, fixedIdSet) {
+  const q = strSafe(input.query);
+  if (!q) return { lines: [], fixedIds: [] };
+  const excluded = new Set((Array.isArray(input.excludeIds) ? input.excludeIds : []).map(String));
+  /* [位置:context-v2-builder.js·buildRelevant 按开关] [相关注入候选不再限定 event] [11-10：开关开着的三类都可被关键词召回；vibe 语义腿仍仅 event（runtime 侧 vecScores 只算 event），开关关着的条目零召回] [注释时间 2026-11-10] */
+  let pool = (Array.isArray(input.memoriesV2) ? input.memoriesV2 : [])
+    .filter(m => m && m.status === "active" && m.id != null && m.anchor !== true
+      && searchEnabled(m)
+      && !fixedIdSet.has(String(m.id)) && !excluded.has(String(m.id)));
+  // 1005-17：来源会话去重——本会话发生的事件 AI 上下文里已有，不重复注入
+  // 1005-26：多会话支持——source_session 逗号串（存量追溯可多会话），包含当前会话即排除
+  const curSession = strSafe(input.sessionId);
+  if (curSession) pool = pool.filter(m => ("," + strSafe(m.source_session) + ",").indexOf("," + curSession + ",") === -1);
+  if (!pool.length) return { lines: [], fixedIds: [] };
+
+  const wLit = Number(cfg.relevantWordWeight); const wl = (wLit >= 0) ? wLit : 0.5;
+  // vibe 仅轻微调整排序（上限 0.05）；不参与是否通过关键词门槛的判断。
+  const wSem = Number(cfg.relevantSemWeight);
+  const ws = Math.min(0.05, Math.max(0, Number.isFinite(wSem) ? wSem : 0.05));
+  const minScore = Number(cfg.relevantMinHybridScore); const gate = (minScore >= 0) ? minScore : 0.20;
+  const maxK = Math.max(1, Math.floor(Number(cfg.relevantHybridTopK) || 1));
+  const vecScores = (input.vecScores && typeof input.vecScores === "object") ? input.vecScores : null;
+
+  // tokenize 返回 Set：先展开再过滤双字及以上词元
+  const qset = new Set([...tokenize(q)].filter(function (x) { return x.length >= 2; }));
+  const scored = [];
+  for (const m of pool) {
+    // 多词召回：每个 trigger 各算一份命中（整词包含=1；否则双字词元交叠达一半以上才按比例计），份数累加后
+    // 换成 0~1 的词面分 lit = 1 - 0.5^累计份数：命中 1 个 0.5、2 个 0.75、3 个 0.875，越多越接近满分。
+    const tr = Array.isArray(m.triggers) ? m.triggers : [];
+    let hitSum = 0;
+    const seenTrig = new Set();
+    for (const t of tr) {
+      const s = String(t || "").trim();
+      if (!s || seenTrig.has(s)) continue;
+      seenTrig.add(s);
+      if (q.indexOf(s) >= 0) { hitSum += 1; continue; }
+      const tt = [...tokenize(s)].filter(function (x) { return x.length >= 2; });
+      if (tt.length && qset.size) {
+        let h = 0;
+        for (const x of tt) if (qset.has(x)) h++;
+        if (h / tt.length >= 0.5) hitSum += h / tt.length; // 只对上不到一半的碎片不计，防止几个词各蹭一点凑过线
+      }
+    }
+    const lit = hitSum > 0 ? 1 - Math.pow(0.5, hitSum) : 0;
+    if (!(lit > 0)) continue; // 无 triggers 命中不入围（存量未重跑完时注入自然为空，符合"重跑完才开注入"）
+    // 词面分单独决定准入；语义仅用于同类候选间轻量重排。
+    const sem = vecScores && vecScores[String(m.id)] != null ? Math.max(0, Math.min(1, Number(vecScores[String(m.id)]) || 0)) : 0;
+    const baseScore = Math.round(wl * lit * 1000) / 1000;
+    if (baseScore < gate) continue;
+    const score = Math.round((baseScore + ws * sem) * 1000) / 1000;
+    scored.push({ m, score, baseScore, sem });
+  }
+  scored.sort((a, b) => b.score - a.score
+    || String(a.m.id).localeCompare(String(b.m.id)));
+  const budget = cfg.budgets.relevant_memories;
+  const headerCost = estimateTokens(HEADERS.relevant_memories);
+  let used = headerCost;
+  const lines = [];
+  const hits = [];
+  for (const s of scored) {
+    if (lines.length >= maxK) break;
+    const line = entryLine(s.m.text, strSafe(s.m.established_at) || strSafe(s.m.created_at));
+    const cost = estimateTokens(line);
+    if (used + cost > budget) break;
+    lines.push(line);
+    hits.push({ id: String(s.m.id), text: s.m.text, kind: s.m.kind, established_at: s.m.established_at || null, created_at: s.m.created_at || null, score: s.score, wordScore: s.baseScore, vibeScore: s.sem });
+    used += cost;
+  }
+  // 1005-17 预览模式（previewOnly）：照常算 hits（观察"本应注入哪条"），但 lines 置空 = 不注入
+  return { lines: (input.previewOnly === true) ? [] : lines, fixedIds: [], hits };
+}
+
+// ============================================================
+// 主入口
+// ============================================================
+
+/**
+ * 构建上下文块。纯函数：不读文件、不写文件、不修改任何输入。
+ * @param {object} input 输入数据（全部只读使用）：
+ *   pinnedEntries: [{id, title?, content, target: "instructions"|"identity"|"moments_anchor"|"retire"}]
+ *   timeline:      （已不再使用——Recent Experience 随 0918 修订剔除；保留键位兼容旧调用）
+ *   diaryEntries:  [{date:"YYYY-MM-DD", content}]（任意序，内部按日期排）
+ *   memoriesV2:    [{id, text, kind, subject, status, created_at?, established_at?, anchor?}]（priority 已删）
+ *   query:         string（本轮 user 消息文本；空则 Relevant 块为空）
+ *   config:        object（可选，浅合并覆盖 DEFAULT_CONFIG）
+ * @param {object} opts 可选：{ includeEmpty: boolean }——true 时空块也返回（empty:true，content:""，shadow 诊断用）
+ * @returns {{blocks: Array<{key,title,content,tokens,empty}>}}
+ */
+function buildContextBlocks(input, opts) {
+  const mergedCfg = Object.assign({}, DEFAULT_CONFIG, input && input.config ? input.config : {});
+  mergedCfg.budgets = Object.assign({}, DEFAULT_CONFIG.budgets, input && input.config && input.config.budgets ? input.config.budgets : {});
+  const cfg = mergedCfg;
+  const options = opts || {};
+  const input_ = input || {};
+
+  // 逐块构建（顺序=BLOCK_DEFS）；先固定块收集成员 id，Relevant 去重
+  const sysIns = buildSystemInstructions(input_, cfg);
+  const identity = buildCoreIdentity(input_, cfg);
+  const understanding = buildUnderstanding(input_, cfg);
+  const fixedIdSet = new Set([].concat(sysIns.fixedIds, identity.fixedIds, understanding.fixedIds));
+  const continuity = buildContinuity(input_, cfg);
+  const starredDialog = buildStarredDialog(input_, cfg);
+  const notebookIndex = buildNotebookIndex(input_, cfg);
+  const pinnedNotes = buildPinnedNotes(input_, cfg);
+  const memoryKeywords = buildMemoryKeywords(input_, cfg);
+  const relevant = buildRelevant(input_, cfg, fixedIdSet);
+  const relevantHits = relevant.hits || [];
+
+  const byKey = {
+    system_instructions: sysIns,
+    core_identity: identity,
+    long_term_understanding: understanding,
+    conversation_continuity: continuity,
+    starred_dialog: starredDialog,
+    notebook_index: notebookIndex,
+    pinned_notes: pinnedNotes,
+    memory_keywords: memoryKeywords,
+    relevant_memories: relevant,
+  };
+
+  const blocks = [];
+  for (const def of BLOCK_DEFS) {
+    const b = byKey[def.key];
+    const isEmpty = !b.lines.length;
+    if (isEmpty && !options.includeEmpty) continue;
+    // pinned_notes（1102）条目间也空一行：一篇笔记一个自然段，篇与篇不挤在一起
+    // memory_keywords（1102）也空一行：说明行与关键词串分开，不挤在一起
+    const _lines = (!isEmpty && BLOCK_DESCS[def.key]) ? [BLOCK_DESCS[def.key]].concat(b.lines) : b.lines;
+    const content = isEmpty ? "" : compose(HEADERS[def.key] || null, _lines, def.key === "system_instructions" || def.key === "core_identity" || def.key === "pinned_notes" || def.key === "memory_keywords");
+    blocks.push({
+      key: def.key,
+      title: def.title,
+      content,
+      tokens: isEmpty ? 0 : estimateTokens(content),
+      empty: isEmpty,
+    });
+  }
+  // members：日记块实际注入的日记 id（1018「建好即固定」按篇冻结用；块对象本身保持五键 schema）
+  return { blocks, relevantHits, members: { conversation_continuity: continuity.memberIds || [] } };
+}
+
+module.exports = { buildContextBlocks, DEFAULT_CONFIG, BLOCK_DEFS, HEADERS, BLOCK_DESCS, estimateTokens };

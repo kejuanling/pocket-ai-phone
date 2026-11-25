@@ -1,0 +1,222 @@
+/* phone-skin.css v1 —— 1017：二级页面和桌面统一气质（同一套宋体 + 细字重 + 更清楚的次级文字） */
+
+/* 1) 次级文字稍微清楚一点（原来 .38 在浅蓝底上太虚；只改 App 页面，不动桌面） */
+.win:not([data-win="note"]){--ink2:rgba(42,48,66,.72);--ink3:rgba(42,48,66,.52)}
+
+/* 2) 全部 App 页面用桌面同一套字体（笔记本有自己的手写体，不动）；这套字只有常规字重，所以不让浏览器假加粗 */
+:root{--hmix:"PHNews","Newsreader",Georgia,"PHSong","LXGW ZhiSong CL","Songti SC","Noto Serif CJK SC",serif}
+.win:not([data-win="note"]) *:not(input):not(textarea){font-family:var(--hfont)}
+.win,.win *{font-synthesis:none}
+/* 宋体只有一档字重：用极细的描边把小字补实一点（不是假粗体） */
+.win:not([data-win="note"]) *{-webkit-text-stroke:.3px}
+.win:not([data-win="note"]) .ltitle h1{-webkit-text-stroke:.2px}
+.win input,.win textarea{font-family:var(--sans)}
+
+/* 3) 页面大标题：细、有呼吸，不再粗黑 */
+.ltitle h1{font-weight:400;font-size:34px;letter-spacing:.06em}
+.apphead .ttl{font-weight:400;font-size:17px;letter-spacing:.14em}
+.cp-nm{font-weight:400;letter-spacing:.34em;padding-left:.34em}
+.tl-hd h2{font-weight:400;letter-spacing:.04em}
+.cl-dh h3{font-weight:400;letter-spacing:.04em}
+.placeholder b{font-weight:400;font-size:21px;letter-spacing:.2em;padding-left:.2em}
+
+/* 4) 英文斜体小字、点缀数字用桌面时钟那套 Newsreader（中文仍是宋体、不斜） */
+.win[data-win] .ltitle .sub,.win[data-win] .cap,.win[data-win] .cl-dh small,.win[data-win] .tl-hd small{font-family:var(--hmix);font-style:italic;letter-spacing:.03em}
+
+/* 5) 「今」→「今天」，做成小药丸 */
+#clToday{width:auto!important;padding:0 16px;border-radius:999px;font:400 14px var(--hfont)!important;letter-spacing:.12em}
+
+/* 6) 设置页：主题色那一行上沿贴着卡片，补一点空气 */
+.st-row.col{padding-top:16px}
+
+/* 7) 占位页（相册 / 小世界）：不再露调试文案，做成一个小小的“预告” */
+.placeholder{gap:12px;padding-bottom:90px}
+.ph-stack{position:relative;width:170px;height:122px;display:grid;place-items:center;margin-bottom:10px}
+.ph-stack .big{position:relative;z-index:2;animation:ph-float 6s ease-in-out infinite}
+.ph-stack i{position:absolute;left:50%;top:50%;width:78px;height:92px;margin:-46px 0 0 -39px;border-radius:14px;border:.5px solid rgba(255,255,255,calc(.9*var(--wk)));box-shadow:0 8px 20px rgba(96,120,160,.14)}
+.ph-stack i::after{content:"";position:absolute;left:7px;right:7px;top:7px;bottom:22px;border-radius:8px;background:rgba(255,255,255,calc(.55*var(--wk)))}
+.ph-stack i:nth-of-type(1){background:linear-gradient(160deg,#fbe6ee,#f3d3e1);transform:translate(-38px,8px) rotate(-14deg);animation:ph-sway1 7s ease-in-out infinite}
+.ph-stack i:nth-of-type(2){background:linear-gradient(160deg,#e3ecfb,#cfdcf3);transform:translate(38px,6px) rotate(13deg);animation:ph-sway2 8s ease-in-out infinite}
+.ph-stack s{position:absolute;z-index:3;text-decoration:none;color:var(--acc);font-size:13px;line-height:1;opacity:.0;animation:ph-twk 3.6s ease-in-out infinite}
+.ph-stack s::before{content:"✦"}
+.ph-stack s:nth-of-type(1){left:2px;top:12px}
+.ph-stack s:nth-of-type(2){right:0;top:34px;font-size:10px;animation-delay:1.2s}
+.ph-stack s:nth-of-type(3){right:20px;bottom:0;font-size:9px;animation-delay:2.2s}
+.placeholder>div:not(.ph-stack){font-size:14.5px;line-height:1.7;letter-spacing:.08em;color:var(--ink2);max-width:240px}
+.ph-soon{margin-top:8px;padding:6px 18px 6px 21px;border-radius:999px;background:var(--glass2);border:.5px solid var(--line);
+  font-size:11.5px;line-height:1;font-weight:400;letter-spacing:.34em;color:var(--ink2);box-shadow:0 4px 14px rgba(96,120,160,.1)}
+@keyframes ph-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes ph-sway1{0%,100%{transform:translate(-38px,8px) rotate(-14deg)}50%{transform:translate(-42px,4px) rotate(-17deg)}}
+@keyframes ph-sway2{0%,100%{transform:translate(38px,6px) rotate(13deg)}50%{transform:translate(42px,2px) rotate(16deg)}}
+@keyframes ph-twk{0%,100%{opacity:0;transform:scale(.6) rotate(0)}50%{opacity:.85;transform:scale(1) rotate(25deg)}}
+@media (prefers-reduced-motion:reduce){.ph-stack .big,.ph-stack i,.ph-stack s{animation:none}.ph-stack s{opacity:.6}}
+
+/* 9) 头像可被「设置 → 我们」覆盖 */
+/* [位置:phone-skin.css·.av.ai 回退链] [会话级头像优先] [2026-11-24：加 --av-sess（聊天页根上设，见 phone-talk.js·会话级头像）。这条和页面内联样式里那条同优先级又更靠后，原来把内联的会话级回退链整个盖掉，会话自己的头像在聊天页顶栏和气泡里从来没显示过] */
+.av.me{--avimg:var(--av-me-x,var(--av-me))}.av.ai{--avimg:var(--av-sess,var(--av-ai-x,var(--av-ai)))}
+.pf{gap:14px;min-height:68px}
+.pf-av{position:relative;flex:none;width:48px;height:48px;border-radius:50%}
+.pf-av .av{width:48px;height:48px;border:2px solid var(--ring);box-shadow:0 3px 10px rgba(96,120,160,.2)}
+.pf-cam{position:absolute;right:-3px;bottom:-3px;width:20px;height:20px;border-radius:50%;background:var(--acc);border:1.5px solid var(--ring);display:grid;place-items:center;box-shadow:0 2px 6px rgba(96,120,160,.3)}
+.pf-cam svg{width:11px;height:11px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pf .lb{display:flex;flex-direction:column;gap:3px}
+.pf-in{width:100%;background:none;border:0;border-bottom:.5px dashed rgba(42,48,66,.22);outline:0;padding:2px 0 4px;font:400 17px var(--hfont);letter-spacing:.05em;color:var(--ink);-webkit-user-select:text;user-select:text;-webkit-text-stroke:.3px;border-radius:0}
+.pf-in:focus{border-bottom-color:var(--acc)}
+.pf .lb small{margin-top:0}
+.pf-rs{flex:none;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,calc(.55*var(--wk)));border:.5px solid var(--line);font-size:12px;letter-spacing:.1em;color:var(--ink2)}
+
+/* 10) 头像裁剪浮层 */
+.crop{position:absolute;inset:0;z-index:90;display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.crop.show{opacity:1;pointer-events:auto}
+.crop .scrim{position:absolute;inset:0;background:rgba(40,52,80,.38);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.cr-box{position:relative;width:min(320px,calc(100% - 40px));padding:18px 18px 16px;border-radius:28px;background:rgba(var(--sh),.94);border:.5px solid var(--ring);box-shadow:0 24px 60px rgba(40,52,80,.3);transform:translateY(20px) scale(.94);transition:transform .45s var(--spring)}
+.crop.show .cr-box{transform:none}
+.cr-t{text-align:center;font-size:13px;letter-spacing:.12em;color:var(--ink2);margin-bottom:12px}
+.cr-stage{position:relative;width:260px;height:260px;margin:0 auto;border-radius:18px;overflow:hidden;background:#dfe8f3;touch-action:none;cursor:grab}
+.cr-stage img{position:absolute;left:0;top:0;max-width:none;transform-origin:0 0;pointer-events:none;-webkit-user-select:none;user-select:none}
+.cr-ring{position:absolute;left:0;top:0;width:260px;height:260px;pointer-events:none;border-radius:50%;box-shadow:0 0 0 400px rgba(var(--sh),.62),inset 0 0 0 1.5px rgba(255,255,255,calc(.95*var(--wk)))}
+.cr-zoom{display:block;width:240px;margin:14px auto 4px;accent-color:var(--acc)}
+.cr-bt{display:flex;gap:10px;margin-top:10px}
+.cr-bt button{flex:1;height:42px;border-radius:999px;font-size:15px;letter-spacing:.2em;background:rgba(125,156,207,.14);color:var(--ink2)}
+.cr-bt .go{background:var(--acc);color:#fff;box-shadow:0 6px 16px color-mix(in srgb,var(--acc) 40%,transparent)}
+
+/* 11) 联网：登录弹窗、日记空状态与大图 */
+.phlogin{position:absolute;inset:0;z-index:95;display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.phlogin.show{opacity:1;pointer-events:auto}
+.phlogin .scrim{position:absolute;inset:0;background:rgba(40,52,80,.4);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.lg-box{position:relative;width:min(320px,calc(100% - 48px));padding:22px 20px 18px;border-radius:28px;background:rgba(var(--sh),.95);border:.5px solid var(--ring);box-shadow:0 24px 60px rgba(40,52,80,.3);transform:translateY(20px) scale(.94);transition:transform .45s var(--spring),margin-top .24s cubic-bezier(.22,1,.36,1)}
+.phlogin.show .lg-box{transform:none}
+.lg-box b{display:block;font-size:19px;font-weight:400;letter-spacing:.18em;text-align:center}
+.lg-box p{margin:8px 0 14px;font-size:12.5px;line-height:1.7;letter-spacing:.06em;color:var(--ink3);text-align:center}
+.lg-box input{display:block;width:100%;box-sizing:border-box;margin-bottom:10px;padding:11px 14px;border-radius:14px;border:.5px solid rgba(125,156,207,.3);background:rgba(125,156,207,.08);font-size:15px;color:var(--ink);outline:0;-webkit-user-select:text;user-select:text;font-family:var(--sans)}
+.lg-box input:focus{border-color:var(--acc);background:var(--face)}
+.lg-msg{min-height:18px;font-size:12.5px;color:var(--k-d5738c);text-align:center;letter-spacing:.05em}
+.lg-bt{display:flex;gap:10px;margin-top:6px}
+.lg-bt button{flex:1;height:42px;border-radius:999px;font-size:15px;letter-spacing:.2em;background:rgba(125,156,207,.14);color:var(--ink2)}
+.lg-bt .go{background:var(--acc);color:#fff;box-shadow:0 6px 16px color-mix(in srgb,var(--acc) 40%,transparent)}
+.lg-bt .go:disabled{opacity:.5}
+.dy-empty{padding:40px 20px;text-align:center;font-size:14px;letter-spacing:.1em;color:var(--ink3)}
+.dy-big{position:absolute;inset:0;z-index:80;display:grid;place-items:center;background:rgba(20,28,48,.82);opacity:0;transition:opacity .25s}
+.dy-big.show{opacity:1}
+.dy-big img{max-width:94%;max-height:86%;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.post.gone{opacity:0;transform:scale(.96);transition:opacity .38s,transform .38s}
+.popm.open{width:228px!important}
+.lv-empty{padding:60px 24px;text-align:center;font-size:14px;line-height:2;letter-spacing:.1em;color:var(--ink3)}
+/* [位置:phone-skin.css·.lv-empty-btn] [空列表那句话本身可点] [11-13：空态原来只写「点右上角开一个」，新用户对着三个点不敢点；这句话改成直接可点的圆角按钮] [注释时间 2026-11-13] */
+.lv-empty .lv-empty-btn{display:inline-flex;align-items:center;height:38px;padding:0 18px;border-radius:12px;background:rgba(125,156,207,.12);border:.5px solid rgba(125,156,207,.28);color:var(--acc);font:inherit;letter-spacing:inherit}
+.lv-retry{margin-top:12px;padding:9px 22px;border-radius:999px;background:var(--acc);color:#fff;font-size:14px;letter-spacing:.2em}
+
+/* 12) 后台提醒排版 / 桌面活动时间线 / 聊天换会话 */
+.tl-g2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.tl-g2 .tl-c{min-width:0}
+.tl-g2 .tl-c.wide{grid-column:1/-1;order:3}
+.tl-c em{white-space:nowrap}
+.tl-c .sub{overflow-wrap:anywhere}
+.dots{flex-wrap:wrap;gap:10px}
+.tl-body{overflow-x:hidden}
+.hw-g2{grid-template-rows:1.3fr 1fr 1fr 1fr 1.75fr}
+.hw-act{justify-content:flex-start;padding-top:10px;padding-bottom:6px}
+.hw-act .hw-a{display:block;width:100%}
+.hw-act .pl-tl .e{padding:6px 0;gap:10px;animation:none}
+.hw-act .pl-tl .e+.e::before{top:-8px;height:16px;left:15px}
+.hw-act .pl-tl .ic{width:30px;height:30px}.hw-act .pl-tl .ic svg{width:14px;height:14px}
+.hw-act .pl-tl .t{font-size:13px}.hw-act .pl-tl .m{font-size:12px;line-height:1.4;margin-top:1px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.hw-note{margin:6px 0 0;font-size:12px;line-height:1.5;color:var(--ink2);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ses-pop{position:absolute;inset:0;z-index:40;pointer-events:none;visibility:hidden;transition:visibility 0s .28s}
+.ses-pop.show{pointer-events:auto;visibility:visible;transition:none}
+.ses-pop .scrim{position:absolute;inset:0;background:rgba(40,52,80,.32);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .14s ease}
+.ses-pop.show .scrim{opacity:1}
+.ses-pop .box{position:absolute;left:14px;right:14px;top:92px;max-height:62%;display:flex;flex-direction:column;padding:12px 8px 10px;border-radius:26px;background:rgba(var(--sh),.96);border:.5px solid var(--ring);box-shadow:0 24px 60px rgba(40,52,80,.28);transform:scale(.8);transform-origin:50% 28%;transition:transform .36s cubic-bezier(.2,1.2,.35,1)}
+.ses-pop.show .box{transform:none}
+.ses-pop .hd{padding:4px 14px 8px;font-size:12.5px;letter-spacing:.2em;color:var(--ink3)}
+.ses-pop .ls{overflow:hidden auto;flex:1;min-height:0}   /* 11-09：横向禁滑（搜索结果页内容能左右拖，用户报）；原 overflow:auto */
+.ses-pop .it{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:10px 14px;border-radius:16px}
+.ses-pop .it b{display:block;font-size:15px;font-weight:400;letter-spacing:.04em;color:var(--ink)}
+.ses-pop .it small{display:block;margin-top:2px;font-size:11.5px;color:var(--ink3)}
+.ses-pop .it i{font-style:normal;color:var(--acc)}
+/* [位置:phone-skin.css·选中态各规则] [批次4b选中态token化：实色强调 var(--acc)→var(--sel-ring)、浅底 rgba(...,.16)→var(--sel-bg)、半实 rgba(...,.55)→var(--sel-dim)；token 定义在 phone-new.html :root，非选中态主色一律未动，零视觉差异] [工作流/tasks/调查/2026-11-13_前端体验修复确认单.md 批次4b] [注释时间 2026-11-14] */
+.ses-pop .it.on{background:var(--sel-bg)}
+.ses-pop .nw{margin:8px 6px 0;height:40px;border-radius:999px;background:var(--acc);color:#fff;font-size:14.5px;letter-spacing:.2em}
+
+/* 13) 聊天字别太粗 / 会话列表可滚动 + 设置页 */
+.win[data-win="chat"] *{-webkit-text-stroke:0}
+.win[data-win="chat"] .b{font-weight:400}
+.ses-pop .box{overflow:hidden}
+.ses-pop .box.opts{max-height:78%}
+.ses-pop .hd{flex:none;display:flex;align-items:center;gap:8px}
+.ses-pop .hd .bk{width:30px;height:30px;border-radius:50%;background:rgba(125,156,207,.14);font-size:20px;line-height:1;color:var(--ink2)}
+.ses-pop .ls,.ses-pop .opt{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain}
+.ses-pop .nw{flex:none;min-height:42px}
+.ses-pop .it{display:flex;align-items:center;padding:0;border-radius:16px}
+.ses-pop .it .pk{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;padding:10px 6px 10px 14px}
+.ses-pop .it .mo{flex:none;width:40px;height:40px;margin-right:4px;border-radius:50%;font-size:20px;line-height:1;color:var(--ink3)}
+.ses-pop .opt{padding:2px 6px 8px}
+.ses-pop .ro{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 8px;border-bottom:.5px solid rgba(120,135,165,.18)}
+.ses-pop .ro label{font-size:14.5px;color:var(--ink)}
+.ses-pop .ro label small{display:block;margin-top:2px;font-size:11.5px;color:var(--ink3)}
+.ses-pop .ro input.rn,.ses-pop .ro input.xd,.ses-pop .ro select{max-width:58%;padding:8px 12px;border-radius:12px;border:.5px solid rgba(125,156,207,.3);background:rgba(125,156,207,.08);font-size:14px;color:var(--ink);outline:0;font-family:var(--hfont)}
+.ses-pop .ro .sv{flex:none;padding:8px 14px;border-radius:999px;background:var(--acc);color:#fff;font-size:13px;letter-spacing:.1em}
+.ses-pop .ro.tg{cursor:pointer}
+.ses-pop .sw{flex:none;width:44px;height:26px;border-radius:13px;background:rgba(92,112,152,.44);position:relative;transition:background .25s}
+.ses-pop .sw::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(60,80,120,.25);transition:transform .3s var(--spring)}
+.ses-pop .ro.on .sw{background:var(--sel-ring)}.ses-pop .ro.on .sw::after{transform:translateX(18px)}
+.ses-pop .gt{padding:14px 8px 4px;font-size:12px;letter-spacing:.2em;color:var(--ink3)}
+.ses-pop .blks{display:grid;gap:2px;padding:4px 8px 6px}
+.ses-pop .cb{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13.5px;color:var(--ink2)}
+.ses-pop .cb input{width:18px;height:18px;accent-color:var(--acc)}
+.ses-pop .ap,.ses-pop .ar{display:block;width:calc(100% - 16px);margin:10px 8px 0;height:42px;border-radius:999px;font-size:14.5px;letter-spacing:.14em}
+.ses-pop .ap{background:var(--acc);color:#fff}
+.ses-pop .ar{background:rgba(213,115,140,.12);color:var(--k-d5738c)}
+
+/* 14) 聊天：往上翻 / 没送达重发 / 停下键 / 搜聊天 */
+.chat .apphead{grid-template-columns:86px 1fr 86px}
+.chat .rt{display:flex;gap:6px}
+.lv-more{align-self:center;margin:6px 0 10px;padding:5px 14px;border-radius:999px;font-size:11.5px;letter-spacing:.1em;color:var(--ink3);background:rgba(125,156,207,.10);cursor:pointer}
+.win[data-win="chat"] .b.fail{opacity:.55}
+.status.retry{cursor:pointer;color:var(--k-d5738c)}.status.retry b{color:var(--k-d5738c)}
+.send .stp{display:none}
+.send.stop .mic,.send.stop .arr{display:none}.send.stop .stp{display:block}
+.chat .send.stop{background:rgba(213,115,140,.9);box-shadow:0 4px 12px rgba(213,115,140,.3);transform:scale(1.04)}
+.send.stop svg{stroke:#fff;fill:#fff;stroke-width:1.4}
+.ses-pop .hd.fd{padding:2px 6px 8px}
+.ses-pop .fq{flex:1;min-width:0;height:40px;padding:0 16px;border-radius:999px;border:.5px solid rgba(125,156,207,.3);background:rgba(125,156,207,.08);font-size:15px;color:var(--ink);outline:0;font-family:var(--hfont);-webkit-appearance:none;appearance:none}
+.ses-pop .it.fr{display:block;padding:10px 14px;text-align:left}
+.ses-pop .it.fr b{font-size:14px;line-height:1.5}
+.ses-pop mark{background:rgba(125,156,207,.28);color:inherit;border-radius:4px;padding:0 1px}
+.ses-pop .ls.fx{position:relative;display:flex;flex-direction:column;gap:6px;padding:4px 8px 8px}
+.ses-pop .fx-t{align-self:center;font-size:11px;color:var(--ink3);margin:6px 0 2px}
+.ses-pop .fx-b{max-width:82%;padding:8px 12px;border-radius:14px;font-size:13.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.ses-pop .fx-b.ai{align-self:flex-start;background:var(--face);border:.5px solid rgba(120,134,160,.3);color:var(--ink)}
+.ses-pop .fx-b.me{align-self:flex-end;background:#7298d6;color:#fff}
+.ses-pop .fx-b.hit{box-shadow:0 0 0 2px rgba(213,115,140,.55)}
+.ses-pop .fx-b.me mark{background:rgba(255,255,255,calc(.35*var(--wk)))}
+
+/* 15) 设置 · 聊天气泡 */
+.bb-pv{display:flex;flex-direction:column;padding:14px 18px 16px;background:var(--wall);border-bottom:.5px solid rgba(120,135,165,.2)}
+.bb-pv .b{max-width:78%;font-size:15px}
+.bb-sw{display:flex;flex-wrap:wrap;gap:10px;padding:4px 16px 14px 58px}
+.bb-c,.bb-cu{width:30px;height:30px;border-radius:50%;background:var(--v);box-shadow:0 0 0 .5px rgba(90,105,140,.35),0 2px 6px rgba(96,120,160,.18);position:relative;flex:none}
+.bb-c.on::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--sel-ring)}
+.bb-cu{background:conic-gradient(#f28b8b,#f2d18b,#9be0a6,#8bc6f2,#b49bf2,#f28bd6,#f28b8b);overflow:hidden;cursor:pointer}
+.bb-cu input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
+.bb-rg{display:flex;align-items:center;gap:8px;flex:none}
+.bb-rg input{width:110px;accent-color:var(--acc)}
+.bb-rg b{min-width:34px;text-align:right;font-size:13px;font-weight:500;color:var(--ink2)}
+.bb-pv{position:relative;overflow:hidden}
+.bb-bg{gap:6px;flex-wrap:nowrap}
+.bb-g{width:40px;height:56px;border-radius:12px;background:var(--v);box-shadow:0 0 0 .5px rgba(90,105,140,.35),0 2px 6px rgba(96,120,160,.16);position:relative;flex:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px}
+.bb-g span{font-size:10px;color:var(--ink2);background:rgba(255,255,255,calc(.7*var(--wk)));border-radius:6px;padding:1px 4px;line-height:1.4}
+.bb-g.on::after{content:"";position:absolute;inset:-4px;border-radius:15px;border:2px solid var(--sel-ring)}
+.bb-ph{background:repeating-linear-gradient(135deg,rgba(125,156,207,.10) 0 6px,rgba(125,156,207,.2) 6px 12px)}
+.bb-ph::before{content:"＋";position:absolute;top:12px;left:0;right:0;text-align:center;font-size:18px;color:var(--ink3)}
+
+/* 16) 键盘弹起：收掉给 home 条留的底边距，输入栏贴着键盘 */
+#device.kbup .chat .composer{padding-bottom:8px}
+#device.kbup .sheetw .sheet{bottom:8px}
+#device.kbup .cbar{padding-bottom:10px}
+
+/* 17) 桌面 Dock 往下挪 22px，给日历小组件让地方（电脑上没有安全区，至少留 18px） */
+#home .dock{margin-bottom:max(calc(var(--sab) + 4px),18px)}
+
+/* 18) 模拟的 home 小横条：只留锁屏（和通知中心自己的拉手），App 里一律不画；底部上滑关 App 的手势区还在，只是看不见 */
+.win .homebar::after{display:none}

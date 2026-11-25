@@ -1,0 +1,9 @@
+{
+  "system_prompt": "",
+  "cfg": {
+    "user_name": "用户",
+    "ai_name": "助手",
+    "user_avatar": "",
+    "ai_avatar": ""
+  }
+}

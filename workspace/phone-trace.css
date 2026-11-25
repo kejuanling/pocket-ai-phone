@@ -1,0 +1,73 @@
+/* phone-trace.css —— 小手机 · 痕迹（2026-11-07）：trace_notes 可读页，桌面第三页游戏胶囊位换进来的。
+   按时间倒序列出他写的每一条此刻；点开看整句 / 切分关键词 / 召回给他的文案 / msg_id 的上下文（前后各 6 条）。
+   颜色全走主题变量（--ink/--glass/--line/--sh/--wk），夜间自动跟随。 */
+.tc .topbar{position:absolute;top:0;left:0;right:0;z-index:6;padding:calc(var(--sat) + 8px) 12px 8px;display:flex;align-items:center;justify-content:space-between;background:rgba(var(--sh),.72);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);box-shadow:0 .5px 0 rgba(42,48,66,.08)}
+.tc .topbar .ttl{position:absolute;left:0;right:0;text-align:center;font-weight:600;font-size:16px;pointer-events:none}
+.tc .tc-n{position:relative;z-index:1;min-width:40px;text-align:right;font:600 12px var(--mono);color:var(--ink3);padding:4px 10px;border-radius:999px;background:var(--glass2);border:.5px solid var(--line)}
+.tc .tc-scroll{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:calc(var(--sat) + 100px) 14px calc(var(--sab) + 40px)} /* 11-14：64→100，给顶栏下的「痕迹/命中」分段（absolute，高约 34px）让出静止空间 */
+.tc-scroll::-webkit-scrollbar{display:none}
+
+/* 卡片：玻璃面 + 入场逐条浮起 */
+.tc-card{position:relative;margin-bottom:10px;border-radius:18px;background:var(--glass);border:.5px solid var(--line);box-shadow:0 4px 14px rgba(96,120,160,.08),inset 0 1px 0 rgba(255,255,255,calc(.7*var(--wk)));-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);overflow:hidden;transition:transform .18s var(--soft)}
+.tc-card:active{transform:scale(.985)}
+.tc-card.stag{animation:tcRise .5s var(--spring) both;animation-delay:calc(var(--i,0)*40ms)}
+@keyframes tcRise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.tc-card.gone{animation:tcFade .3s var(--soft) both}
+@keyframes tcFade{to{opacity:0;transform:translateY(6px)}}
+
+/* 折叠行：时间 + 整句截断 + 箭头 */
+.tc-row{display:flex;align-items:center;gap:10px;width:100%;padding:13px 14px;text-align:left}
+.tc-row time{flex:none;font:11px var(--mono);color:var(--ink3);letter-spacing:.02em}
+.tc-txt{flex:1;min-width:0;font:13.5px/1.5 var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc-chev{flex:none;font-style:normal;font-size:14px;color:var(--ink3);transition:transform .28s var(--spring)}
+.tc-card.open .tc-chev{transform:rotate(90deg)}
+
+/* 展开体：高度过渡 */
+.tc-body{height:0;overflow:hidden;transition:height .32s var(--spring)}
+.tc-in{padding:0 14px 14px;border-top:.5px solid rgba(120,135,165,.14)}
+.tc-full{font:400 15px/1.9 var(--serif);letter-spacing:.02em;color:var(--ink);padding-top:12px;word-break:break-word;white-space:pre-wrap;-webkit-user-select:text;user-select:text}
+
+/* 区块：关键词 / 召回给他的 / msg_id 的上下文 */
+.tc-sec{margin-top:13px}
+.tc-sec-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+.tc-sec-h label,.tc-sec>label{display:block;font:10.5px var(--sans);letter-spacing:.14em;color:var(--ink3)}
+.tc-rng{font:10.5px var(--mono);color:var(--ink3);letter-spacing:.02em}
+.tc-grams{display:flex;flex-wrap:wrap;gap:6px}
+.tc-grams i{font-style:normal;font:12px var(--mono);padding:3px 10px;border-radius:10px;background:rgba(125,156,207,.14);border:.5px solid rgba(125,156,207,.2);color:var(--ink2)}
+.tc-recall{font:12px/1.8 var(--sans);color:var(--ink2);padding:9px 12px;border:.5px solid var(--line);border-radius:12px;background:rgba(var(--sh),.5);word-break:break-all;-webkit-user-select:text;user-select:text}
+
+/* 上下文：消息行（名字 + 正文；时间在区块标题右边，11-07 extra） */
+.tc-th{border:.5px solid var(--line);border-radius:12px;background:rgba(var(--sh),.5);max-height:min(48dvh,420px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.tc-th::-webkit-scrollbar{display:none}
+.tc-m{display:flex;gap:9px;padding:8px 12px;align-items:flex-start}
+.tc-m + .tc-m{border-top:.5px solid rgba(120,135,165,.1)}
+.tc-m b{flex:none;width:20px;font:600 12px/1.8 var(--sans);color:var(--ink3);text-align:right}
+.tc-m p{margin:0;flex:1;min-width:0;font:12.5px/1.7 var(--sans);color:var(--ink2);white-space:pre-wrap;word-break:break-word}
+.tc-m.hit{background:rgba(125,156,207,.13);box-shadow:inset 2px 0 0 var(--acc)}
+.tc-m.hit b,.tc-m.hit p{color:var(--ink)}
+.tc-ph{font:12px/1.7 var(--sans);color:var(--ink3);font-style:italic;padding:2px 2px 0}
+.tc-empty{padding:80px 0;text-align:center;font:italic 13px var(--sans);color:var(--ink3)}
+.tc-ld{min-height:56px;display:grid;place-items:center}
+
+/* [位置:phone-trace.css·tc-seg] [痕迹/命中分段（固定在顶栏正下方，卡片滚动从其下穿过）] [11-14 命中页（随手记15）；sticky 初始停在文档流位置会压住第一张卡，改 absolute 可预测] [注释时间 2026-11-14] */
+.tc-seg{position:absolute;top:calc(var(--sat) + 54px);left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:2px;padding:3px;border-radius:12px;background:rgba(var(--sh),.78);border:.5px solid var(--line);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%)}
+.tc-seg button{border:0;background:none;padding:5px 16px;border-radius:9px;font:600 12.5px var(--sans);color:var(--ink3);transition:color .2s var(--soft),background .2s var(--soft)}
+.tc-seg button.on{background:var(--glass2);color:var(--ink);box-shadow:0 1px 4px rgba(96,120,160,.12)}
+
+/* [位置:phone-trace.css·命中卡片] [模式徽标（注入/预览）+ 展开体（会话行、她说的话、命中条目、当时的上下文）] [11-14 命中页] [注释时间 2026-11-14] */
+.tc-badge{flex:none;font-style:normal;font:600 10px var(--mono);letter-spacing:.05em;padding:2px 7px;border-radius:7px;background:rgba(125,156,207,.14);border:.5px solid rgba(125,156,207,.22);color:var(--ink2)}
+.tc-badge.prev{background:rgba(214,158,74,.16);border-color:rgba(214,158,74,.3);color:#c9963f}
+.tc-meta{display:flex;align-items:center;gap:8px;padding-top:12px}
+.tc-meta b{font:600 12px var(--sans);color:var(--ink2);word-break:break-all}
+.tc-q{padding-top:10px}
+.tc-hits{display:flex;flex-direction:column;gap:6px}
+.tc-hit{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border:.5px solid var(--line);border-radius:12px;background:rgba(var(--sh),.5)}
+.tc-hit .src{flex:none;font-style:normal;font:600 10px var(--sans);padding:2px 8px;border-radius:7px;margin-top:1px}
+.tc-hit .s-memory{background:rgba(125,156,207,.16);color:var(--ink2)}
+.tc-hit .s-trace{background:rgba(170,150,230,.18);color:#8d6fc9}
+.tc-hit .s-album{background:rgba(122,190,168,.2);color:#4f8f7a}
+.tc-hit .hc{flex:1;min-width:0}
+.tc-hit code{display:block;font:10px var(--mono);color:var(--ink3);word-break:break-all}
+.tc-hit p{margin:2px 0 0;font:12px/1.6 var(--sans);color:var(--ink2);word-break:break-word;-webkit-user-select:text;user-select:text}
+.tc-hit em{flex:none;font-style:normal;font:10.5px var(--mono);color:var(--ink3);margin-top:2px}
+.tc-hint{padding:12px 0 2px;text-align:center;font:italic 11.5px var(--sans);color:var(--ink3)}

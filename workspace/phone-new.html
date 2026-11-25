@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no,interactive-widget=resizes-content"><!-- 1025 恢复缩放锁定：10-24 设计审计删了 maximum-scale/user-scalable，之后 iOS 一聚焦输入框就自动放大整页（App 壳场景锁死缩放才是正解；iOS 10+ 用户捏合缩放不受 author 禁令影响，无障碍无损） -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#e6eef8">
+<script>/* [位置:phone-new.html·宽屏标记] [宽屏（iPad/电脑）模式：窗口 ≥760px 宽就给 html 加 wide，去掉手机外框，改成微信 iPad 那种左右双栏；样式在 phone-wide.css，逻辑在 phone-wide.js] [10-28] [注释时间 2026-10-28] */
+try{ if(window.matchMedia&&matchMedia("(min-width:760px)").matches) document.documentElement.classList.add("wide"); }catch(e){}</script>
+<link rel="apple-touch-icon" href="/push-icon-192.png">
+<link rel="icon" href="/push-icon-192.png">
+<title>小手机 · 新版预览</title>
+<style>
+:root{
+  --ink:#2a3042;--ink2:rgba(42,48,66,.62);--ink3:rgba(42,48,66,.38);
+  --acc:#7d9ccf;--acc2:#a9bfe6;
+  /* [位置:phone-new.html·:root --sel-*] [选中态三token：--sel-bg 选中浅底(=原.16)、--sel-ring 选中实色强调、--sel-dim 半实强调(=原.55，开关轨道/勾选圈)] [注意：自定义属性在声明处就求值，这里写 var(--acc) 只会固化成 :root 的蓝；凡是重定义 --acc 的作用域（.tkmin、.ses-pop.sub .box 日/夜）必须同步写 --sel-ring:var(--acc)，否则圈不跟主题，见 11-15 修复] [注释时间 2026-11-15 更新] */
+  --sel-bg:rgba(125,156,207,.16);--sel-ring:var(--acc);--sel-dim:rgba(125,156,207,.55);
+  --glass:rgba(255,255,255,.36);--glass2:rgba(255,255,255,.55);--line:rgba(255,255,255,.75);
+  --shadow:0 10px 30px rgba(96,120,160,.16);
+  --spring:cubic-bezier(.2,.9,.25,1);--soft:cubic-bezier(.4,0,.2,1);--press:cubic-bezier(.2,.7,.3,1);
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
+  --dw-gap:calc(var(--sat,0px) + 12px);   /* [位置:phone-new.html·:root --dw-gap] [抽屉满高档顶部空隙] [#58 11-01：sheetdrag 满高档=窗口高-此值，顶部露出状态栏；取值见 phone-sheetdrag.js gapPx 探针] [注释时间 2026-11-01] */
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Noto Sans CJK SC",sans-serif;
+  --display:"SF Pro Display",-apple-system,"PingFang SC",sans-serif;
+  --serif:"Georgia","Times New Roman","Songti SC","Noto Serif CJK SC",serif;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  --av-me:none;--av-ai:none;--wk:1;--sh:246,249,255;--ring:#fff;--pill:#fff;--face:#fff;--k-2a3042:#2a3042;--k-3c3129:#3c3129;--k-3d5a92:#3d5a92;--k-3d7c62:#3d7c62;--k-3d8c6a:#3d8c6a;--k-3f8f72:#3f8f72;--k-4a3d33:#4a3d33;--k-4d6fa8:#4d6fa8;--k-4f6ea8:#4f6ea8;--k-4f9a7a:#4f9a7a;--k-4f9b78:#4f9b78;--k-5a74a8:#5a74a8;--k-5a76ab:#5a76ab;--k-5a78b0:#5a78b0;--k-5f80c0:#5f80c0;--k-5f9884:#5f9884;--k-5f9a7c:#5f9a7c;--k-6b5a3e:#6b5a3e;--k-6b7fa8:#6b7fa8;--k-6b87bd:#6b87bd;--k-6d8ccb:#6d8ccb;--k-7480b4:#7480b4;--k-7f95c4:#7f95c4;--k-8a7766:#8a7766;--k-8a90a6:#8a90a6;--k-8c7fd0:#8c7fd0;--k-9a6238:#9a6238;--k-a1553d:#a1553d;--k-a67428:#a67428;--k-b4533f:#b4533f;--k-b5475c:#b5475c;--k-b5617a:#b5617a;--k-b8566f:#b8566f;--k-b8794a:#b8794a;--k-bd7f76:#bd7f76;--k-c06d86:#c06d86;--k-c4607c:#c4607c;--k-c46a82:#c46a82;--k-c5814f:#c5814f;--k-c86c84:#c86c84;--k-c9607a:#c9607a;--k-c9788d:#c9788d;--k-c9803a:#c9803a;--k-cf6683:#cf6683;--k-d06a7e:#d06a7e;--k-d5738c:#d5738c;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#dfe8f3;color:var(--ink);font-family:var(--sans);overflow:hidden;overscroll-behavior:none;-webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+/* 壁纸：同一色系的冰蓝白，想换成照片就改 --wall */
+#device{--wall:linear-gradient(180deg,#eef4fb 0%,#e0eaf5 48%,#c9d8ea 100%);
+  position:fixed;inset:0;overflow:hidden;background:var(--wall);isolation:isolate}
+@media (min-width:640px) and (max-width:759px){   /* 10-28：≥760px 走宽屏双栏（phone-wide.css），不再套手机外框 */
+  body{display:grid;place-items:center;background:radial-gradient(circle at 50% 30%,#eef3fa,#cfd9e8 75%)}
+  #device{--sab:14px;position:relative;inset:auto;width:402px;height:874px;border-radius:54px;box-shadow:0 0 0 10px #f6f8fb,0 0 0 11px #cdd6e3,0 40px 100px rgba(80,100,140,.3)}
+}
+/* 水纹：低频噪声染成白色，像壁纸上的水波 */
+#ripple{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.55;mix-blend-mode:soft-light;
+  background-size:cover;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='900'><filter id='r' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.006 .018' numOctaves='3' seed='7'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 2.2 -.7'/></filter><rect width='100%' height='100%' filter='url(%23r)'/></svg>")}
+
+#grain{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.05;mix-blend-mode:multiply;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+#device.idle .dimmable{opacity:.7}
+.dimmable{transition:opacity 1.6s var(--soft)}
+
+/* ========== 通用 ========== */
+/* [位置:phone-new.html·.ph-load] [全局加载动画（行内小号 / 铺满窗口那档）] [需求：11-05——不要骨架屏、不要「拉取中」文字；白天纸船、夜里星光；只留动画，不铺底色不糊毛玻璃（11-05 已确定：毛玻璃先加了又去掉）；整体居中（11-05先要偏上、随即改主意「还是居中吧」）；夜里星光放大 1.3 倍（素材画布 512 空边多，同尺寸下星形只有纸船六成，缩的是 .ld-box）；尺寸随屏幕放大；内容到了动画淡出（160ms）露出内容] [注释时间 2026-11-05 改：改回居中 + 夜里星光放大] */
+.ph-load{--lds:48px;width:var(--lds);height:var(--lds);display:grid;place-items:center;margin:0 auto;opacity:0;transition:opacity .18s var(--soft);position:relative}
+.ph-load .ld-box{width:100%;height:100%;display:grid;place-items:center}
+.ph-load .ld-box>div{width:100%;height:100%}
+.ph-load .ld-box svg{width:100%!important;height:100%!important;display:block}
+/* 整页那档：铺满所在窗口（手机=整屏，宽屏=右栏），不铺底色、不吃点击；
+   动画默认在窗口正中（top:50%），内容从中间长出来；--ldy 是各页面自己给的竖直偏移（默认 0），
+   有底栏的页面整窗几何中心偏低、看着不居中，由调用方传 dy 修正（聊天页 -36、会话列表首屏 -14，11-05 实测）；
+   用百分比不用 vh——平板外套框模式下 #device 是 874 高的框、视口更高，vh 会算歪 */
+.ph-load.ph-page{position:absolute;inset:0;width:auto;height:auto;margin:0;z-index:9;pointer-events:none;border-radius:0;display:block}
+.ph-load.ph-page .ld-box{position:absolute;left:50%;top:calc(50% + var(--ldy,0px));width:var(--lds);height:var(--lds);margin:0;transform:translate(-50%,-50%)}
+.ph-load.ph-page{--lds:72px}
+/* 夜里星光：素材画布 512×512 带大片空边（星星只占中间一块），72px 时星形只有纸船六成大，看着单薄；
+   放大放在 .ld-box 上，不碰里面的 svg——lottie 会给 svg 写行内 transform:translate3d(0,0,0)，外面写的规则一律被它盖掉（11-05 量过）；
+   .ld-box 自己的 transform 是我们自己的，整页那档要把定位的 translate 一起带上 */
+#device[data-theme="dark"] .ph-load .ld-box{transform:scale(1.3)}
+#device[data-theme="dark"] .ph-load.ph-page .ld-box{transform:translate(-50%,-50%) scale(1.3)}
+.ph-load.ld-on{opacity:1}
+/* 散去：整层只淡出、不缩放（缩放会露出边缘），动画本身跟着一起淡 */
+.ph-load.ld-out{opacity:0;transform:scale(.94);transition:opacity .16s var(--soft),transform .16s var(--soft)}
+.ph-load.ph-page.ld-out{transform:none}
+/* lottie 脚本/素材没拉下来时的静态兜底（一颗安静的星，不转不闪）
+   11-05 修：父层 .ph-load 是 opacity:0、只靠 .ld-on 亮起来，兜底这个分支原来没被点亮，静态星一直是隐形的 —— 补 .ld-fallback{opacity:1} */
+.ph-load.ld-fallback{opacity:1}
+.ph-load.ld-fallback::after{content:"";width:44%;height:44%;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3.2l2.5 5.6 6.1.6-4.6 4.1 1.3 6-5.3-3.1-5.3 3.1 1.3-6L3.4 9.4l6.1-.6z' fill='none' stroke='%237d9ccf' stroke-width='1.1' stroke-linejoin='round'/></svg>") center/contain no-repeat;opacity:.6}
+@media (min-width:760px){.ph-load{--lds:56px}.ph-load.ph-page{--lds:84px}}
+@media (min-width:1320px){.ph-load{--lds:64px}.ph-load.ph-page{--lds:100px}}
+@media (prefers-reduced-motion:reduce){.ph-load,.ph-load.ld-out{transition:none}}
+
+.layer{position:absolute;inset:0;z-index:5}
+.tap{transition:transform .16s var(--press),opacity .16s}
+.tap.pressed{transform:scale(.97);opacity:.9}
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);border:.5px solid var(--line);box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.7)}
+.homebar{position:absolute;left:0;right:0;bottom:0;height:calc(var(--sab) + 28px);display:flex;justify-content:center;align-items:flex-end;padding-bottom:calc(var(--sab) + 8px);z-index:20;touch-action:none}
+.homebar::after{content:"";width:134px;height:5px;border-radius:3px;background:rgba(42,48,66,.4)}
+/* [位置:phone-new.html·.win>.homebar] [app 窗口底条不再吃点击] [原来这条完全透明（z-index:20，高 sab+28px）压在列表底部，滚到底最后一行半截的点击全被它接走，得往上滑一点才点得进去；改成只做视觉不参与命中，上滑关 app 的手势改在 openApp 里按起手位置判定] [注释时间 2026-10-27] */
+.win>.homebar{pointer-events:none}
+.av{border-radius:50%;background-color:#dbe5f2;background-image:var(--avimg,none);background-size:cover;background-position:center;position:relative;flex:none;display:grid;place-items:center;font:600 18px var(--serif);color:var(--ink2)}
+.av.me{--avimg:var(--av-me)}.av.ai{--avimg:var(--av-sess,var(--av-ai))} /* 1026：--av-sess 由聊天页根上设（预设带的会话级头像），没有就回落全局 --av-ai */
+.av.hasimg::after{content:none}
+.av:not(.hasimg)::after{content:attr(data-l)}
+.cap{font-family:var(--serif);font-style:italic;color:var(--ink2)}
+
+/* ========== 锁屏 ========== */
+#lock{z-index:30;display:flex;flex-direction:column;align-items:center;padding-top:calc(var(--sat) + 56px);touch-action:none;will-change:transform}
+#lock .date{font-size:17px;font-weight:500;color:var(--ink2);letter-spacing:.02em}
+#lock .clock{font:200 96px/1 var(--display);letter-spacing:-.04em;margin-top:2px;color:rgba(42,48,66,.86)}
+#lock .together{margin-top:14px;padding:7px 14px;border-radius:999px;font-size:13px;display:flex;gap:8px;align-items:center}
+#lock .together b{font-weight:600}
+.heart{width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc);animation:beat 1.2s ease-in-out infinite}
+@keyframes beat{0%,100%{transform:scale(1)}15%{transform:scale(1.5)}30%{transform:scale(1)}45%{transform:scale(1.3)}}
+#lock .notis{margin-top:auto;width:calc(100% - 28px);display:flex;flex-direction:column;gap:8px;margin-bottom:22px}
+.noti{border-radius:24px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+.noti .ic{width:38px;height:38px;border-radius:12px;flex:none;display:grid;place-items:center;background:var(--glass2);border:.5px solid var(--line)}
+.noti .ic svg{width:19px;height:19px;stroke:var(--ink);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.noti .av{width:38px;height:38px}
+.noti .t{font-size:14px;font-weight:600;display:flex;justify-content:space-between;gap:8px}
+.noti .t small{font-weight:400;color:var(--ink3);font-size:12px}
+.noti .m{font-size:14px;color:var(--ink2);margin-top:2px;line-height:1.4}
+/* [位置:phone-new.html·#lock .hint] [上滑解锁贴更底] [11-16：锁屏自己的杠删了（系统手机本身有），提示往下收——margin 从 sab+30px 收到 sab+10px，正好落在系统手势条上方] [注释时间 2026-11-16] */
+#lock .hint{font-size:14px;color:var(--ink2);margin-bottom:calc(var(--sab) + 10px);animation:hint 2.4s ease-in-out infinite;letter-spacing:.08em}
+@keyframes hint{0%,100%{transform:translateY(0);opacity:.55}50%{transform:translateY(-6px);opacity:1}}
+
+/* ========== 主屏 ========== */
+#home{z-index:10;padding:calc(var(--sat) + 14px) 20px 0;display:flex;flex-direction:column;transform-origin:50% 60%;will-change:transform}
+#home.behind,#home.under{transform:scale(.92);opacity:0}
+#home{transition:transform .5s var(--spring),opacity .4s,filter .4s}
+/* 资料卡 */
+.pcard{border-radius:30px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;padding:0 16px 14px}
+.pcard .cover{position:absolute;left:0;right:0;top:0;height:50%;pointer-events:none;
+  background:radial-gradient(80% 120% at 20% 0%,rgba(255,255,255,.9),rgba(255,255,255,0) 60%),radial-gradient(70% 110% at 85% 20%,rgba(185,211,241,.85),rgba(185,211,241,0) 65%),radial-gradient(60% 90% at 50% 100%,rgba(217,211,243,.6),rgba(217,211,243,0) 70%)}
+.pcard .avs{margin-top:24px;display:flex;position:relative;z-index:1}
+.pcard .avs .av{width:74px;height:74px;border:3px solid rgba(255,255,255,.92);box-shadow:0 8px 22px rgba(96,120,160,.25)}
+.pcard .avs .av+.av{margin-left:-16px}
+.pcard .nm{margin-top:10px;font-size:19px;font-weight:600;letter-spacing:.01em;position:relative}
+.pcard .sub{font-size:13px;margin-top:2px;position:relative}
+.pcard .cnt{font:12px var(--mono);color:var(--ink2);margin-top:8px;position:relative;letter-spacing:.02em}
+.pcard .bar{width:132px;height:3px;border-radius:2px;background:rgba(42,48,66,.1);margin-top:10px;position:relative;overflow:hidden}
+.pcard .bar i{position:absolute;inset:0;border-radius:2px;background:linear-gradient(90deg,var(--acc2),var(--acc));transform-origin:0 50%;transform:scaleX(0);transition:transform 1.6s var(--spring)}
+/* 图标 + 小组件 */
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px;justify-items:center}
+.app-ic{display:flex;flex-direction:column;align-items:center;gap:6px;width:76px}
+.app-ic .sq{width:62px;height:62px;border-radius:20px;display:grid;place-items:center;position:relative;background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:.5px solid var(--line);box-shadow:0 8px 20px rgba(96,120,160,.16),inset 0 1px 0 rgba(255,255,255,.85),inset 0 -6px 12px rgba(255,255,255,.18)}
+.app-ic .sq svg{width:27px;height:27px;stroke:var(--k-566079,#566079);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round} /* 10-31 夜间兼容：图标描边写死深蓝改 --k- 变量（日间 fallback 原值、零变化；夜间浅色值在 phone-dark.css 窗口变量表），修宽屏「应用」页夜间看不清 */
+.app-ic span{font-size:11.5px;color:var(--k-4e5a78,#4e5a78);font-weight:600;letter-spacing:.02em} /* 10-31 夜间兼容：图标文字同上，宽屏「应用」页夜间反转 */
+.app-ic .badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:#f08ea0;color:#fff;font-size:11px;font-weight:600;display:grid;place-items:center;padding:0 5px;z-index:2;box-shadow:0 0 0 2px #e8eff8}
+.app-ic .wrap{position:relative}
+.pill{align-self:center;margin-top:16px;border-radius:999px;padding:9px 20px;font:600 11.5px var(--sans);letter-spacing:.2em;color:var(--ink2);text-transform:uppercase;white-space:nowrap}
+.dock{margin-top:auto;margin-bottom:calc(var(--sab) + 26px);border-radius:38px;padding:13px 10px;display:flex;justify-content:space-around}
+/* [位置:phone-new.html·#home .dock] [dock 更透明、去投影] [11-16：底栏玻璃太实、投影重；背景在各自主题的 --glass 上再掺一半透明（日夜都跟变量走），box-shadow:none 去掉 .glass 的投影和高光内描边，模糊和 0.5px 描边保留] [注释时间 2026-11-16] */
+#home .dock{background:color-mix(in srgb,var(--glass) 50%,transparent);box-shadow:none}
+.dock .app-ic{width:auto}.dock .app-ic span{display:none}
+.dock .app-ic .sq{width:58px;height:58px;border-radius:19px;box-shadow:0 6px 14px rgba(96,120,160,.14),inset 0 1px 0 rgba(255,255,255,.85)}
+.pager{display:flex;gap:7px;justify-content:center;margin:auto 0 14px}
+.pager i{width:7px;height:7px;border-radius:50%;background:rgba(42,48,66,.2)}.pager i.on{width:20px;border-radius:4px;background:rgba(42,48,66,.45)}
+#home.enter .stag{animation:stag .7s var(--spring) both;animation-delay:calc(var(--i) * 28ms)}
+@keyframes stag{from{opacity:0;transform:translateY(18px) scale(.88)}}
+@media (max-height:760px){.pill{display:none}.pcard .avs{margin-top:16px}.grid{margin-top:10px;gap:8px}}
+
+/* ========== 通知中心 ========== */
+#nc{z-index:40;transform:translateY(-100%);padding:calc(var(--sat) + 22px) 14px 0;display:flex;flex-direction:column;gap:10px;background:rgba(232,240,250,.55);-webkit-backdrop-filter:blur(34px) saturate(150%);backdrop-filter:blur(34px) saturate(150%);touch-action:none;will-change:transform}
+#nc h3{font:600 28px var(--display);padding:0 6px 6px;letter-spacing:-.01em}
+#nc .noti{opacity:0;transform:translateY(-12px) scale(.97);transition:opacity .4s,transform .5s var(--spring)}
+#nc.open .noti{opacity:1;transform:none}
+#nc.open .noti:nth-child(3){transition-delay:.04s}#nc.open .noti:nth-child(4){transition-delay:.08s}#nc.open .noti:nth-child(5){transition-delay:.12s}#nc.open .noti:nth-child(6){transition-delay:.16s}
+#nc .grab{margin:auto auto calc(var(--sab) + 14px);width:40px;height:5px;border-radius:3px;background:rgba(42,48,66,.3)}
+.pullzone{position:absolute;top:0;left:0;right:0;height:calc(var(--sat) + 44px);z-index:15;touch-action:none}
+/* [位置:phone-new.html·.pullzone 编辑时停用] [格位编辑：下拉热区盖住第一行卡片的 − 角标，编辑模式关掉] [注释时间 2026-11-17] */
+#home.editing~.pullzone{display:none}
+
+/* ========== App 窗口 ========== */
+.win{position:absolute;inset:0;z-index:25;overflow:hidden;background:rgba(238,244,251,.72);border-radius:0;transform-origin:0 0;will-change:transform}
+.win .content{position:absolute;inset:0;display:flex;flex-direction:column}
+.win.opening .content{animation:cin .38s var(--soft) .12s both}
+@keyframes cin{from{opacity:0}}
+.apphead{padding:calc(var(--sat) + 8px) 12px 10px;display:flex;align-items:center;gap:10px;z-index:3}
+.apphead .back{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--glass2);border:.5px solid var(--line)}
+.apphead .back svg{width:20px;height:20px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.apphead .ttl{font-weight:600;font-size:17px}
+.placeholder{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--ink2);text-align:center;padding:0 40px 80px}
+.placeholder .big{width:96px;height:96px;border-radius:30px;display:grid;place-items:center;background:var(--glass2);border:.5px solid var(--line);box-shadow:var(--shadow)}
+.placeholder .big svg{width:42px;height:42px;stroke:var(--k-566079,#566079);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round} /* 10-31 夜间兼容：App 窗口空态大图标同上 */
+.placeholder b{color:var(--ink);font-size:20px}
+
+/* [位置:phone-new.html·#toast / #toast.long] [提示条两种形态] [11-06：这条是全站共用的，「删掉了」这种两个字也铺满一整条太像系统通知。分两种：短提示（20 字以内，字面量最长 35 字，绝大多数 ≤16）保持原来的居中胶囊；超过 20 字（错误原因、校验拒绝这类）才切成横幅——左右各留 16px、圆角 16px（她：标签按钮一律圆角矩形不做成圆的）、文字左对齐可换行、行距 1.62、长串用 overflow-wrap:anywhere 断开不横向溢出。20 字是「390 宽 + 14px 字号 + 左右 18px padding」算出来的安全阈值（约 316px，留 40px 余量）] [注释时间 2026-11-06] */
+#toast{position:absolute;left:50%;top:calc(var(--sat) + 58px);z-index:90;transform:translate(-50%,calc(-100% - var(--sat) - 70px));opacity:0;padding:10px 18px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;transition:transform .5s var(--spring),opacity .25s}
+#toast.show{transform:translate(-50%,0);opacity:1}
+#toast.long{width:max-content;max-width:calc(100% - 32px);transform:translate(-50%,calc(-100% - var(--sat) - 66px));padding:12px 16px;border-radius:16px;font-size:13.5px;line-height:1.62;letter-spacing:.01em;white-space:normal;overflow-wrap:anywhere;text-align:left;transition:transform .46s var(--spring),opacity .24s}
+#toast.long.show{transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.12s!important}
+}
+</style>
+<link rel="stylesheet" href="phone-apps.css">
+<link rel="stylesheet" href="phone-apps2.css">
+<link rel="stylesheet" href="phone-fix.css">
+<link rel="stylesheet" href="phone-nw-widgets.css">
+<link rel="stylesheet" href="phone-glass.css">
+<link rel="stylesheet" href="phone-sea.css">
+<link rel="stylesheet" href="phone-skin.css">
+<link rel="stylesheet" href="phone-cards.css">
+<link rel="stylesheet" href="phone-bubble.css">
+<link rel="stylesheet" href="phone-chats.css">
+<!-- [位置:phone-new.html·加载动画资源预取] [空闲时把 lottie 运行库和两个动画素材拉到本地缓存] [11-05：加载动画只在需要时懒加载，首次进页面时如果正好要用会慢半拍；用 prefetch 让浏览器空闲时先下好（首次约 190KB，之后走缓存/304），不影响首屏渲染] [注释时间 2026-11-05] -->
+<!-- 2026-11-19 加载提速批 C1：lottie 运行库（168KB）与两个动画 json 的 prefetch 从这里挪走——原先首屏就抢带宽；现在由 phone-pages.js 尾部的空闲预取（idlePrefetch）在主屏稳定后拉，首次出加载动画前大概率已暖好协商缓存，没暖到也有静态星兜底（ph-load.js） -->
+<link rel="stylesheet" href="phone-talk.css">
+<link rel="stylesheet" href="fonts/wenkai/lxgwwenkai-regular.css">   <!-- [位置:phone-new.html·霞鹜文楷] [气泡样式名字的硬笔楷书字体，97 个 unicode-range 分片、用到哪个字才下哪片（共 4.7MB，不会一次全下）；来源 npm lxgw-wenkai-webfont@1.7.0；10-30 从 8 款预览里选的第 6 款，替换龙藏体] [注释时间 2026-10-30] -->
+<link rel="stylesheet" href="phone-pages.css">
+<link rel="stylesheet" href="phone-wf.css">
+<link rel="stylesheet" href="phone-jot.css">
+<link rel="stylesheet" href="phone-wide.css">
+<link rel="stylesheet" href="phone-trace.css">
+<link rel="stylesheet" href="phone-notes.css">
+<link rel="stylesheet" href="phone-drawer.css">
+<link rel="stylesheet" href="phone-dark.css">
+</head>
+<body>
+<div id="device" data-mood="calm">
+  <div id="ripple"></div><div id="grain"></div>
+
+  <!-- 主屏 -->
+  <section id="home" class="layer dimmable" aria-label="主屏">
+    <div class="pcard glass stag tap" style="--i:0" data-act="me" role="button" aria-label="打开我的资料" title="点一下看资料，长按回到锁屏">
+      <div class="cover"></div>
+      <div class="avs"><div class="av me" data-l="用"></div><div class="av ai" data-l="助"></div></div>
+      <div class="nm" id="homePairNm">用户 &amp; 助手</div>
+      <div class="sub cap" id="homeSince" hidden></div>
+      <div class="cnt" id="cntLine" hidden></div>
+      <div class="bar" id="homeProgWrap" hidden><i id="progBar"></i></div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="pill glass stag" style="--i:12" id="pillLine">· ✦ ·</div>
+    <div class="pager stag" style="--i:13"><i class="on"></i><i></i><i></i></div>
+    <div class="dock glass" id="dock"></div>
+  </section>
+  <div class="pullzone" id="pullzone"></div>
+
+  <!-- 通知中心 -->
+  <section id="nc" class="layer" aria-label="后台活动">
+    <h3>后台活动</h3>
+    <div class="noti glass" id="egCard" style="cursor:pointer">
+      <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 12h4l2 6 3-12 2 6h5"/></svg></div>
+      <div style="flex:1"><div class="t">Claude 线路 <small id="egWhen"></small></div><div class="m" id="egText">检查中…</div></div>
+      <div id="egDot" style="width:8px;height:8px;border-radius:50%;background:#c3ccdb;margin-top:7px;flex:none"></div>
+    </div>
+    <div class="noti glass" id="egMore" style="display:none">
+      <div style="flex:1">
+        <div class="m" id="egIp">出口 —</div>
+        <div class="m" id="egFails">失败 0/3</div>
+        <div class="m" id="egProxy" style="opacity:.6">—</div>
+        <div style="margin-top:10px"><button id="egBtn" class="tap" style="font:600 13px var(--ui);padding:7px 14px;border-radius:12px;border:0;background:rgba(42,48,66,.08);color:#2a3042">立即检查</button></div>
+      </div>
+    </div>
+    <!-- [位置:phone-new.html·通知中心] [删 4 条硬编码假通知] [2026-10-27 产品确定：通知中心只显示真的（Claude 线路卡拉 /admin/claude-egress）；「唤醒/心动时刻/记忆整理/推送」四条是写死的演示文案，留着会让人以为真有通知。CSS :nth-child(3..6) 渐入延迟规则保留：#egMore 仍命中 (3)，其余不命中无副作用] [注释时间 2026-10-27] -->
+    <div class="grab"></div>
+  </section>
+
+  <!-- 锁屏 -->
+  <!-- [位置:phone-new.html·#lock] [锁屏不吃闲置变暗] [11-16：#device.idle .dimmable{opacity:.7} 让锁屏放久了整体变透明、透出后面的壁纸；锁屏去掉 dimmable 类（主屏的闲置变暗保留，不受影响）] [注释时间 2026-11-16] -->
+  <section id="lock" class="layer" aria-label="锁屏">
+    <div class="date" id="lkDate"></div>
+    <div class="clock" id="lkClock">00:00</div>
+    <div class="together glass" id="lkTogether" hidden><span class="heart"></span>在一起 <b id="lkDays">0</b> 天 <span id="lkHours" style="color:var(--ink2)"></span></div>
+    <!-- [位置:phone-new.html·锁屏演示消息] [锁屏示例通知] [11-16 产品确定：写死的演示消息，文案沿用 10-27 删掉的旧演示通知；点击解锁并进聊天列表（接线在脚本 #lkNoti，锁屏拖动手势在 drag(lock) 的 can 里排除这块）；.notis 容器 margin-top:auto 撑住锁屏底部布局，保留] [注释时间 2026-11-16] -->
+    <div class="notis" id="lkNotis">
+      <div class="noti glass" id="lkNoti" role="button" aria-label="打开聊天"><div class="av ai" data-l="助"></div>
+        <div style="flex:1"><div class="t"><span id="lkNotiNm">助手</span> <small>刚刚</small></div><div class="m">你好，我在这儿。</div></div></div>
+    </div>
+    <div class="hint">上滑解锁</div>
+  </section>
+
+  <div id="toast" class="glass"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var D=document.getElementById('device'), $=function(s,r){return (r||document).querySelector(s);};
+var WIDE=document.documentElement.classList.contains('wide');   /* 10-28 宽屏双栏模式（见 phone-wide.js） */
+var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+var SINCE=null;
+var buzz=function(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms||8); }catch(e){} };
+
+/* ---------- 头像与称呼：读聊天系统里设置的那一对，未配置时显示中性默认字母头像 ---------- */
+var AV={me:'',ai:''};
+function applyAv(key,url){
+  if(!url) return; var im=new Image();
+  im.onload=function(){ document.documentElement.style.setProperty('--av-'+key,'url("'+url.replace(/"/g,'%22')+'")'); Array.prototype.forEach.call(document.querySelectorAll('.av.'+key),function(e){ e.classList.add('hasimg'); }); };
+  im.src=url;
+}
+function applyHomeNames(u,a){
+  var me=(typeof u==='string'&&u.trim())?u.trim():'用户';
+  var ai=(typeof a==='string'&&a.trim())?a.trim():'助手';
+  var pair=$('#homePairNm'); if(pair) pair.textContent=me+' & '+ai;
+  var lkNm=$('#lkNotiNm'); if(lkNm) lkNm.textContent=ai;
+  var ml=Array.from(me)[0]||'用', al=Array.from(ai)[0]||'助';
+  Array.prototype.forEach.call(document.querySelectorAll('#home .av.me,#lock .av.me'),function(e){ e.setAttribute('data-l',ml); });
+  Array.prototype.forEach.call(document.querySelectorAll('#home .av.ai,#lock .av.ai'),function(e){ e.setAttribute('data-l',al); });
+}
+/* 1026：会话级头像（预设带的）——聊天页根上有 tk-av-sess 标记类时，页内 .av.ai 都按 hasimg 处理藏字母 */
+function markAv(){ ['me','ai'].forEach(function(k){ if(document.documentElement.style.getPropertyValue('--av-'+k)) Array.prototype.forEach.call(document.querySelectorAll('.av.'+k+':not(.hasimg)'),function(e){ e.classList.add('hasimg'); }); });
+  Array.prototype.forEach.call(document.querySelectorAll('.tk-av-sess .av.ai:not(.hasimg)'),function(e){ e.classList.add('hasimg'); }); }
+if(AV.me) applyAv('me',AV.me); if(AV.ai) applyAv('ai',AV.ai);
+try{ fetch('/heartbeat/admin/chat-settings',{credentials:'include'}).then(function(r){ return r.ok?r.json():null; }).then(function(j){
+  if(!j) return; var c=(j.data&&j.data.cfg)||j.cfg||j.settings||j;
+  if(c&&c.user_avatar) applyAv('me',c.user_avatar);
+  if(c&&c.ai_avatar) applyAv('ai',c.ai_avatar);
+  if(c&&(c.user_name||c.ai_name)){
+    applyHomeNames(c.user_name,c.ai_name);
+    if(window.PH){ window.PH._initChatCfg={user_name:c.user_name,ai_name:c.ai_name}; if(window.PH.names) window.PH.names.set(window.PH._initChatCfg); }
+  }
+}).catch(function(){}); }catch(e){}
+
+/* ---------- 时间 ---------- */
+var WK='日一二三四五六';
+function tick(){
+  var n=new Date(), h=('0'+n.getHours()).slice(-2), m=('0'+n.getMinutes()).slice(-2);
+  $('#lkClock').textContent=h+':'+m;
+  $('#lkDate').textContent=(n.getMonth()+1)+'月'+n.getDate()+'日 星期'+WK[n.getDay()];
+  if(SINCE){
+    var ms=n-SINCE, d=Math.floor(ms/864e5), hh=Math.floor(ms%864e5/36e5);
+    var lkT=$('#lkTogether'); if(lkT) lkT.hidden=false;
+    var hs=$('#homeSince'); if(hs) hs.hidden=false;
+    var cl=$('#cntLine'); if(cl){ cl.hidden=false; cl.textContent='together.days( '+d+' ) ✦ next 100 in '+(100-d%100); }
+    var pw=$('#homeProgWrap'); if(pw) pw.hidden=false;
+    $('#lkDays').textContent=d; $('#lkHours').textContent=hh>0?'· '+hh+' 小时':'';
+  }
+  var hr=n.getHours();
+  var s= hr<6?'陪你熬夜':hr<11?'等你醒来':hr<14?'想和你吃饭':hr<18?'在想你':hr<23?'等你回家':'哄你睡觉';
+  $('#pillLine').textContent='✦ '+s+' ✦';
+}
+/* [2026-11-01 可达页才渲染（不要后台偷偷跑）：桌面时钟只在没开 app、没切后台时更新，原来 15s 一直跳 */
+tick(); setInterval(function(){ if(document.hidden||D.classList.contains('app-open')) return; tick(); },15000);
+
+/* ---------- 按压反馈 ---------- */
+D.addEventListener('pointerdown',function(e){ var t=e.target.closest('.tap'); if(!t) return; t.classList.add('pressed'); var up=function(){ t.classList.remove('pressed'); removeEventListener('pointerup',up); removeEventListener('pointercancel',up); }; addEventListener('pointerup',up); addEventListener('pointercancel',up); });
+
+/* ---------- 闲置变暗 ---------- */
+var idleT;
+function wake(){ D.classList.remove('idle'); clearTimeout(idleT); idleT=setTimeout(function(){ D.classList.add('idle'); },25000); }
+['pointerdown','keydown'].forEach(function(ev){ addEventListener(ev,wake,{passive:true}); }); wake();
+
+/* ---------- 图标 ---------- */
+var ICON={
+  chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
+  diary:'<path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z"/><path d="M8 9h8M8 13h6"/>',
+  world:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  todo:'<path d="m4 7 2 2 4-4M4 15l2 2 4-4M14 7h6M14 15h6"/>',
+  heart:'<path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/>',
+  note:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+  phone:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>',
+  pulse:'<path d="M22 12h-4l-3 8L9 4l-3 8H2"/>',
+  set:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+  photo:'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>',
+  moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  wake:'<circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.2 2M5 3.5 2.5 6M19 3.5 21.5 6"/>',
+  mem:'<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>',
+  tools:'<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><path d="M17 14v6M14 17h6"/>',
+  star:'<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+  push:'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M10.3 21a2 2 0 0 0 3.4 0"/>',
+  perm:'<circle cx="12" cy="5" r="2.5"/><path d="M12 7.5V21M5 12H2.5a9.5 9.5 0 0 0 19 0H19"/>',
+  /* [位置:phone-new.html·ICON.trace] [痕迹图标] [11-07：桌面游戏胶囊删除，图标位换「痕迹」——折线轨迹加末端一点，像一路留下的印子] [注释时间 2026-11-07] */
+  trace:'<path d="m4 19 3-3M9.5 13.5l1.5-1.5M13.5 9.5 15 8"/><circle cx="17.5" cy="5.5" r="2.3"/>',
+  theme:'<path d="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.3A4.7 4.7 0 0 0 21 9.7C21 6 17 3 12 3z"/><circle cx="7.5" cy="11.5" r="1"/><circle cx="10" cy="7.5" r="1"/><circle cx="15" cy="7.5" r="1"/>'
+};
+var APPS={
+  diary:{n:'日记',i:'diary',d:'碎碎念都写在这里，谢可阅可评。'},
+  heart:{n:'心动',i:'heart',d:'被标星的那些句子。'},
+  cal:{n:'月历',i:'cal',d:'记账、经期、今日总结。'},
+  todo:{n:'待办',i:'todo',d:'一起写，划掉就消失。'},
+  note:{n:'笔记本',i:'note',d:'故事、梦与设定。'},
+  photo:{n:'相册',i:'photo',d:'等第一张照片落进来，我就替你好好收着。'},
+  chat:{n:'聊天',i:'chat'},
+  chats:{n:'聊天',i:'chat'},
+  world:{n:'小世界',i:'world',d:'一个只属于我们的小房间，正在慢慢搭。'},
+  pulse:{n:'后台',i:'pulse',d:'他在你看不见的时候做的事。'},
+  set:{n:'设置',i:'set',d:'外观、模型、语音……'},
+  theme:{n:'主题',i:'theme',d:'头像名称、聊天主题、字体字号、触感震动。'},
+  trace:{n:'痕迹',i:'trace',d:'他写下的此刻，都收在这里。'},   /* [位置:phone-new.html·APPS.trace] [痕迹 app] [11-07：游戏胶囊删除换痕迹（trace_notes 可读页）；d 是 app 简介文案] [注释时间 2026-11-07] */
+  wake:{n:'唤醒',i:'wake'},
+  mem:{n:'记忆池',i:'mem'},
+  tools:{n:'工具集',i:'tools'},
+  star:{n:'标星管理',i:'star'},
+  push:{n:'推送管理',i:'push'},
+  perm:{n:'永久上下文',i:'perm'}
+};
+function icon(id,k,idx){ var a=APPS[id]; return '<button class="app-ic tap '+(k||'')+'" '+(a.go?'data-go="'+a.go+'"':'data-app="'+id+'"')+' style="--i:'+(idx||0)+'"><div class="wrap"><div class="sq"><svg viewBox="0 0 24 24">'+ICON[a.i]+'</svg></div>'+(a.badge?'<div class="badge">'+a.badge+'</div>':'')+'</div><span>'+a.n+'</span></button>'; }
+/* [位置:phone-new.html·order] [桌面第一页顺序] [11-16：待办/唤醒/标星/记忆池/信封从桌面撤下（都有卡片等价入口，点卡片直接进页面），桌面图标只剩 笔记本/工具集/永久上下文；信封 App 同日整个删除（C1）] [注释时间 2026-11-16] */
+var order=['note','tools','perm'], gi=0;   /* 桌面第一页顺序 */
+/* [位置:phone-new.html·appOrder] [宽屏「应用」页顺序·注册表唯一来源] [批次4a：宽屏顺序原来硬编码在 phone-chats.js 的 APP_ORDER，和这里的 APPS/desktop order 三处各一份，加删 app 要改多处还容易漏（电话死项就是这么留下的）。收拢到这里，挂 window.PH.appOrder 给 phone-chats.js 引用；tests/ui/app_registry_check.js 每次构建前核对本表与 APPS 一致] [注释时间 2026-11-14] */
+/* [位置:phone-new.html·appOrder] [宽屏「应用」页顺序·注册表唯一来源] [批次4a：宽屏顺序原来硬编码在 phone-chats.js 的 APP_ORDER，和这里的 APPS/desktop order 三处各一份，加删 app 要改多处还容易漏（电话死项就是这么留下的）。收拢到这里，挂 window.PH.appOrder 给 phone-chats.js 引用；tests/ui/app_registry_check.js 每次构建前核对本表与 APPS 一致。11-16 批1：撤下 待办/唤醒/标星/后台/记忆池/信封（桌面卡片等价入口），应用页同步收窄] [注释时间 2026-11-16 改] */
+var appOrder=['todo','note','cal','diary','wake','mem','tools','star','perm','trace','pulse','theme','set'];   /* [位置:phone-new.html·appOrder] [宽屏应用页补回真页面] [11-20 晚：第四页只剩 7 个，把注册表里有真页面的全加回来 = 13；心跳/相册/小世界/推送管理/聊天无注册窗口（点了是占位页）不加；信封与提示词页已删] [注释时间 2026-11-20] */
+$('#grid').innerHTML=order.map(function(id){ gi++; return icon(id,'stag',gi<=4?gi+1:gi+2); }).join('');   /* [位置:phone-new.html·grid] [删 qroom 死分支] [2026-10-27 产品确定删假文案时发现：order 数组里没有 'QROOM'，该分支永假、Quiet Room 组件从未渲染（含 CSS 两条），连 CSS 一起删] [注释时间 2026-10-27] */
+/* [位置:phone-new.html·dock] [底栏三个：聊天/主题/设置] [11-16：后台（pulse）也有卡片（第三页「后台 · 备份」），从 dock 撤下；底栏同时改更透明、去投影（见上方 #home .dock）] [注释时间 2026-11-16] */
+$('#dock').innerHTML=['chats','theme','set'].map(function(id){ return icon(id); }).join('');
+markAv();
+
+/* ---------- 拖动工具 ---------- */
+function drag(el,o){
+  var sx,sy,st,on=false,ax=null;
+  el.addEventListener('pointerdown',function(e){ if(o.can&&!o.can(e)) return; on=true; ax=null; sx=e.clientX; sy=e.clientY; st=performance.now(); try{el.setPointerCapture(e.pointerId);}catch(_){} o.start&&o.start(e); });
+  el.addEventListener('pointermove',function(e){ if(!on) return; var dx=e.clientX-sx, dy=e.clientY-sy; if(ax===null){ if(Math.abs(dx)<6&&Math.abs(dy)<6) return; ax=Math.abs(dy)>Math.abs(dx)?'y':'x'; } o.move&&o.move(dx,dy,ax); });
+  var end=function(e){ if(!on) return; on=false; var dx=e.clientX-sx, dy=e.clientY-sy, dt=performance.now()-st; o.end&&o.end(dx,dy,dt,ax); };
+  el.addEventListener('pointerup',end); el.addEventListener('pointercancel',end);
+}
+function anim(el,frames,opt){ if(reduce){ opt=Object.assign({},opt,{duration:120}); } return el.animate(frames,Object.assign({fill:'forwards'},opt)); }
+
+/* ---------- 锁屏 ---------- */
+var lock=$('#lock'), home=$('#home'), H=function(){return D.clientHeight;};
+var locked=true; home.classList.add('behind');
+drag(lock,{
+  /* [位置:phone-new.html·drag(lock) can] [演示消息区域不吃锁屏手势] [11-16：通知卡片自己有点击行为（解锁+进聊天），从它起手不再拖动锁屏/触发回弹动画] [注释时间 2026-11-16] */
+  can:function(e){ return !(e.target&&e.target.closest&&e.target.closest('#lkNoti')); },
+  move:function(dx,dy){ if(dy>0) dy=dy*.15; var p=Math.min(1,-dy/H()); lock.style.transition='none'; lock.style.transform='translateY('+dy+'px)'; lock.style.opacity=String(1-p*1.2); home.style.transition='none'; home.style.transform='scale('+(.92+.08*p)+')'; home.style.opacity=String(.45+.55*p); home.style.filter='blur('+(2-2*p)+'px)'; },
+  end:function(dx,dy,dt){
+    var v=-dy/dt;
+    if(-dy>H()*.22||v>.6){ unlock(); }
+    else if(Math.abs(dy)<6&&dt<300){ anim(lock,[{transform:'translateY(0)'},{transform:'translateY(-26px)'},{transform:'translateY(0)'}],{duration:500,easing:'cubic-bezier(.2,.9,.25,1)',fill:'none'}); }
+    else{ lock.style.transition='transform .5s var(--spring),opacity .3s'; lock.style.transform=''; lock.style.opacity=''; home.style.transition=''; home.style.transform=''; home.style.opacity=''; home.style.filter=''; }
+  }
+});
+function setProg(){ var d=(+$('#lkDays').textContent)||0; $('#progBar').style.transform='scaleX('+((d%100)/100)+')'; }
+function unlock(){
+  buzz(10);
+  lock.style.transition='transform .45s var(--spring),opacity .35s'; lock.style.transform='translateY(-100%)'; lock.style.opacity='0';
+  setTimeout(function(){ lock.style.visibility='hidden'; },460);
+  home.style.transition=''; home.style.transform=''; home.style.opacity=''; home.style.filter='';
+  home.classList.remove('behind'); home.classList.remove('enter'); void home.offsetWidth; home.classList.add('enter');
+  setTimeout(setProg,200);
+  locked=false;
+  if(window.PH&&PH.minLayout&&PH.minLayout.on&&!D.querySelector('.win.tk-layer')){
+    PH.minLayout.openRootChat();
+  }
+}
+/* [位置:phone-new.html·宽屏跳过锁屏] [宽屏直接进工作台：锁屏不显示、桌面藏起来（图标由「应用」页复用）] [10-28] [注释时间 2026-10-28] */
+if(WIDE){ lock.style.display='none'; locked=false; home.classList.remove('behind'); home.style.visibility='hidden'; home.style.pointerEvents='none'; }
+/* [位置:phone-new.html·前端更新原地恢复] [跳过锁屏首帧不闪] [11-21：frontUpdate 自动 reload 前把当前页状态记进 sessionStorage(ph_hot_reload，25s 有效单次消费)；重载首帧直接藏掉锁屏，等脚本就绪后原地恢复刚才所在的页面] [注释时间 2026-11-21] */
+(function(){
+  try{
+    var raw=sessionStorage.getItem('ph_hot_reload');
+    if(!raw) return;
+    sessionStorage.removeItem('ph_hot_reload');
+    var st=JSON.parse(raw);
+    if(!st||!st.at||Date.now()-st.at>25000) return;
+    window.__phHotRestore=st;
+    if(st.unlocked){
+      lock.style.display='none'; lock.style.visibility='hidden';
+      locked=false; home.classList.remove('behind');
+    }
+  }catch(e){}
+})();
+function relock(){
+  lock.style.visibility=''; lock.style.transition='transform .5s var(--spring),opacity .4s'; lock.style.transform=''; lock.style.opacity='';
+  home.classList.add('behind'); $('#progBar').style.transform='scaleX(0)'; locked=true;
+}
+/* [位置:phone-new.html·lkNoti 点击] [点锁屏演示消息=解锁并进聊天列表] [11-16 产品确定：锁屏示例消息点击直接进聊天；locked 时全局 [data-app] 点击被拦（!locked 守卫），所以这里自己 unlock 后再开 chats；找不到 dock 图标就退回用 lock 当动画起点（全屏矩形=无缩放，只剩内容淡入）] [注释时间 2026-11-16] */
+(function(){
+  var n=$('#lkNoti'); if(!n) return;
+  n.addEventListener('click',function(e){ e.stopPropagation(); buzz(8); if(locked) unlock();
+    if(window.PH&&PH.minLayout&&PH.minLayout.on) return;
+    setTimeout(function(){ var ic=document.querySelector('#dock [data-app="chats"] .sq'); openApp('chats',ic||lock); },160); });
+})();
+
+/* ---------- 通知中心（主屏顶部下拉） ---------- */
+var nc=$('#nc'), ncOpen=false;
+function ncSet(y,animate){ nc.style.transition=animate?'transform .55s var(--spring)':'none'; nc.style.transform='translateY('+y+'px)'; }
+drag($('#pullzone'),{
+  can:function(){ return !locked&&!curWin; },
+  move:function(dx,dy){ ncSet(Math.min(0,-H()+Math.max(0,dy)*1.05)); if(dy>40) nc.classList.add('open'); },
+  end:function(dx,dy,dt){ if(dy>H()*.18||dy/dt>.5){ openNC(); } else closeNC(); }
+});
+drag(nc,{
+  move:function(dx,dy,ax){ if(ax!=='y') return; ncSet(Math.min(0,dy)); },
+  end:function(dx,dy,dt){ if(-dy>H()*.15||-dy/dt>.5||(Math.abs(dy)<6&&dt<250)) closeNC(); else openNC(); }
+});
+function openNC(){ ncOpen=true; nc.classList.add('open'); ncSet(0,true); buzz(6); egLoad(); }
+
+/* ---------- Claude 线路（真实状态，来自 /admin/claude-egress） ---------- */
+var _egBusy=false;
+function _egFmt(t){ if(!t) return ''; var d=new Date(t); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+function _egPaint(j){
+  var g=(j&&j.guard)||{}, k=(j&&j.keeper)||{};
+  var dot=$('#egDot'), txt=$('#egText'), when=$('#egWhen');
+  var ok=!!g.ok, stopped=!!k.stopped, fails=k.fails||0;
+  if(!dot) return;
+  dot.style.background = ok ? '#3fbf7f' : (stopped ? '#e05a5a' : '#e8b23a');
+  txt.textContent = ok ? '出口正常' : (stopped ? '已停止重试' : '线路不通');
+  when.textContent = g.checked_at ? _egFmt(g.checked_at) : '';
+  var ipEl=$('#egIp'), fEl=$('#egFails'), pEl=$('#egProxy');
+  if(ipEl) ipEl.textContent = '出口 ' + (g.ip || '—');
+  if(fEl) fEl.textContent = '失败 ' + fails + '/' + (k.max_fails || 3);
+  if(pEl) pEl.textContent = stopped ? '重启服务或手动检查后恢复' : (g.reason ? g.reason : '');
+}
+function egLoad(){
+  if(_egBusy) return;
+  fetch('/heartbeat/admin/claude-egress',{credentials:'include'}).then(function(r){ return r.ok?r.json():null; }).then(function(j){ if(j) _egPaint(j); }).catch(function(){});
+}
+function egCheck(){
+  if(_egBusy) return; _egBusy=true;
+  var b=$('#egBtn'); if(b){ b.disabled=true; b.textContent='检查中…'; }
+  fetch('/heartbeat/admin/claude-egress/check',{method:'POST',credentials:'include'}).then(function(r){ return r.json(); }).then(function(j){
+    _egPaint(j); if(b) b.textContent='立即检查';
+  }).catch(function(){ if(b) b.textContent='立即检查'; }).then(function(){ _egBusy=false; if(b) b.disabled=false; });
+}
+(function(){
+  var card=$('#egCard'), more=$('#egMore'), btn=$('#egBtn');
+  if(card) card.addEventListener('click', function(){ if(!more) return; var open=more.style.display!=='none'; more.style.display=open?'none':'block'; if(!open){ buzz(4); egCheck(); } });
+  if(btn) btn.addEventListener('click', function(e){ e.stopPropagation(); egCheck(); });
+})();
+function closeNC(){ ncOpen=false; nc.classList.remove('open'); ncSet(-H(),true); }
+nc.style.transform='translateY(-100%)';
+
+/* ---------- 打开 / 收起 App（从图标放大，缩回图标） ---------- */
+var curWin=null, curIcon=null;
+function rectIn(el){ var r=el.getBoundingClientRect(), d=D.getBoundingClientRect(); return {x:r.left-d.left,y:r.top-d.top,w:r.width,h:r.height}; }
+function fromIconFrames(ir){ var W=D.clientWidth, Hh=D.clientHeight; return {start:'translate('+ir.x+'px,'+ir.y+'px) scale('+(ir.w/W)+','+(ir.h/Hh)+')', end:'translate(0,0) scale(1,1)'}; }
+/* [位置:phone-new.html·资料卡] [单击看资料、长按锁屏] [11-13：原来点一下直接锁屏（提示只写在触屏看不到的 title 里），误触就得上滑解锁；改成单击打开「我的」、长按 430ms 才锁屏；长按后那一下 click 吞掉] [注释时间 2026-11-13] */
+var pcT=0, pcX=0, pcY=0;
+D.addEventListener('pointerdown',function(e){ var pc=e.target.closest('.pcard[data-act="me"]'); if(!pc||curWin||locked) return; pcX=e.clientX; pcY=e.clientY; clearTimeout(pcT); pcT=setTimeout(function(){ pcT=0; pc.__lp=1; relock(); },430); });
+D.addEventListener('pointermove',function(e){ if(pcT&&Math.hypot(e.clientX-pcX,e.clientY-pcY)>12){ clearTimeout(pcT); pcT=0; } });
+['pointerup','pointercancel','pointerleave'].forEach(function(ev){ D.addEventListener(ev,function(){ clearTimeout(pcT); pcT=0; }); });
+D.addEventListener('click',function(e){
+  var b=e.target.closest('[data-app]'); if(b&&!locked&&(!curWin||(WIDE&&b.closest('.cs-apps')))){ openApp(b.getAttribute('data-app'),b.querySelector('.sq')); return; }   /* 宽屏：「应用」页的图标随时可点，会替换右栏当前应用 */
+  var pc=e.target.closest('[data-act="me"]'); if(pc&&!curWin){ if(pc.__lp){ pc.__lp=0; return; } openApp('me',pc); return; }   /* [位置:phone-new.html·资料卡点击] [补动画起点] [批5：原来 openApp('me') 不传 iconEl，窄屏分支 rectIn(undefined) 抛 TypeError、back 监听挂不上，窗口关不掉；传资料卡元素本身当起点，窗口从卡片放大/缩回卡片，与桌面图标同行为（同批2 MCP 行 1eace670 修法）] [注释时间 2026-11-17] */
+  var w=e.target.closest('[data-act="lock"]'); if(w&&!curWin) relock();
+});
+function openApp(id,iconEl,opts){
+  var instant=!!(opts&&opts.instant);
+  if(!instant) buzz(8);
+  /* [位置:phone-new.html·openApp 叠开记父窗] [从一个 app 里再开另一个 app（工具集 → 配置的 MCP 页）：记下底下那个窗口和它的图标] [11-17：原来 curWin/curIcon 被新窗口直接顶掉，新窗口关闭时 curWin 置空，底下的工具集窗口还在 DOM 里却再也关不掉（返回键 / 上滑 / 右滑都走 closeApp，curWin 为空直接 return）=返回不了桌面。现在新窗口带 _par，closeApp 关掉它时把 curWin/curIcon 还给父窗；宽屏本来就替换右栏，不记] [注释时间 2026-11-17] */
+  var par=(!WIDE&&curWin&&curWin.isConnected)?{win:curWin,icon:curIcon}:null;
+  curIcon=iconEl||null;
+  var win=document.createElement('div'); win.className='win opening'; win.dataset.win=id; win._par=par; win.innerHTML=APPREG[id]?APPREG[id].html():placeHTML(id);
+  win.innerHTML+='<div class="homebar"></div>';
+  /* [位置:phone-new.html·openApp 宽屏分支] [宽屏下应用窗口开在右栏] [10-28：右栏已有应用就先撤掉；不做图标放大动画（窗口不是全屏），淡入；返回键走 closeApp] [注释时间 2026-10-28] */
+  if(WIDE&&curWin){ curWin.remove(); curWin=null; }
+  D.appendChild(win); curWin=win; markAv();
+  /* [位置:phone-new.html·openApp app-open 标记] [天空动画暂停] [2026-11-01 性能批 1：app 窗口打开时给 #device 挂 app-open，phone-sky2.js 不再排天空 rAF、phone-glass.css 冻结 #sky 动画；窗口是半透明的（--winA .72 / chat .5），天空一直动会让手机在聊天/生成时持续全屏合成、发烫] [注释时间 2026-11-01] */
+  D.classList.add('app-open');
+  try{ document.dispatchEvent(new CustomEvent('ph:appopen')); }catch(e){}   /* 2026-11-01：通知天空/组件开始停帧 */
+  if(WIDE){
+    win.classList.remove('opening');
+    anim(win,[{opacity:0,transform:'translateX(22px)'},{opacity:1,transform:'none'}],{duration:260,easing:'cubic-bezier(.2,.9,.25,1)'}).finished.then(function(){ win.style.transform='none'; });
+    win.querySelector('.back').addEventListener('click',function(){ closeApp(); });
+    if(APPREG[id]&&APPREG[id].setup) APPREG[id].setup(win);
+    return;
+  }
+  home.classList.add('under'); D.dataset.mood='app';
+  if(instant||!iconEl){
+    win.classList.remove('opening'); win.style.transform='none';
+  }else{
+    var ir=rectIn(iconEl), f=fromIconFrames(ir);
+    iconEl.style.opacity='0';
+    anim(win,[{transform:f.start,borderRadius:'90px'},{transform:f.end,borderRadius:'0px'}],{duration:520,easing:'cubic-bezier(.2,.9,.25,1)'})
+      .finished.then(function(){ win.classList.remove('opening'); win.style.transform='none'; });
+  }
+  win.querySelector('.back').addEventListener('click',function(){ closeApp(); });
+  /* [位置:phone-new.html·openApp 上滑关 app] [底条手势改成起手在底部才算、真拖动才接管] [底条一不吃事件，原来挂在它上面的手势就没了；改成按起手位置判定，位移不到 8px 不抓取指针，所以点列表最后一行照样能进，上滑照旧关 app] [注释时间 2026-10-27] */
+  (function(cn,hb){
+    if(!cn||!hb) return;
+    var on=false,sx=0,sy=0,st=0,cap=false;
+    cn.addEventListener('pointerdown',function(e){
+      if(e.target.closest('.pg-sheet,.pg-cf,.sheetw,.cs-ov,.cs-dw,.tk-ov,.tk-dw,.st-alert,.nc')) return;   /* 弹层贴着底边时不让它关 app */
+      var r=hb.getBoundingClientRect(); if(e.clientY<r.top) return;
+      on=true; cap=false; sx=e.clientX; sy=e.clientY; st=performance.now();
+    });
+    cn.addEventListener('pointermove',function(e){
+      if(!on) return; var dx=e.clientX-sx, dy=e.clientY-sy;
+      if(!cap){ if(Math.abs(dy)<8||Math.abs(dy)<Math.abs(dx)) return; cap=true; try{ cn.setPointerCapture(e.pointerId); }catch(_){} }
+      var p=Math.max(0,-dy), sc=1-Math.min(p,320)/900;
+      win.style.transform='translate('+(dx*.2)+'px,'+(-p*.25)+'px) scale('+sc+')';
+      win.style.transformOrigin='50% 100%'; win.style.borderRadius=Math.min(48,p/4)+'px';
+    });
+    function end(e){
+      if(!on) return; on=false; if(!cap) return; cap=false;
+      var dy=e.clientY-sy, dt=performance.now()-st;
+      if(-dy>70||-dy/dt>.4) closeApp();
+      else anim(win,[{transform:win.style.transform},{transform:'none'}],{duration:400,easing:'cubic-bezier(.2,.9,.25,1)'}).finished.then(function(){ win.style.transform='none'; win.style.borderRadius=''; win.style.transformOrigin=''; });
+    }
+    cn.addEventListener('pointerup',end); cn.addEventListener('pointercancel',end);
+  })(win.querySelector('.content'),win.querySelector('.homebar'));
+  if(APPREG[id]&&APPREG[id].setup) APPREG[id].setup(win);
+}
+function closeApp(){
+  var win=curWin, ic=curIcon; if(!win) return; buzz(6);
+  /* [位置:phone-new.html·closeApp 还给父窗] [关的是叠开的窗口（win._par 还在 DOM）：curWin/curIcon 还给底下的 app，桌面状态（app-open / under / mood / 天空）不动，因为并没有回桌面] [11-17] [注释时间 2026-11-17] */
+  var par=(!WIDE&&win._par&&win._par.win&&win._par.win.isConnected)?win._par:null;
+  curWin=par?par.win:null; if(par) curIcon=par.icon;
+  /* [位置:phone-new.html·closeApp app-open 标记] [恢复天空] [2026-11-01 性能批 1：关窗就摘掉 app-open，回到桌面时天空动画/帧循环恢复（关窗动画期间的恢复代价可忽略）] [注释时间 2026-11-01] */
+  if(!par){
+    D.classList.remove('app-open');
+    try{ document.dispatchEvent(new CustomEvent('ph:appclose')); }catch(e){}   /* 2026-11-01：关 app 恢复天空，替代 800ms 轮询 */
+  }
+  if(WIDE||!ic){ if(!par){ home.classList.remove('under'); D.dataset.mood='calm'; } anim(win,[{opacity:1},{opacity:0}],{duration:160}).finished.then(function(){ win.remove(); }); return; }   /* 宽屏或无图标起点（原地恢复打开）：淡出即可 */
+  win.style.transformOrigin='0 0';
+  var ir=rectIn(ic), f=fromIconFrames(ir);
+  var cs=win.getBoundingClientRect(), d=D.getBoundingClientRect();
+  var startT='translate('+(cs.left-d.left)+'px,'+(cs.top-d.top)+'px) scale('+(cs.width/D.clientWidth)+','+(cs.height/D.clientHeight)+')';
+  if(!par){ home.classList.remove('under'); D.dataset.mood='calm'; }
+  var c=win.querySelector('.content'); if(c) anim(c,[{opacity:1},{opacity:0}],{duration:200});
+  anim(win,[{transform:startT,borderRadius:win.style.borderRadius||'0px'},{transform:f.start,borderRadius:'90px'}],{duration:460,easing:'cubic-bezier(.3,.9,.3,1)'})
+    .finished.then(function(){ win.remove(); ic.style.opacity=''; anim(ic,[{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:380,easing:'cubic-bezier(.2,.9,.25,1)',fill:'none'}); });
+}
+function head(t,extra){ return '<div class="apphead"><button class="back tap" aria-label="返回"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>'+(extra||'<div class="ttl">'+t+'</div>')+'</div>'; }
+function placeHTML(id){ var a=APPS[id]; return '<div class="content">'+head(a.n)+'<div class="placeholder"><div class="ph-stack"><i></i><i></i><div class="big"><svg viewBox="0 0 24 24">'+ICON[a.i]+'</svg></div><s></s><s></s><s></s></div><b>'+a.n+'</b><div>'+(a.d||'')+'</div>'+(id==='game'?'':'<span class="ph-soon">即将开放</span>')+'</div></div>'; }
+
+var tt;
+/* [位置:phone-new.html·toast] [短提示保持胶囊、长提示切横幅 + 时长按字数给 + 点一下收起] [11-06：按长度切 .long（阈值 20 字，见 #toast 注释）；短提示时长保持原来的 1.7 秒，长提示按字数给到最多 3.6 秒（折成三行的原因读得完）；点提示条立刻收起] [注释时间 2026-11-06] */
+function toast(m){ var t=$('#toast'); if(!t) return;
+  var s=(m==null?'':String(m)), isLong=s.length>20;
+  t.textContent=s; t.classList.toggle('long', isLong);
+  t.classList.add('show'); clearTimeout(tt);
+  t.onclick=function(){ clearTimeout(tt); t.classList.remove('show'); };
+  tt=setTimeout(function(){ t.classList.remove('show'); }, isLong?Math.min(3600, 1800+s.length*26):1700); }
+var APPREG={};
+
+/* 防 iOS 橡皮筋把整页拖走 */
+/* 防整页橡皮筋：手指按下时往上找，有能滚的祖先（新页面的 .pg-sc / 底板 / 横向条…）就放行，否则拦下 touchmove */
+(function(){ var ok=false, OKS='.msgs,textarea,.sc,.scroll,.tl-term,.ses-pop .ls,.ses-pop .opt';   /* [2026-11-17 批5] 移除 .panes>section：那是已下线信封页的双栏容器，全仓唯一 DOM 来源已随 phone-love.js 删除 */
+  function canScroll(t){ for(var e=t;e&&e.nodeType===1&&e!==document.body;e=e.parentElement){ var s=getComputedStyle(e); if((/(auto|scroll)/.test(s.overflowY)&&e.scrollHeight>e.clientHeight+1)||(/(auto|scroll)/.test(s.overflowX)&&e.scrollWidth>e.clientWidth+1)) return true; } return false; }
+  document.addEventListener('touchstart',function(e){ var t=e.target; ok=!!(t&&t.closest&&t.closest(OKS))||canScroll(t); },{passive:true,capture:true});
+  document.addEventListener('touchmove',function(e){ if(ok) return; var t=e.target; if((t&&t.closest&&t.closest(OKS))||canScroll(t)){ ok=true; return; } e.preventDefault(); },{passive:false});
+})();
+/* [位置:phone-new.html·防捏合缩放] [iOS 10+ 无视 viewport 禁令，双指捏合仍会缩放网页：缩过后布局视口宽于屏幕，贴右的元素（发送键等）全被截出屏且不重开不恢复；拦掉 gesture 事件让捏合失效（系统级辅助功能缩放走别的通道，不受影响）] [注释时间 2026-10-30] */
+document.addEventListener('gesturestart',function(e){ e.preventDefault(); });
+document.addEventListener('gesturechange',function(e){ e.preventDefault(); });
+/* [位置:phone-new.html·视口自检] [输入框莫名被截断的兜底：视觉视口窄于布局视口（页面处于放大态）且输入框没聚焦时，重写一次 viewport 让 Safari 回弹到 100%] [注释时间 2026-10-30] */
+(function(){ var mv=document.querySelector('meta[name="viewport"]');
+  function check(){ var vv=window.visualViewport; if(!vv||vv.scale<=1.01) return; var ae=document.activeElement; if(ae&&ae.matches&&ae.matches('input,textarea')) return;
+    var c=mv.getAttribute('content'); mv.setAttribute('content',c+' '); setTimeout(function(){ mv.setAttribute('content',c); },60); }
+  if(window.visualViewport) window.visualViewport.addEventListener('resize',check);
+  window.addEventListener('focusout',function(){ setTimeout(check,300); });
+})();
+/* [位置:phone-new.html·PH.afterGesture] [手势窗口内推迟整段重画] [列表打开时先画缓存、后端回来再整段 innerHTML 重画；这一下正好落在手指按下与抬起之间，就把按下的那行摘出 DOM 了，合成 click 不再冒泡，这一下白点（笔记/待办/相册/会话列表都要点两下）。记一个手势窗口，各列表的渲染函数在窗口内只登记不执行，松手 350ms 后画最后一次] [注释时间 2026-10-27] */
+var GBUSY=false, GQ={}, GT=0, GMAX=0;
+function gestureEnd(){ clearTimeout(GT); clearTimeout(GMAX); GT=setTimeout(function(){
+  GBUSY=false; var ks=Object.keys(GQ); if(!ks.length) return;
+  var fs=ks.map(function(k){ return GQ[k]; }); GQ={};
+  fs.forEach(function(f){ try{ f(); }catch(e){ console.error(e); } });
+},350); }
+document.addEventListener('pointerdown',function(){ GBUSY=true; clearTimeout(GT); clearTimeout(GMAX); GMAX=setTimeout(gestureEnd,1200); },true);
+document.addEventListener('pointerup',gestureEnd,true);
+document.addEventListener('pointercancel',gestureEnd,true);
+/* 返回 true = 现在就画（调用方继续往下的渲染代码）；false = 已在手势中，这次画被推迟（调用方直接 return） */
+function afterGesture(key,fn){ if(!GBUSY) return true; GQ[key]=fn; return false; }
+window.PH={D:D,$:$,rectIn:rectIn,anim:anim,drag:drag,buzz:buzz,toast:toast,head:head,markAv:markAv,reduce:reduce,ICON:ICON,afterGesture:afterGesture,appOrder:appOrder,
+  icon:icon,register:function(id,o){ APPREG[id]=o; },app:function(id){ return APPREG[id]; },open:openApp,curWin:function(){ return curWin; },APPS:APPS};
+})();
+</script>
+<script defer src="phone-kit.js"></script>
+<script defer src="phone-profile.js"></script>
+<script defer src="phone-net.js"></script>
+<script defer src="ph-load.js"></script>
+<script defer src="phone-cards.js"></script>
+<script defer src="phone-bubble.js"></script>
+<script defer src="phone-diary.js"></script>
+<script defer src="phone-todo.js"></script>
+<script defer src="phone-cal.js"></script>
+<script defer src="phone-call.js"></script>
+<script defer src="phone-set.js"></script>
+<script defer src="phone-tools.js"></script>
+<script defer src="phone-nw-widgets.js"></script>
+<script defer src="phone-sheetdrag.js"></script>
+<script defer src="phone-mcprules.js"></script>
+<script defer src="phone-chats.js"></script>
+<script defer src="phone-scrollbar.js"></script>
+<script defer src="phone-tags.js"></script>
+<script defer src="phone-talk.js"></script>
+<script defer src="img-editor.js"></script>
+<script defer src="sticker-cropper.js"></script>
+<script defer src="phone-pages.js"></script>
+<script defer src="phone-wf.js"></script>
+<script defer src="phone-jot.js"></script>
+<script defer src="phone-trace.js"></script>
+<script defer src="phone-notes.js"></script>
+<script defer src="phone-swipeback.js"></script>
+<script defer src="phone-sky2.js"></script>
+<script defer src="phone-draft.js"></script>
+<script defer src="phone-wide.js"></script>
+<script defer src="phone-drawer.js"></script>
+
+<!-- 撞车横幅已于 2026-11-01 按产品要求整个移除（总在弹，烦）：撞车提醒只走 WebPush 浏览器推送；后端记录与静默闸仍在 lib/claim-locks.js -->
+
+</body>
+</html>
